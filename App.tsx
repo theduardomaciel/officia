@@ -1,20 +1,43 @@
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import * as NavigationBar from 'expo-navigation-bar';
+
+// Expo and App Loading
+import { useCallback } from 'react';
+
+import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from '@expo-google-fonts/inter';
+import { Raleway_400Regular, Raleway_700Bold } from "@expo-google-fonts/raleway";
+
+import * as SplashScreen from 'expo-splash-screen';
+SplashScreen.preventAutoHideAsync();
+
+import Routes from 'routes';
+import colors from "global/colors";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+    let [fontsLoaded] = useFonts({
+        Inter_400Regular, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold, Raleway_400Regular, Raleway_700Bold,
+    });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+    NavigationBar.setBackgroundColorAsync(colors.bg[500])
+
+    const onLayoutRootView = useCallback(async () => {
+        if (fontsLoaded) {
+            await SplashScreen.hideAsync();
+        }
+    }, [fontsLoaded]);
+
+    if (!fontsLoaded) {
+        return null;
+    }
+
+    return (
+        <GestureHandlerRootView className="flex-1 bg-bg-300" onLayout={onLayoutRootView}>
+            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+                <Routes />
+                <StatusBar style="light" />
+            </SafeAreaProvider>
+        </GestureHandlerRootView>
+    );
+}
