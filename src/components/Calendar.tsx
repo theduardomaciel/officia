@@ -5,7 +5,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
+import { useNavigation } from "@react-navigation/native";
 
 const WEEK_DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
@@ -25,21 +26,23 @@ export function WeekDays() {
     )
 }
 
-function DayView({ DATE, isToday, style }: { DATE: number, isToday?: boolean, style?: ViewStyle }) {
+function DayView({ date, isToday, style, navigate }: { date: Date, isToday?: boolean, style?: ViewStyle, navigate: any }) {
+    const dateString = date.toISOString();
     return (
         <TouchableOpacity
             className='flex w-10 h-10 rounded-full items-center justify-center p-1 bg-bg-200 border-text-neutral'
             style={{ borderWidth: isToday ? 1 : 0, ...style }}
             activeOpacity={0.65}
+            onPress={() => navigate('dayAgenda', { dateString })}
         >
             <Text className='font-semibold text-md text-text-neutral'>
-                {DATE}
+                {date.getDate()}
             </Text>
         </TouchableOpacity>
     )
 }
 
-export function WeekView({ startDate }: { startDate?: Date }) {
+export function WeekView({ startDate, navigate }: { startDate?: Date, navigate: any }) {
     const currentDate = new Date();
     const lastDayOfMonth = new Date(startDate ? startDate.getFullYear() : currentDate.getFullYear(), startDate ? startDate.getMonth() + 1 : currentDate.getMonth() + 1, 0).getDate();
 
@@ -50,7 +53,14 @@ export function WeekView({ startDate }: { startDate?: Date }) {
             {
                 WEEK_DAYS.map((day, index) => {
                     const DATE = startDateDayOfMonth <= lastDayOfMonth ? startDateDayOfMonth++ : lastDayOfMonth - startDateDayOfMonth + index;
-                    return <DayView key={`day_number${index}`} DATE={DATE} isToday={DATE === currentDate.getDate()} />
+                    return (
+                        <DayView
+                            key={`day_number${index}`}
+                            navigate={navigate}
+                            date={new Date(currentDate.getFullYear(), currentDate.getMonth(), DATE)}
+                            isToday={DATE === currentDate.getDate()}
+                        />
+                    )
                 })
             }
         </View>
@@ -68,7 +78,10 @@ function getMonthInfo(currentMonth: number, currentDate: Date) {
     //console.log(daysAmountOnCalendar, "quantidade de dias")
 
     let monthDates = Array.from({ length: lastDateOfMonth - firstDateOfMonth + 1 }, (_, index) => {
-        return firstDateOfMonth + index;
+        return {
+            date: firstDateOfMonth + index,
+            month: currentMonth
+        };
     })
 
     const remainingDaysOnLastMonth = firstDayOfMonth;
@@ -77,7 +90,10 @@ function getMonthInfo(currentMonth: number, currentDate: Date) {
     if (remainingDaysOnLastMonth > 0) {
         const lastMonthLastDate = new Date(currentDate.getFullYear(), currentMonth, 0).getDate();
         const remainingPreviousMonthDates = Array.from({ length: remainingDaysOnLastMonth }, (_, index) => {
-            return lastMonthLastDate - index;
+            return {
+                date: lastMonthLastDate - index,
+                month: currentMonth - 1
+            };
         }).reverse()
 
         //console.log(remainingPreviousMonthDates, "restantes no mês anterior")
@@ -91,7 +107,10 @@ function getMonthInfo(currentMonth: number, currentDate: Date) {
     if (remainingDaysOnNextMonth > 0) {
         const nextMonthFirstDate = new Date(currentDate.getFullYear(), currentMonth + 1, 1).getDate();
         const remainingNextMonthDates = Array.from({ length: remainingDaysOnNextMonth }, (_, index) => {
-            return nextMonthFirstDate + index;
+            return {
+                date: nextMonthFirstDate + index,
+                month: currentMonth + 1
+            };
         })
 
         //console.log(remainingNextMonthDates, "restantes no próximo mês")
@@ -106,6 +125,8 @@ const monthInfos = Array.from({ length: 12 }, (_, index) => {
 })
 
 export default function Calendar() {
+    const { navigate } = useNavigation();
+
     const currentDate = new Date();
     const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
 
@@ -116,6 +137,7 @@ export default function Calendar() {
 
     const END_POSITION = 250;
     const position = useSharedValue(0);
+    const opacity = useSharedValue(1);
 
     function worklet(index: number) {
         setCurrentMonth(currentMonth + index);
@@ -126,6 +148,7 @@ export default function Calendar() {
             if (e.translationX > 0 && !canDecrease) return;
             if (e.translationX < 0 && !canIncrease) return;
             position.value = e.translationX;
+            opacity.value = 1 - Math.abs(e.translationX) / (END_POSITION / 2);
         })
         .onEnd((e) => {
             if (e.translationX > 0 && !canDecrease) return;
@@ -136,6 +159,7 @@ export default function Calendar() {
                     'worklet';
                     position.value = -END_POSITION
                     position.value = withTiming(0, { duration: 250 })
+                    opacity.value = withTiming(1, { duration: 250 });
                 });
                 runOnJS(worklet)(-1);
             } else {
@@ -144,6 +168,7 @@ export default function Calendar() {
                     'worklet';
                     position.value = END_POSITION
                     position.value = withTiming(0, { duration: 250 })
+                    opacity.value = withTiming(1, { duration: 250 });
                 });
                 runOnJS(worklet)(1);
             }
@@ -151,61 +176,66 @@ export default function Calendar() {
 
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ translateX: position.value }],
+        opacity: opacity.value
     }));
 
     return (
-        <View className="flex-col w-full bg-bg-500 rounded-xl p-4">
-            <View className="flex-row items-center justify-around mb-2">
-                <MaterialIcons
-                    name="chevron-left"
-                    size={24}
-                    disabled={currentMonth <= 0}
-                    style={{ opacity: currentMonth <= 0 ? 0.25 : 1 }}
-                    color={colors.text.neutral}
-                    onPress={() => currentMonth > 0 && setCurrentMonth(actualStateMonth => actualStateMonth - 1)}
-                />
-                <GestureDetector gesture={panGesture}>
-                    <Animated.Text style={animatedStyle} className="text-text-neutral w-3/4 text-center font-titleBold text-xl">
-                        {MONTHS[currentMonth]}
-                    </Animated.Text>
-                </GestureDetector>
-                <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    disabled={currentMonth >= 11}
-                    style={{ opacity: currentMonth >= 11 ? 0.25 : 1 }}
-                    color={colors.text.neutral}
-                    onPress={() => currentMonth < 11 && setCurrentMonth(actualStateMonth => actualStateMonth + 1)}
-                />
-            </View>
+        <GestureHandlerRootView className="w-full">
+            <View className="flex-col w-full bg-bg-500 rounded-xl p-4">
+                <View className="flex-row items-center justify-around mb-2">
+                    <MaterialIcons
+                        name="chevron-left"
+                        size={24}
+                        className="active:scale-50"
+                        disabled={currentMonth <= 0}
+                        style={{ opacity: currentMonth <= 0 ? 0.25 : 1 }}
+                        color={colors.text.neutral}
+                        onPress={() => currentMonth > 0 && setCurrentMonth(actualStateMonth => actualStateMonth - 1)}
+                    />
+                    <GestureDetector gesture={panGesture}>
+                        <Animated.Text style={animatedStyle} className="text-text-neutral w-3/4 text-center font-titleBold text-xl">
+                            {MONTHS[currentMonth]}
+                        </Animated.Text>
+                    </GestureDetector>
+                    <MaterialIcons
+                        name="chevron-right"
+                        size={24}
+                        disabled={currentMonth >= 11}
+                        style={{ opacity: currentMonth >= 11 ? 0.25 : 1 }}
+                        color={colors.text.neutral}
+                        onPress={() => currentMonth < 11 && setCurrentMonth(actualStateMonth => actualStateMonth + 1)}
+                    />
+                </View>
 
-            <View className="flex-col items-center justify-center w-full mb-2">
-                <WeekDays />
-            </View>
+                <View className="flex-col items-center justify-center w-full mb-2">
+                    <WeekDays />
+                </View>
 
-            <View className="flex-row items-center justify-between w-full flex-wrap">
-                {
-                    monthDates.map((date, index) => {
-                        const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < remainingDaysOnLastMonth;
-                        const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
+                <View className="flex-row items-center justify-between w-full flex-wrap">
+                    {
+                        monthDates.map((date, index) => {
+                            const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < remainingDaysOnLastMonth;
+                            const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
 
-                        return (
-                            <DayView
-                                key={`calendar_${index}`}
-                                DATE={date}
-                                isToday={date == currentDate.getDate() && index >= firstDayOfMonth && index <= lastDayOfMonth}
-                                style={{
-                                    opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,
-                                    marginBottom: 5,
-                                    marginRight: 5,
-                                    width: 35,
-                                    height: 35,
-                                }}
-                            />
-                        )
-                    })
-                }
+                            return (
+                                <DayView
+                                    key={`calendar_${index}`}
+                                    date={new Date(currentDate.getFullYear(), date.month, date.date)}
+                                    isToday={date.date == currentDate.getDate() && index >= firstDayOfMonth && index <= lastDayOfMonth}
+                                    navigate={navigate}
+                                    style={{
+                                        opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,
+                                        marginBottom: 5,
+                                        marginRight: 5,
+                                        width: 35,
+                                        height: 35,
+                                    }}
+                                />
+                            )
+                        })
+                    }
+                </View>
             </View>
-        </View>
+        </GestureHandlerRootView>
     )
 }

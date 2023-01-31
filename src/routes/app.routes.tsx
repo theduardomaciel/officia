@@ -8,18 +8,12 @@ import Home from "../screens/Home";
 import Business from "screens/Business";
 import Overview from "screens/Overview";
 
+import DayAgenda from "screens/DayAgenda";
+
 import colors from "global/colors";
 import { MaterialIcons } from "@expo/vector-icons";
 
-/* function HomeStack() {
-    return (
-        <Stack.Navigator sceneContainerStyle={{ backgroundColor: colors.bg[300] }} screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Home" component={Home} />
-        </Stack.Navigator>
-    );
-} */
-
-export function AppRoutes() {
+function HomeStack() {
     return (
         <Tab.Navigator
             sceneContainerStyle={{ backgroundColor: "transparent" }}
@@ -65,5 +59,18 @@ export function AppRoutes() {
                 }}
             />
         </Tab.Navigator>
+    );
+}
+
+export function AppRoutes() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "transparent" } }}>
+            <Stack.Screen
+                name="homeTab"
+                component={HomeStack}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen name="dayAgenda" component={DayAgenda} />
+        </Stack.Navigator>
     )
 }

@@ -5,11 +5,11 @@
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
-        "userInterfaceStyle": "light",
+        "userInterfaceStyle": "dark",
         "splash": {
             "image": "./assets/splash.png",
             "resizeMode": "contain",
-            "backgroundColor": "#09090A"
+            "backgroundColor": "#1E1F20"
         },
         "updates": {
             "fallbackToCacheTimeout": 0
@@ -23,9 +23,19 @@
         "android": {
             "adaptiveIcon": {
                 "foregroundImage": "./assets/adaptive-icon.png",
-                "backgroundColor": "#09090A"
+                "backgroundColor": "#DDDDE1"
             },
             "softwareKeyboardLayoutMode": "pan"
+        },
+        "androidStatusBar": {
+            "translucent": "true",
+            "barStyle": "light-content",
+            "backgroundColor": "transparent"
+        },
+        "androidNavigationBar": {
+            "visible": "true",
+            "backgroundColor": "#1E1F20",
+            "barStyle": "light-content"
         },
         "web": {
             "favicon": "./assets/favicon.png"

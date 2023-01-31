@@ -1,17 +1,24 @@
 import { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from "@expo/vector-icons";
 
-import Animated, { FadeInUp, FadeInDown, FadeOutDown, FadeOutUp, Layout, Easing } from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeOutUp, Layout } from 'react-native-reanimated';
+import * as NavigationBar from "expo-navigation-bar";
 
 import colors from 'global/colors';
 
 import Header from 'components/Header';
 import EmptyMessage from 'components/EmptyMessage';
 import { Tag, TagsSelector } from 'components/TagsSelector';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 import Calendar, { WeekView, WeekDays } from 'components/Calendar';
+import { UIManager } from 'react-native';
 
 export default function Home() {
     const { navigate } = useNavigation()
@@ -27,14 +34,15 @@ export default function Home() {
             console.log(error, "erro")
             setSummary([])
         }
-    }
+    } */
 
     useFocusEffect(useCallback(() => {
-        fetchData()
-    }, [])) */
+        //fetchData()
+        NavigationBar.setBackgroundColorAsync(colors.bg[500])
+    }, []))
 
     function handleTagSelection(data: Tag[]) {
-        console.log(data)
+        /* console.log(data) */
     }
 
     return (
@@ -50,9 +58,14 @@ export default function Home() {
                         size={16}
                         className={"m-0"}
                         color={colors.text[100]}
+                        style={{
+                            transform: [
+                                { rotate: isCalendarExpanded ? '180deg' : '0deg' }
+                            ],
+                        }}
                     />
                     <Text className='text-sm ml-1 text-text-100'>
-                        Expandir
+                        {isCalendarExpanded ? 'Minimizar' : 'Expandir'}
                     </Text>
                 </TouchableOpacity>
             </Header>
@@ -67,7 +80,7 @@ export default function Home() {
                 !isCalendarExpanded && (
                     <Animated.View entering={FadeInUp.duration(235)} exiting={FadeOutUp} className='flex-col items-center justify-start w-full'>
                         <WeekDays />
-                        <WeekView />
+                        <WeekView navigate={navigate} />
                     </Animated.View>
                 )
             }
@@ -80,8 +93,8 @@ export default function Home() {
                 </View>
                 <TagsSelector
                     tags={[
-                        { id: 1, title: 'Hidráulico', icon: "plumbing", checked: false },
-                        { id: 2, title: 'Elétrico', icon: "bolt", checked: false },
+                        { title: 'Hidráulico', icon: "plumbing" },
+                        { title: 'Elétrico', icon: "bolt" },
                     ]}
                     onSelectTags={handleTagSelection}
                 />

@@ -1,15 +1,16 @@
-import { View, Text } from 'react-native';
+import { View, Text, ViewStyle } from 'react-native';
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
 interface Props {
     message?: string;
+    style?: ViewStyle;
 }
 
-export default function EmptyMessage({ message }: Props) {
+export default function EmptyMessage({ message, style }: Props) {
     return (
-        <View className='items-center justify-center px-4'>
+        <View className='items-center justify-center px-4' style={style}>
             <MaterialIcons
                 name='search'
                 size={56}

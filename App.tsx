@@ -1,6 +1,5 @@
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import * as NavigationBar from 'expo-navigation-bar';
 
 // Expo and App Loading
 import { useCallback } from 'react';
@@ -20,8 +19,6 @@ export default function App() {
         Inter_400Regular, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold, Raleway_400Regular, Raleway_700Bold,
     });
 
-    NavigationBar.setBackgroundColorAsync(colors.bg[500])
-
     const onLayoutRootView = useCallback(async () => {
         if (fontsLoaded) {
             await SplashScreen.hideAsync();
@@ -32,12 +29,12 @@ export default function App() {
         return null;
     }
 
+    // <GestureHandlerRootView >
     return (
-        <GestureHandlerRootView className="flex-1 bg-bg-300" onLayout={onLayoutRootView}>
-            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-                <Routes />
-                <StatusBar style="light" />
-            </SafeAreaProvider>
-        </GestureHandlerRootView>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics} className="flex-1 bg-bg-300" onLayout={onLayoutRootView}>
+            <Routes />
+            <StatusBar style="light" />
+        </SafeAreaProvider>
     );
 }
+//</GestureHandlerRootView>
