@@ -5,18 +5,22 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
+import clsx from "clsx";
 
 const WEEK_DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
-export function WeekDays() {
+export function WeekDays({ invert }: { invert?: boolean }) {
     return (
-        <View className='flex flex-row items-center justify-between w-full px-4'>
+        <View className={`flex flex-row items-center justify-between w-full px-4`}>
             {
                 WEEK_DAYS.map((day, index) => {
                     return (
-                        <Text key={`day_${index}`} className="font-semibold text-xs text-text-100">
+                        <Text key={`day_${index}`} className={clsx('font-semibold text-xs', {
+                            'text-text-light-100 dark:text-text-100': !invert,
+                            'text-white dark:text-text-100': invert,
+                        })}>
                             {day.charAt(0).toUpperCase()}
                         </Text>
                     )
@@ -26,16 +30,19 @@ export function WeekDays() {
     )
 }
 
-function DayView({ date, isToday, style, navigate }: { date: Date, isToday?: boolean, style?: ViewStyle, navigate: any }) {
-    const dateString = date.toISOString();
+function DayView({ date, isToday, style, onPress, invert }: { date: Date, isToday?: boolean, style?: ViewStyle, invert?: boolean, onPress: () => void }) {
     return (
         <TouchableOpacity
-            className='flex w-10 h-10 rounded-full items-center justify-center p-1 bg-bg-200 border-text-neutral'
+            className={clsx('flex w-10 h-10 rounded-full items-center justify-center p-1 bg-gray_light-neutral bg-black dark:bg-gray-200 border-white', {
+                'bg-white dark:bg-gray-200': invert,
+            })}
             style={{ borderWidth: isToday ? 1 : 0, ...style }}
             activeOpacity={0.65}
-            onPress={() => navigate('dayAgenda', { dateString })}
+            onPress={onPress}
         >
-            <Text className='font-semibold text-md text-text-neutral'>
+            <Text className={clsx('font-semibold text-md text-white', {
+                'text-gray-400 dark:text-text-100': invert,
+            })}>
                 {date.getDate()}
             </Text>
         </TouchableOpacity>
@@ -53,11 +60,13 @@ export function WeekView({ startDate, navigate }: { startDate?: Date, navigate: 
             {
                 WEEK_DAYS.map((day, index) => {
                     const DATE = startDateDayOfMonth <= lastDayOfMonth ? startDateDayOfMonth++ : lastDayOfMonth - startDateDayOfMonth + index;
+                    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), DATE)
+                    const dateString = date.toISOString();
                     return (
                         <DayView
                             key={`day_number${index}`}
-                            navigate={navigate}
-                            date={new Date(currentDate.getFullYear(), currentDate.getMonth(), DATE)}
+                            onPress={() => navigate('dayAgenda', { dateString })}
+                            date={date}
                             isToday={DATE === currentDate.getDate()}
                         />
                     )
@@ -124,7 +133,11 @@ const monthInfos = Array.from({ length: 12 }, (_, index) => {
     return getMonthInfo(index, new Date());
 })
 
-export default function Calendar() {
+interface CalendarProps {
+    style?: ViewStyle;
+}
+
+export default function Calendar({ style }: CalendarProps) {
     const { navigate } = useNavigation();
 
     const currentDate = new Date();
@@ -180,62 +193,135 @@ export default function Calendar() {
     }));
 
     return (
-        <GestureHandlerRootView className="w-full">
-            <View className="flex-col w-full bg-bg-500 rounded-xl p-4">
-                <View className="flex-row items-center justify-around mb-2">
-                    <MaterialIcons
-                        name="chevron-left"
-                        size={24}
-                        className="active:scale-50"
-                        disabled={currentMonth <= 0}
-                        style={{ opacity: currentMonth <= 0 ? 0.25 : 1 }}
-                        color={colors.text.neutral}
-                        onPress={() => currentMonth > 0 && setCurrentMonth(actualStateMonth => actualStateMonth - 1)}
-                    />
-                    <GestureDetector gesture={panGesture}>
-                        <Animated.Text style={animatedStyle} className="text-text-neutral w-3/4 text-center font-titleBold text-xl">
-                            {MONTHS[currentMonth]}
-                        </Animated.Text>
-                    </GestureDetector>
-                    <MaterialIcons
-                        name="chevron-right"
-                        size={24}
-                        disabled={currentMonth >= 11}
-                        style={{ opacity: currentMonth >= 11 ? 0.25 : 1 }}
-                        color={colors.text.neutral}
-                        onPress={() => currentMonth < 11 && setCurrentMonth(actualStateMonth => actualStateMonth + 1)}
-                    />
-                </View>
-
-                <View className="flex-col items-center justify-center w-full mb-2">
-                    <WeekDays />
-                </View>
-
-                <View className="flex-row items-center justify-between w-full flex-wrap">
-                    {
-                        monthDates.map((date, index) => {
-                            const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < remainingDaysOnLastMonth;
-                            const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
-
-                            return (
-                                <DayView
-                                    key={`calendar_${index}`}
-                                    date={new Date(currentDate.getFullYear(), date.month, date.date)}
-                                    isToday={date.date == currentDate.getDate() && index >= firstDayOfMonth && index <= lastDayOfMonth}
-                                    navigate={navigate}
-                                    style={{
-                                        opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,
-                                        marginBottom: 5,
-                                        marginRight: 5,
-                                        width: 35,
-                                        height: 35,
-                                    }}
-                                />
-                            )
-                        })
-                    }
-                </View>
+        <View className="flex-col w-full bg-black dark:bg-gray-500 rounded-xl" style={style ? style : { padding: 16 }}>
+            <View className="flex-row items-center justify-around mb-2">
+                <MaterialIcons
+                    name="chevron-left"
+                    size={24}
+                    className="active:scale-50"
+                    disabled={currentMonth <= 0}
+                    style={{ opacity: currentMonth <= 0 ? 0.25 : 1 }}
+                    color={colors.white}
+                    onPress={() => currentMonth > 0 && setCurrentMonth(actualStateMonth => actualStateMonth - 1)}
+                />
+                <GestureDetector gesture={panGesture}>
+                    <Animated.Text style={animatedStyle} className="text-white w-3/4 text-center font-titleBold text-xl">
+                        {MONTHS[currentMonth]}
+                    </Animated.Text>
+                </GestureDetector>
+                <MaterialIcons
+                    name="chevron-right"
+                    size={24}
+                    disabled={currentMonth >= 11}
+                    style={{ opacity: currentMonth >= 11 ? 0.25 : 1 }}
+                    color={colors.white}
+                    onPress={() => currentMonth < 11 && setCurrentMonth(actualStateMonth => actualStateMonth + 1)}
+                />
             </View>
-        </GestureHandlerRootView>
+
+            <View className="flex-col items-center justify-center w-full mb-2">
+                <WeekDays invert />
+            </View>
+
+            <View className="flex-row items-center justify-between w-full flex-wrap">
+                {
+                    monthDates.map((date, index) => {
+                        const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < remainingDaysOnLastMonth;
+                        const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
+
+                        const DATE = new Date(currentDate.getFullYear(), date.month, date.date)
+                        const dateString = DATE.toISOString();
+                        return (
+                            <DayView
+                                key={`calendar_${index}`}
+                                date={DATE}
+                                isToday={date.date == currentDate.getDate() && index >= firstDayOfMonth && index <= lastDayOfMonth}
+                                onPress={() => navigate('dayAgenda', { dateString })}
+                                invert
+                                style={{
+                                    opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,
+                                    marginBottom: 5,
+                                    marginRight: 5,
+                                    width: 35,
+                                    height: 35,
+                                }}
+                            />
+                        )
+                    })
+                }
+            </View>
+        </View>
+    )
+}
+
+export function StaticCalendar({ style }: CalendarProps) {
+    const currentDate = new Date();
+    const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
+
+    const { monthDates, firstDayOfMonth, lastDayOfMonth, remainingDaysOnLastMonth, remainingDaysOnNextMonth } = monthInfos[currentMonth];
+
+    const canDecrease = currentMonth > 0;
+    const canIncrease = currentMonth < 11;
+
+
+    function worklet(index: number) {
+        setCurrentMonth(currentMonth + index);
+    }
+
+    return (
+        <View className="flex-col w-full bg-black dark:bg-gray-500 rounded-xl" style={style ? style : { padding: 16 }}>
+            <View className="flex-row items-center justify-around mb-2">
+                <MaterialIcons
+                    name="chevron-left"
+                    size={24}
+                    className="active:scale-50"
+                    disabled={currentMonth <= 0}
+                    style={{ opacity: currentMonth <= 0 ? 0.25 : 1 }}
+                    color={colors.white}
+                    onPress={() => currentMonth > 0 && setCurrentMonth(actualStateMonth => actualStateMonth - 1)}
+                />
+                <Text className="text-white w-3/4 text-center font-titleBold text-xl">
+                    {MONTHS[currentMonth]}
+                </Text>
+                <MaterialIcons
+                    name="chevron-right"
+                    size={24}
+                    disabled={currentMonth >= 11}
+                    style={{ opacity: currentMonth >= 11 ? 0.25 : 1 }}
+                    color={colors.white}
+                    onPress={() => currentMonth < 11 && setCurrentMonth(actualStateMonth => actualStateMonth + 1)}
+                />
+            </View>
+
+            <View className="flex-col items-center justify-center w-full mb-2">
+                <WeekDays invert />
+            </View>
+
+            <View className="flex-row items-center justify-between w-full flex-wrap">
+                {
+                    monthDates.map((date, index) => {
+                        const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < remainingDaysOnLastMonth;
+                        const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
+
+                        return (
+                            <DayView
+                                key={`calendar_${index}`}
+                                date={new Date(currentDate.getFullYear(), date.month, date.date)}
+                                onPress={() => { }}
+                                isToday={date.date == currentDate.getDate() && index >= firstDayOfMonth && index <= lastDayOfMonth}
+                                invert
+                                style={{
+                                    opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,
+                                    marginBottom: 5,
+                                    marginRight: 5,
+                                    width: 35,
+                                    height: 35,
+                                }}
+                            />
+                        )
+                    })
+                }
+            </View>
+        </View>
     )
 }

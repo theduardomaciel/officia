@@ -1,21 +1,16 @@
 import * as React from "react";
 import { Dimensions, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
     Extrapolate,
     interpolate,
     useAnimatedStyle,
     useSharedValue,
+    withTiming,
 } from "react-native-reanimated";
 import Carousel from "react-native-reanimated-carousel";
 import { StatisticsCard } from "./StatisticsCard";
 
 const PAGE_WIDTH = Dimensions.get("window").width;
-const colors = [
-    "#26292E",
-    "#899F9C",
-    "#B3C680",
-];
 
 interface Props {
     setCanScrollVertically: (value: boolean) => void;
@@ -29,47 +24,68 @@ export default function StatisticsCarousel({ setCanScrollVertically }: Props) {
         height: PAGE_WIDTH * 0.6,
     } as const;
 
+    const carousel = React.useRef<any>(null);
 
     return (
-        <GestureHandlerRootView style={{
-            alignItems: "center",
-        }}>
+        <View style={{ alignItems: "center" }} hitSlop={{ top: 25, bottom: 25, }}>
             <Carousel
                 {...baseOptions}
                 loop
+                ref={carousel}
                 pagingEnabled={true}
                 snapEnabled={true}
-                /* autoPlay={true}
-                autoPlayInterval={10000} */
-                onProgressChange={(_, absoluteProgress) =>
-                    (progressValue.value = absoluteProgress)
-                }
-                onScrollBegin={() => setCanScrollVertically(false)}
-                onScrollEnd={() => setCanScrollVertically(true)}
+                autoPlay={true}
+                autoPlayInterval={10000}
+                onProgressChange={(_, absoluteProgress) => (progressValue.value = absoluteProgress)}
+                panGestureHandlerProps={{
+                    /* onBegan: () => setCanScrollVertically(false),
+                    onEnded: () => setCanScrollVertically(true),
+                    onCancelled: () => setCanScrollVertically(true), */
+                    /* onBegan: () => {
+                        console.log("onBegan")
+                        setCanScrollVertically(false)
+                    }, */
+                    /* onEnded: () => {
+                        //console.log("onEnded")
+                        setCanScrollVertically(true)
+                    },
+                    onCancelled: () => {
+                        //console.log("onCancelled")
+                        carousel.current.scrollTo(Math.round(progressValue.value))
+                        setCanScrollVertically(true)
+                    }, */
+                    minDist: 0,
+                    activeOffsetY: 0,
+                    activeOffsetX: 0,
+                }}
+                /* onScrollBegin={() => {
+                    setCanScrollVertically(false);
+                }} */
                 mode="parallax"
                 modeConfig={{
                     parallaxScrollingScale: 0.88,
                     parallaxScrollingOffset: 50,
                 }}
-                data={colors}
+                autoFillData
+                data={[...new Array(3).keys()]}
                 renderItem={({ index }) => <StatisticsCard progressValue={progressValue} index={index} />}
             />
             {!!progressValue && (
                 <View className="flex-row justify-between self-center w-10">
-                    {colors.map((_, index) => {
+                    {[...new Array(3).keys()].map((_, index) => {
                         return (
                             <PaginationItem
                                 animValue={progressValue}
                                 index={index}
                                 key={index}
                                 isRotate={false}
-                                length={colors.length}
+                                length={3}
                             />
                         );
                     })}
                 </View>
             )}
-        </GestureHandlerRootView>
+        </View>
     );
 }
 
@@ -107,7 +123,7 @@ const PaginationItem: React.FC<{
     }, [animValue, index, length]);
     return (
         <View
-            className="bg-bg-200"
+            className="bg-gray-200"
             style={{
                 width,
                 height: width,

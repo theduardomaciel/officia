@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useColorScheme } from 'nativewind';
 
 import {
     Text,
@@ -31,6 +32,8 @@ type TagSectionProps = {
 }
 
 export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButton, onSelectTags, insertPaddingRight }: TagSectionProps) {
+    const { colorScheme } = useColorScheme();
+
     const [sectionData, setSectionData] = useState(tags.map((tag: Tag, index: number) => {
         return { ...tag, checked: false, id: index }
     }));
@@ -46,7 +49,7 @@ export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButto
         <>
             <TouchableOpacity
                 key={item.id}
-                className={clsx('bg-bg-200 rounded-full h-[30px] flex-row px-4 py-1 mr-2 items-center justify-center', {
+                className={clsx('bg-black dark:bg-gray-200 rounded-full h-[30px] flex-row px-4 py-1 mr-2 items-center justify-center', {
                     'border-primary-green border-[1.25px]': item.checked,
                 })}
                 style={height ? { height: height } : {}}
@@ -75,21 +78,21 @@ export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButto
                 }}
             >
                 {
-                    item.icon && <MaterialIcons name={item.icon as unknown as any} size={16} color={colors.text[100]} />
+                    item.icon && <MaterialIcons name={item.icon as unknown as any} size={16} color={colorScheme === "dark" ? colors.text[100] : colors.white} />
                 }
-                <Text className='text-text-100 text-sm text-center ml-1 mr-2'>
+                <Text className='text-white dark:text-text-100 text-sm text-center ml-1 mr-2'>
                     {item.title}
                 </Text>
                 {
-                    hasClearButton ? <MaterialIcons name="expand-more" size={18} color={colors.text[100]} /> : (
-                        item.checked ? <MaterialIcons name="remove" size={18} color={colors.text[100]} /> :
-                            <MaterialIcons name="add" size={18} color={colors.text[100]} />
+                    hasClearButton ? <MaterialIcons name="expand-more" size={18} color={colorScheme === "dark" ? colors.text[100] : colors.white} /> : (
+                        item.checked ? <MaterialIcons name="remove" size={18} color={colorScheme === "dark" ? colors.text[100] : colors.white} /> :
+                            <MaterialIcons name="add" size={18} color={colorScheme === "dark" ? colors.text[100] : colors.white} />
                     )
                 }
             </TouchableOpacity>
             {
                 index === sectionData.length - 1 && hasClearButton && <TouchableOpacity className='flex items-center justify-center'>
-                    <Text className='text-text-100 text-sm text-center ml-1 alice'>Limpar</Text>
+                    <Text className='text-black dark:text-text-100 text-sm text-center ml-1 alice'>Limpar</Text>
                 </TouchableOpacity>
             }
         </>
