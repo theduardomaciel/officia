@@ -1,12 +1,9 @@
 import React, { useRef, useCallback } from 'react';
-import { View, Text, useWindowDimensions, TouchableOpacity, StatusBar } from "react-native";
-import { useFocusEffect } from '@react-navigation/native';
+import { View, Text, useWindowDimensions, TouchableOpacity } from "react-native";
 import { useSharedValue, withSpring } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
-import * as NavigationBar from "expo-navigation-bar";
 
 import Header from 'components/Header';
 import { SectionsNavigator } from 'components/SectionsNavigator';
@@ -14,18 +11,20 @@ import BottomSheet, { animProps } from 'components/BottomSheet';
 import Input from 'components/Input';
 import Label from 'components/Label';
 import { StaticCalendar } from 'components/Calendar';
+import ServicePreview from 'components/ServicePreview';
+import EmptyMessage from 'components/EmptyMessage';
 
-import type { Service } from 'utils/data';
+import AddSubService from 'components/ScheduleForm/AddSubService';
+
+import type { SubService } from 'utils/data';
 
 export default function ScheduleForm() {
-    const insets = useSafeAreaInsets();
     const { height } = useWindowDimensions();
 
     const [section, setSection] = React.useState(0);
-    const bottomSheetRef = useRef<any>(null);
-
     const selectedSectionId = useSharedValue(section);
 
+    const bottomSheetRef = useRef<any>(null);
     const updateHandler = useCallback((id: number) => {
         selectedSectionId.value = withSpring(id, animProps);
         bottomSheetRef.current.update(() => setSection(id));
@@ -33,9 +32,13 @@ export default function ScheduleForm() {
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
-            <StatusBar backgroundColor={colors.gray[300]} barStyle={"light-content"} />
+            {/* <StatusBar backgroundColor={colors.gray[300]} barStyle={"light-content"} /> */}
             <View>
-                <Header title='Agendamento' hasCancelButton />
+                <Header
+                    title='Agendamento'
+                    cancelButton={section === 0}
+                    returnButton={section !== 0 ? () => updateHandler(section - 1) : undefined}
+                />
             </View>
             <SectionsNavigator
                 selectedId={selectedSectionId}
@@ -65,9 +68,12 @@ export default function ScheduleForm() {
                     suppressHandle: true,
                     suppressPortal: true
                 }}
-                activeHeight={height * 0.8}
+                height={"76%"}
                 canDismiss={false}
                 heightLimitBehaviour="contentHeight"
+                colors={{
+                    background: colors.gray[500],
+                }}
             >
                 <View
                     className="flex flex-1"
@@ -130,69 +136,47 @@ const SubSectionWrapper = ({ header, children }: SubSectionWrapperProps) => {
     )
 }
 
-const ServicePreview = ({ service }: { service?: Service }) => {
-    return (
-        <View className='flex-row items-center justify-between w-full dark:bg-gray-400 rounded-sm p-3'>
-            <View className='flex-1 flex-col items-start justify-center gap-y-2 mr-3'>
-                <Text className='font-bold text-[15px] leading-none text-white'>
-                    Aplicação de silicone em box de banheiro
-                </Text>
-                <View className='flex-row'>
-                    <MaterialIcons name="plumbing" size={12} color={colors.white} style={{ marginRight: 5 }} />
-                    <Text className='font-semibold text-black dark:text-white text-xs mr-1'>
-                        Hidráulico
-                    </Text>
-                    <Text className='text-white text-xs'>
-                        x3
-                    </Text>
-                </View>
-            </View>
-            <View className='px-3 py-1 bg-primary-green rounded-full'>
-                <Text className='font-bold text-xs text-white'>
-                    R$ 200
-                </Text>
-            </View>
-        </View>
-    )
-}
-
-const NextButton = ({ section, updateHandler }: { section: number, updateHandler: updateHandler }) => {
-    return (
-        <TouchableOpacity
-            activeOpacity={0.8}
-            className='flex-row items-center justify-center w-full py-4 rounded'
-            onPress={() => updateHandler(section + 1)}
-            style={{
-                backgroundColor: section === 3 ? colors.primary.green : colors.gray[200],
-                /* marginBottom: 24 */
-            }}
-        >
-            <Text className='font-bold text-white text-base'>
-                Próximo
-            </Text>
-        </TouchableOpacity>
-    )
-}
-
 const Section0 = ({ updateHandler }: Section) => {
-    const [services, setServices] = React.useState<Service[]>([]);
+    const [subServices, setSubServices] = React.useState<SubService[]>([]);
+
+    const serviceBottomSheetRef = useRef<any>(null);
+
+    const serviceBottomSheetOpenHandler = useCallback(() => {
+        serviceBottomSheetRef.current.expand();
+    }, [])
 
     return (
         <>
             <Input label='Nome do Serviço' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN }} />
+
             <SubSectionWrapper
                 header={{
                     title: "Serviços",
-                    children: <Text className='font-medium text-primary-red text-xs opacity-80'>
+                    children: subServices.length > 0 && <Text className='font-medium text-primary-red text-xs opacity-80'>
                         Arraste para excluir
                     </Text>
                 }}
             >
-                <View>
-                    <ServicePreview />
+                <View className='w-full'>
+                    {
+                        subServices.length === 0 && (
+                            <EmptyMessage
+                                message="Adicione um sub-serviço para que ele apareça aqui!"
+                                style={{
+                                    transform: [{ scale: 0.8 }]
+                                }}
+                            />
+                        )
+                    }
+                    {
+                        subServices.map((subService, index) => (
+                            <ServicePreview key={index.toString()} subService={subService} setSubServices={setSubServices} />
+                        ))
+                    }
                 </View>
                 <TouchableOpacity
                     activeOpacity={0.8}
+                    onPress={serviceBottomSheetOpenHandler}
                     className='flex-row items-center justify-center w-full py-3 bg-primary-green rounded'
                 >
                     <MaterialIcons name='add' size={18} color={colors.white} />
@@ -201,12 +185,21 @@ const Section0 = ({ updateHandler }: Section) => {
                     </Text>
                 </TouchableOpacity>
             </SubSectionWrapper>
+
             <SubSectionWrapper header={{ title: "Data" }}>
-                <StaticCalendar style={{ padding: 0 }} />
+                <StaticCalendar style={{ padding: 16, backgroundColor: colors.gray[600] }} />
             </SubSectionWrapper>
+
             <Input label='Indeterminado' style={{ marginBottom: MARGIN }} />
+
             <Input label='Informações Adicionais' style={{ marginBottom: MARGIN }} />
+
             <NextButton section={0} updateHandler={updateHandler} />
+
+            <AddSubService
+                serviceBottomSheetRef={serviceBottomSheetRef}
+                setSubServices={setSubServices}
+            />
         </>
     )
 }
@@ -227,7 +220,25 @@ const Section2 = ({ updateHandler }: Section) => {
             <Input label='Altura média' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN * 7 }} />
             <Input label='Altura média' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN * 5 }} />
             <Input label='Altura média' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN }} />
-            <NextButton section={1} updateHandler={updateHandler} />
+            <NextButton section={2} updateHandler={updateHandler} />
         </>
+    )
+}
+
+const NextButton = ({ section, updateHandler }: { section: number, updateHandler: updateHandler }) => {
+    return (
+        <TouchableOpacity
+            activeOpacity={0.8}
+            className='flex-row items-center justify-center w-full py-4 rounded'
+            onPress={section === 2 ? () => updateHandler(0) : () => updateHandler(section + 1)}
+            style={{
+                backgroundColor: section === 2 ? colors.primary.green : colors.gray[200],
+                /* marginBottom: 24 */
+            }}
+        >
+            <Text className='font-bold text-white text-base'>
+                {section === 2 ? "Agendar" : "Próximo"}
+            </Text>
+        </TouchableOpacity>
     )
 }

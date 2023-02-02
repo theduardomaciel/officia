@@ -21,6 +21,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 import Calendar, { WeekView, WeekDays } from 'components/Calendar';
 import { UIManager } from 'react-native';
+import { tags } from 'global/tags';
 
 export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
     <View className='bg-black dark:bg-gray-200 flex-row items-center  h-full mr-3 px-3 rounded-full'>
@@ -100,10 +101,7 @@ export default function Home() {
             <Animated.View className='flex flex-row items-start w-full' layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}>
                 <FilterView colorScheme={colorScheme} />
                 <TagsSelector
-                    tags={[
-                        { title: 'Hidráulico', icon: "plumbing" },
-                        { title: 'Elétrico', icon: "bolt" },
-                    ]}
+                    tags={tags}
                     onSelectTags={handleTagSelection}
                 />
             </Animated.View>

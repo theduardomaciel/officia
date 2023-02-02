@@ -15,16 +15,19 @@ import BottomSheet from "./BottomSheet";
 interface Props extends TouchableOpacityProps {
     label: string;
     modalLabel?: string;
-    data: string[];
+    data: {
+        label: string;
+        value: string;
+    }[];
+    pallette?: "dark";
+    bottomSheetHeight?: string;
     selected: string;
     setSelected: (value: string) => void;
 }
 
-export default function Dropdown({ label, modalLabel, data, selected, setSelected, ...rest }: Props) {
-    const insets = useSafeAreaInsets();
+export default function Dropdown({ label, modalLabel, data, bottomSheetHeight, pallette, selected, setSelected, ...rest }: Props) {
     const { colorScheme } = useColorScheme();
 
-    const { height } = Dimensions.get("screen");
     const bottomSheetRef = useRef<any>(null);
 
     const openHandler = useCallback(() => {
@@ -43,18 +46,20 @@ export default function Dropdown({ label, modalLabel, data, selected, setSelecte
                 </Label>
                 <TouchableOpacity
                     activeOpacity={0.8}
-                    className="flex-row justify-between w-full px-4 py-3 rounded-lg bg-black dark:bg-gray-200"
+                    className={clsx("flex-row justify-between w-full px-4 py-3 rounded-lg bg-black dark:bg-gray-200", {
+                        "bg-black dark:bg-gray-300": pallette === "dark",
+                    })}
                     onPress={() => openHandler()}
                     {...rest}
                 >
                     <Text className=" text-white">
-                        {selected}
+                        {data.find(item => item.value === selected)?.label}
                     </Text>
                     <MaterialIcons name="expand-more" size={18} color={colorScheme === "dark" ? colors.text[200] : colors.white} />
                 </TouchableOpacity>
             </View>
             <BottomSheet
-                activeHeight={height * 0.4}
+                height={bottomSheetHeight || "40%"}
                 ref={bottomSheetRef}
             >
                 <View
@@ -87,17 +92,17 @@ export default function Dropdown({ label, modalLabel, data, selected, setSelecte
                                 activeOpacity={0.8}
                                 className="flex-row justify-between w-full py-4"
                                 onPress={() => {
-                                    setSelected(item)
+                                    setSelected(item.value)
                                     closeHandler();
                                 }}
                             >
                                 <Text className={clsx("text-black dark:text-text-100 text-sm font-semibold", {
-                                    "dark:text-white font-bold": selected === item
+                                    "dark:text-white font-bold": selected === item.value
                                 })}>
-                                    {item}
+                                    {item.label}
                                 </Text>
                                 {
-                                    selected === item && (
+                                    selected === item.value && (
                                         <MaterialIcons name="check" size={18} color={colorScheme === "dark" ? colors.text[200] : colors.white} />
                                     )
                                 }

@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler';
+import 'react-native-get-random-values'
 
 import { SafeAreaProvider, initialWindowMetrics, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';

@@ -16,7 +16,7 @@ export default function BankAccount() {
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
             <View>
-                <Header title='Dados Bancários' hasBackButton />
+                <Header title='Dados Bancários' returnButton />
             </View>
             <ScrollView contentContainerStyle={{ height: "100%" }}>
                 <View className='flex-col gap-y-5'>
@@ -26,7 +26,14 @@ export default function BankAccount() {
                             modalLabel='Selecione um banco'
                             selected={selected}
                             setSelected={setSelected}
-                            data={["Nenhum banco", "Banco do Brasil", "Bradesco", "Caixa Econômica Federal", "Itaú", "Santander"]}
+                            data={[
+                                { label: "Nenhum banco", value: "unselected" },
+                                { label: "Banco do Brasil", value: "bb" },
+                                { label: "Bradesco", value: "bradesco" },
+                                { label: "Caixa Econômica Federal", value: "cef" },
+                                { label: "Itaú", value: "itau" },
+                                { label: "Santander", value: "santander" },
+                            ]}
                         />
                     </View>
                     <View className='flex-row w-full items-center justify-between'>

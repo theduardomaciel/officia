@@ -16,7 +16,7 @@ export default function SocialMedia() {
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
             <View>
-                <Header title='Redes Sociais' hasBackButton />
+                <Header title='Redes Sociais' returnButton />
             </View>
             <ScrollView contentContainerStyle={{ height: "100%" }}>
 

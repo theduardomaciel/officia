@@ -6,27 +6,29 @@ import colors from "global/colors";
 import { MaterialIcons } from "@expo/vector-icons";
 
 interface HeaderProps extends ViewProps {
-    hasBackButton?: boolean;
-    hasCancelButton?: boolean;
+    returnButton?: boolean | (() => void);
+    cancelButton?: boolean | (() => void);
     title: string;
 }
 
-export default function Header({ title, hasBackButton, hasCancelButton, children, ...props }: HeaderProps) {
+export default function Header({ title, cancelButton, returnButton, children, ...props }: HeaderProps) {
     const { colorScheme } = useColorScheme();
     const { goBack } = useNavigation();
 
     return (
         <View className="flex flex-col items-start justify-center w-full">
             {
-                (hasBackButton || hasCancelButton) && (
+                (returnButton || cancelButton) && (
                     <View className="flex-row w-full items-center justify-between">
                         <TouchableOpacity
                             className="mb-2"
-                            disabled={!hasBackButton}
+                            disabled={!returnButton}
                             style={{
-                                opacity: hasBackButton ? 1 : 0
+                                opacity: returnButton ? 1 : 0
                             }}
-                            onPress={() => goBack()}
+                            onPress={typeof returnButton === "function" ? returnButton : () => {
+                                goBack();
+                            }}
                         >
                             <MaterialIcons
                                 name="keyboard-backspace"
@@ -35,10 +37,12 @@ export default function Header({ title, hasBackButton, hasCancelButton, children
                             />
                         </TouchableOpacity>
                         {
-                            hasCancelButton && (
+                            cancelButton && (
                                 <TouchableOpacity
                                     className="mb-2"
-                                    onPress={() => goBack()}
+                                    onPress={typeof returnButton === "function" ? returnButton : () => {
+                                        goBack();
+                                    }}
                                 >
                                     <MaterialIcons
                                         name="close"

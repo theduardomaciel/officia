@@ -1,12 +1,17 @@
-export interface Service {
-    date: Date | string;
-    type: string;
+export interface SubService {
+    id: string;
     description: string;
-    value: number;
-    quantity: number;
-    client: {
+    details: string;
+    types: ['hydraulic', 'electric'];
+    price: number;
+    amount: number;
+    service?: {
         name: string;
-        phone: string;
-        address: string;
-    };
+        date: Date | string;
+        client: {
+            name: string;
+            phone: string;
+            address: string;
+        };
+    }
 }

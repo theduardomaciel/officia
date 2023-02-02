@@ -28,7 +28,7 @@ export default function DayAgenda() {
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
             <View>
-                <Header title='Serviços agendados' hasBackButton />
+                <Header title='Serviços agendados' returnButton />
             </View>
             <View className='flex-row gap-x-2 items-center justify-start'>
                 <MaterialIcons name='calendar-today' size={18} color={colorScheme === "dark" ? colors.text[100] : colors.black} />

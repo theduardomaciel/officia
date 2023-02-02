@@ -16,7 +16,7 @@ export default function PhoneAndAddress() {
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
             <View>
-                <Header title='Telefone e Endereço' hasBackButton />
+                <Header title='Telefone e Endereço' returnButton />
             </View>
             <ScrollView contentContainerStyle={{ height: "100%" }}>
 

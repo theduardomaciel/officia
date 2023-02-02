@@ -1,4 +1,3 @@
-
 import React, { useCallback, forwardRef, useImperativeHandle } from 'react';
 import { View, Dimensions, TouchableWithoutFeedback, ViewStyle } from "react-native";
 import { PanGestureHandler } from 'react-native-gesture-handler';
@@ -14,11 +13,15 @@ export const animProps = {
 
 interface BottomSheetProps {
     children: React.ReactNode;
-    activeHeight: number;
-    heightLimitBehaviour?: 'top' | 'lock' | 'contentHeight';
+    height: string;
+    heightLimitBehaviour?: /* 'top' | */ 'lock' | 'contentHeight';
     // a animação do lock muda dependendo de se no futuro haverá a opção de adicionar uma propriedade de altura adicional para o bottom sheet. Possuindo essa altura adicional a animação passa a ser de spring
     overDragAmount?: number;
     canDismiss?: boolean;
+    colors?: {
+        backdrop?: string;
+        background?: string;
+    },
     defaultValues?: {
         expanded?: boolean;
         suppressHandle?: boolean;
@@ -27,15 +30,16 @@ interface BottomSheetProps {
     }
 }
 
-const BottomSheet = forwardRef(({ children, activeHeight, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues }: BottomSheetProps, ref) => {
+const BottomSheet = forwardRef(({ children, height, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues, colors }: BottomSheetProps, ref) => {
     const insets = useSafeAreaInsets();
 
     const overDrag = overDragAmount && overDragAmount > 0 ? overDragAmount : 0;
 
-    const height = Dimensions.get("screen").height + (defaultValues?.suppressPortal ? 24 : 0);
-    const newActiveHeight = height - activeHeight - overDrag;
+    const screenHeight = Dimensions.get("screen").height + (defaultValues?.suppressPortal ? 24 : 0);
+    const activeHeight = (screenHeight * parseFloat(height.split("%")[0]) / 100)
+    const newActiveHeight = screenHeight - activeHeight - overDrag;
 
-    const topAnimation = useSharedValue(defaultValues?.expanded ? newActiveHeight : height);
+    const topAnimation = useSharedValue(defaultValues?.expanded ? newActiveHeight : screenHeight);
     const contentHeight = useSharedValue(0);
 
     const animationStyle = useAnimatedStyle(() => {
@@ -48,7 +52,7 @@ const BottomSheet = forwardRef(({ children, activeHeight, overDragAmount = 0, ca
     const backdropAnimationStyle = useAnimatedStyle(() => {
         const opacity = interpolate(
             topAnimation.value,
-            [height, newActiveHeight],
+            [screenHeight, newActiveHeight],
             [0, 0.75]
         );
         const display = opacity === 0 ? "none" : "flex";
@@ -88,20 +92,20 @@ const BottomSheet = forwardRef(({ children, activeHeight, overDragAmount = 0, ca
                 if (insideBounds && event.translationY < 0 && !smallWithContentHeight || event.translationY > 0) {
                     topAnimation.value = ctx.startY + event.translationY;
                 }
-                console.log("outOfBoundsHeight", outOfBoundsHeight)
+                /* console.log("outOfBoundsHeight", outOfBoundsHeight)
                 console.log("contentHeight", contentHeight.value)
                 console.log(contentHeight.value - activeHeight - newActiveHeight)
                 console.log("anim", Math.abs(topAnimation.value))
                 console.log("bounds", outOfBoundsHeight - newActiveHeight)
                 console.log("inside", insideBounds)
                 console.log(Math.abs(topAnimation.value) + insets.bottom)
-                console.log("-----------")
+                console.log("-----------") */
             }
         },
         onEnd: (event) => {
             // Se o usuário arrastar o suficiente, o bottom sheet é fechado
             if (canDismiss && topAnimation.value > newActiveHeight + DISMISS_TOLERANCE) {
-                topAnimation.value = withSpring(height, animProps);
+                topAnimation.value = withSpring(screenHeight, animProps);
             } else {
                 // Volta para a posição inicial caso:
                 // 1. a opção de dismiss estiver desativada
@@ -126,12 +130,12 @@ const BottomSheet = forwardRef(({ children, activeHeight, overDragAmount = 0, ca
 
     const close = useCallback(() => {
         'worklet';
-        topAnimation.value = withSpring(height, animProps)
+        topAnimation.value = withSpring(screenHeight, animProps)
     }, [])
 
     const update = useCallback((updateFunction: () => void) => {
         'worklet';
-        topAnimation.value = withSpring(height, animProps, () => {
+        topAnimation.value = withSpring(screenHeight, animProps, () => {
             if (updateFunction) {
                 runOnJS(updateFunction)();
             }
@@ -158,7 +162,10 @@ const BottomSheet = forwardRef(({ children, activeHeight, overDragAmount = 0, ca
                     <TouchableWithoutFeedback onPress={() => {
                         close();
                     }}>
-                        <Animated.View style={backdropAnimationStyle} className='bg-black absolute top-0 bottom-0 right-0 left-0' />
+                        <Animated.View
+                            style={[backdropAnimationStyle, colors?.backdrop ? { backgroundColor: colors?.backdrop } : {},]}
+                            className='bg-black absolute top-0 bottom-0 right-0 left-0'
+                        />
                     </TouchableWithoutFeedback>
                 )
             }
@@ -168,8 +175,9 @@ const BottomSheet = forwardRef(({ children, activeHeight, overDragAmount = 0, ca
                     style={[
                         animationStyle,
                         heightLimitBehaviour === "contentHeight" ? contentHeightStyle : defaultStyle,
+                        colors?.background ? { backgroundColor: colors?.background } : {},
                     ]}
-                    className='flex flex-col bg-white dark:bg-gray-500 absolute left-0 right-0 rounded-tl-3xl rounded-tr overflow-auto'
+                    className='flex flex-col bg-white dark:bg-gray-200 absolute left-0 right-0 rounded-tl-3xl rounded-tr overflow-auto'
                 >
                     {
                         !defaultValues?.suppressHandle && <View className='my-3 items-center'>

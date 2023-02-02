@@ -29,9 +29,10 @@ type TagSectionProps = {
     onSelectTags: (tags: Tag[]) => void;
     hasClearButton?: boolean;
     insertPaddingRight?: boolean;
+    pallette?: "dark";
 }
 
-export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButton, onSelectTags, insertPaddingRight }: TagSectionProps) {
+export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButton, onSelectTags, insertPaddingRight, pallette }: TagSectionProps) {
     const { colorScheme } = useColorScheme();
 
     const [sectionData, setSectionData] = useState(tags.map((tag: Tag, index: number) => {
@@ -51,6 +52,7 @@ export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButto
                 key={item.id}
                 className={clsx('bg-black dark:bg-gray-200 rounded-full h-[30px] flex-row px-4 py-1 mr-2 items-center justify-center', {
                     'border-primary-green border-[1.25px]': item.checked,
+                    'bg-black dark:bg-gray-300': pallette === "dark",
                 })}
                 style={height ? { height: height } : {}}
                 activeOpacity={0.75}

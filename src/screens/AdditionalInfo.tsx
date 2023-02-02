@@ -16,7 +16,7 @@ export default function AdditionalInfo() {
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
             <View>
-                <Header title='Informações Adicionais' hasBackButton />
+                <Header title='Informações Adicionais' returnButton />
             </View>
             <ScrollView contentContainerStyle={{ height: "100%" }}>
 
