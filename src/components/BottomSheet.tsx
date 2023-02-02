@@ -1,6 +1,6 @@
 
 import React, { useCallback, forwardRef, useImperativeHandle } from 'react';
-import { View, Dimensions, TouchableWithoutFeedback } from "react-native";
+import { View, Dimensions, TouchableWithoutFeedback, ViewStyle } from "react-native";
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Portal } from "@gorhom/portal";
 
@@ -15,24 +15,28 @@ export const animProps = {
 interface BottomSheetProps {
     children: React.ReactNode;
     activeHeight: number;
-    expandedByDefault?: boolean;
-    hideDeco?: boolean;
-    hideBackdrop?: boolean;
-    heightLimitBehaviour?: 'none' | 'lock' | 'limit' | 'spring';
+    heightLimitBehaviour?: 'top' | 'lock' | 'contentHeight';
+    // a animação do lock muda dependendo de se no futuro haverá a opção de adicionar uma propriedade de altura adicional para o bottom sheet. Possuindo essa altura adicional a animação passa a ser de spring
+    overDragAmount?: number;
     canDismiss?: boolean;
-    suppressPortal?: boolean;
+    defaultValues?: {
+        expanded?: boolean;
+        suppressHandle?: boolean;
+        suppressBackdrop?: boolean;
+        suppressPortal?: boolean;
+    }
 }
 
-const BottomSheet = forwardRef(({ children, expandedByDefault, activeHeight, canDismiss = true, heightLimitBehaviour = "spring", hideDeco, hideBackdrop, suppressPortal }: BottomSheetProps, ref) => {
+const BottomSheet = forwardRef(({ children, activeHeight, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues }: BottomSheetProps, ref) => {
     const insets = useSafeAreaInsets();
 
-    const height = Dimensions.get("screen").height;
-    const modalHeight = Dimensions.get("window").height;
-    console.log(height, modalHeight)
+    const overDrag = overDragAmount && overDragAmount > 0 ? overDragAmount : 0;
 
-    const newActiveHeight = height - activeHeight;
+    const height = Dimensions.get("screen").height + (defaultValues?.suppressPortal ? 24 : 0);
+    const newActiveHeight = height - activeHeight - overDrag;
 
-    const topAnimation = useSharedValue(expandedByDefault ? newActiveHeight : height);
+    const topAnimation = useSharedValue(defaultValues?.expanded ? newActiveHeight : height);
+    const contentHeight = useSharedValue(0);
 
     const animationStyle = useAnimatedStyle(() => {
         const top = topAnimation.value;
@@ -55,52 +59,61 @@ const BottomSheet = forwardRef(({ children, expandedByDefault, activeHeight, can
         }
     })
 
-    const MINIMUM_HEIGHT = -50 - insets.bottom;
+    const DISMISS_TOLERANCE = 50;
 
     const gestureHandler = useAnimatedGestureHandler({
         onStart: (_, ctx: any) => {
             ctx.startY = topAnimation.value;
         },
         onActive: (event, ctx: any) => {
-            if (heightLimitBehaviour === "none") {
-                // Allow passing screen height
-                topAnimation.value = ctx.startY + event.translationY;
-                if (topAnimation.value < MINIMUM_HEIGHT) {
-                    topAnimation.value = MINIMUM_HEIGHT;
-                }
-                console.log(topAnimation.value)
-            } else {
-                // Not allow passing screen height
-                // Animates back when limit is reached
-                if (event.translationY < -0) {
-                    if (heightLimitBehaviour === "spring") {
-                        topAnimation.value = withSpring(newActiveHeight, animProps)
-                    }
+            // Caso o usuário arraste o bottom sheet para além da posição inicial, ele é mantido na posição inicial
+            if (heightLimitBehaviour === "lock" && event.translationY < 0) {
+                // Caso haja uma quantidade extra de arraste, o bottom sheet é mantido na posição inicial menos a quantidade extra de arraste
+                if (overDrag > 0) {
+                    topAnimation.value = newActiveHeight - overDrag;
                 } else {
-                    topAnimation.value = ctx.startY + event.translationY, animProps;
+                    // Caso não, o bottom sheet é mantido na posição inicial normalmente
+                    topAnimation.value = newActiveHeight;
                 }
+            } else {
+                // Caso contrário, o bottom sheet acompanha o arraste do usuário
+                // topAnimation.value = ctx.startY + event.translationY;
+                const smallWithContentHeight = heightLimitBehaviour === "contentHeight" && Math.round(contentHeight.value) <= Math.round(activeHeight);
+
+                const outOfBoundsHeight = contentHeight.value - activeHeight;
+                const insideBounds = topAnimation.value < 0 && Math.abs(topAnimation.value) < outOfBoundsHeight - newActiveHeight
+                    || topAnimation.value > 0;
+
+                // O !smallWithContentHeight previne que o usuário possa arrastar para cima quando o bottom sheet é pequeno demais para ser arrastado para cima
+                if (insideBounds && event.translationY < 0 && !smallWithContentHeight || event.translationY > 0) {
+                    topAnimation.value = ctx.startY + event.translationY;
+                }
+                console.log("outOfBoundsHeight", outOfBoundsHeight)
+                console.log("contentHeight", contentHeight.value)
+                console.log(contentHeight.value - activeHeight - newActiveHeight)
+                console.log("anim", Math.abs(topAnimation.value))
+                console.log("bounds", outOfBoundsHeight - newActiveHeight)
+                console.log("inside", insideBounds)
+                console.log(Math.abs(topAnimation.value) + insets.bottom)
+                console.log("-----------")
             }
         },
         onEnd: (event) => {
-            if (canDismiss) {
-                // Allow drag down to dismiss (and returns to original position when released)
-                if (topAnimation.value > newActiveHeight + 50) {
-                    topAnimation.value = withSpring(height, animProps)
-                } else {
-                    // Caso o comportamento seja de bloqueio, travaremos o bottom sheet na altura máxima
-                    if (heightLimitBehaviour === "lock") {
-                        topAnimation.value = withSpring(height, animProps)
-                    } else if (heightLimitBehaviour !== "none") {
-                        // Por contrário, volta para a altura padrão
-                        topAnimation.value = withSpring(newActiveHeight, animProps)
-                    }
-                }
-                // Don't allow drag down to dismiss
-                // topAnimation.value = withSpring(newActiveHeight, animProps)
+            // Se o usuário arrastar o suficiente, o bottom sheet é fechado
+            if (canDismiss && topAnimation.value > newActiveHeight + DISMISS_TOLERANCE) {
+                topAnimation.value = withSpring(height, animProps);
             } else {
-                // Returns to original position when released bellow active height
-                if (topAnimation.value > newActiveHeight - 50) {
-                    topAnimation.value = withSpring(newActiveHeight, animProps)
+                // Volta para a posição inicial caso:
+                // 1. a opção de dismiss estiver desativada
+                // 2. o usuário não tenha arrastado o suficiente para fechar o bottom sheet
+
+                const smallWithContentHeight = heightLimitBehaviour === "contentHeight" && Math.round(contentHeight.value) <= Math.round(activeHeight);
+                // Caso o comportamento de limite de altura permita que o bottom sheet seja arrastado para cima, somente voltaremos para a posição inicial caso o usuário deslize o suficiente para fechar o bottom sheet (baixo)
+                if (heightLimitBehaviour !== "lock" && topAnimation.value > newActiveHeight || smallWithContentHeight) {
+                    topAnimation.value = withSpring(newActiveHeight, animProps);
+                } else if (heightLimitBehaviour === "lock") {
+                    // Caso contrário, possuindo trava no limite de altura, voltaremos para a posição inicial caso o usuário deslize o suficiente para baixo
+                    topAnimation.value = withSpring(newActiveHeight, animProps);
                 }
             }
         }
@@ -126,6 +139,14 @@ const BottomSheet = forwardRef(({ children, expandedByDefault, activeHeight, can
         })
     }, [])
 
+    const defaultStyle = {
+        height: activeHeight + (overDrag * 2)
+    } as ViewStyle;
+
+    const contentHeightStyle = {
+        minHeight: activeHeight,
+    } as ViewStyle;
+
     useImperativeHandle(ref, () => ({
         expand, close, update
     }), [])
@@ -133,7 +154,7 @@ const BottomSheet = forwardRef(({ children, expandedByDefault, activeHeight, can
     const BottomSheet = () => (
         <>
             {
-                !hideBackdrop && (
+                !defaultValues?.suppressBackdrop && (
                     <TouchableWithoutFeedback onPress={() => {
                         close();
                     }}>
@@ -143,23 +164,28 @@ const BottomSheet = forwardRef(({ children, expandedByDefault, activeHeight, can
             }
             <PanGestureHandler onGestureEvent={gestureHandler}>
                 <Animated.View
-                    style={[animationStyle, suppressPortal ? { paddingBottom: insets.bottom, minHeight: activeHeight + insets.bottom } : { height: activeHeight }]}
+                    onLayout={(event) => contentHeight.value = event.nativeEvent.layout.height}
+                    style={[
+                        animationStyle,
+                        heightLimitBehaviour === "contentHeight" ? contentHeightStyle : defaultStyle,
+                    ]}
                     className='flex flex-col bg-white dark:bg-gray-500 absolute left-0 right-0 rounded-tl-3xl rounded-tr overflow-auto'
                 >
                     {
-                        !hideDeco && <View className='my-3 items-center'>
+                        !defaultValues?.suppressHandle && <View className='my-3 items-center'>
                             <View className='w-12 h-1 bg-black dark:bg-gray-100 rounded-2xl my-1' />
                         </View>
                     }
                     {children}
-                    {/* <View className='w-full absolute bottom-0 h-1 bg-blue-800' /> */}
+                    {/* <View className='w-full bottom-0 bg-blue-800' style={{ height: overDrag + insets.bottom }} /> */}
+                    <View className='w-full bg-transparent' style={{ height: overDrag + insets.bottom }} />
                 </Animated.View>
             </PanGestureHandler>
         </>
     )
 
     return (
-        suppressPortal ?
+        defaultValues?.suppressPortal ?
             (
                 <BottomSheet />
             ) : (

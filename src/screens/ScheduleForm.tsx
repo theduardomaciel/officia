@@ -1,7 +1,7 @@
 import React, { useRef, useCallback } from 'react';
-import { View, Text, useWindowDimensions, TouchableOpacity } from "react-native";
+import { View, Text, useWindowDimensions, TouchableOpacity, StatusBar } from "react-native";
 import { useFocusEffect } from '@react-navigation/native';
-import { color, useSharedValue, withSpring } from 'react-native-reanimated';
+import { useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MaterialIcons } from "@expo/vector-icons";
@@ -13,6 +13,9 @@ import { SectionsNavigator } from 'components/SectionsNavigator';
 import BottomSheet, { animProps } from 'components/BottomSheet';
 import Input from 'components/Input';
 import Label from 'components/Label';
+import { StaticCalendar } from 'components/Calendar';
+
+import type { Service } from 'utils/data';
 
 export default function ScheduleForm() {
     const insets = useSafeAreaInsets();
@@ -30,6 +33,7 @@ export default function ScheduleForm() {
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
+            <StatusBar backgroundColor={colors.gray[300]} barStyle={"light-content"} />
             <View>
                 <Header title='Agendamento' hasCancelButton />
             </View>
@@ -55,13 +59,15 @@ export default function ScheduleForm() {
             />
             <BottomSheet
                 ref={bottomSheetRef}
-                hideDeco
-                hideBackdrop
-                expandedByDefault
-                activeHeight={(height * 0.775) + insets.bottom}
+                defaultValues={{
+                    expanded: true,
+                    suppressBackdrop: true,
+                    suppressHandle: true,
+                    suppressPortal: true
+                }}
+                activeHeight={height * 0.8}
                 canDismiss={false}
-                heightLimitBehaviour="none"
-                suppressPortal
+                heightLimitBehaviour="contentHeight"
             >
                 <View
                     className="flex flex-1"
@@ -69,7 +75,7 @@ export default function ScheduleForm() {
                         paddingTop: 24,
                         paddingLeft: 24,
                         paddingRight: 24,
-                        paddingBottom: insets.bottom
+                        paddingBottom: 12
                     }}
                 >
                     {
@@ -89,11 +95,7 @@ export default function ScheduleForm() {
 
 const MARGIN = 20;
 
-import { Service } from 'utils/data';
-import { StaticCalendar } from 'components/Calendar';
-
 type updateHandler = (id: number) => void;
-
 interface Section {
     updateHandler: updateHandler;
 }
@@ -162,7 +164,7 @@ const NextButton = ({ section, updateHandler }: { section: number, updateHandler
             onPress={() => updateHandler(section + 1)}
             style={{
                 backgroundColor: section === 3 ? colors.primary.green : colors.gray[200],
-                marginBottom: 24
+                /* marginBottom: 24 */
             }}
         >
             <Text className='font-bold text-white text-base'>
@@ -213,7 +215,6 @@ const Section1 = ({ updateHandler }: Section) => {
     return (
         <>
             <Input label='Nome do Serviço' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN }} />
-            <View className='h-[400px]' />
             <NextButton section={1} updateHandler={updateHandler} />
         </>
     )
@@ -222,7 +223,10 @@ const Section1 = ({ updateHandler }: Section) => {
 const Section2 = ({ updateHandler }: Section) => {
     return (
         <>
-            <Input label='Nome do Serviço' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN }} />
+            <Input label='Nome do Serviço' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN * 16 }} />
+            <Input label='Altura média' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN * 7 }} />
+            <Input label='Altura média' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN * 5 }} />
+            <Input label='Altura média' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN }} />
             <NextButton section={1} updateHandler={updateHandler} />
         </>
     )

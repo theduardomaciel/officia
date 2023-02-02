@@ -55,7 +55,6 @@ export default function Dropdown({ label, modalLabel, data, selected, setSelecte
             </View>
             <BottomSheet
                 activeHeight={height * 0.4}
-                heightLimitBehaviour="spring"
                 ref={bottomSheetRef}
             >
                 <View
@@ -63,7 +62,6 @@ export default function Dropdown({ label, modalLabel, data, selected, setSelecte
                     style={{
                         paddingLeft: 24,
                         paddingRight: 24,
-                        paddingBottom: insets.bottom
                     }}
                 >
                     {
@@ -75,7 +73,7 @@ export default function Dropdown({ label, modalLabel, data, selected, setSelecte
                     }
                     <FlatList
                         data={data}
-                        keyExtractor={(item, index) => index.toString()}
+                        keyExtractor={(_, index) => index.toString()}
                         showsVerticalScrollIndicator={false}
                         style={{
                             flex: 1
