@@ -41,7 +41,11 @@ export const ServicePreviewStatic = ({ subService }: { subService: SubService })
                     {subService.description}
                 </Text>
                 <View className='flex-row'>
-                    <Category category={subService.types.length > 1 ? "various" : subService.types[0]} />
+                    {
+                        subService.types && (
+                            <Category category={subService.types?.length > 1 ? "various" : subService.types[0]} />
+                        )
+                    }
                     <Text className='text-white text-xs'>
                         x{subService.amount}
                     </Text>

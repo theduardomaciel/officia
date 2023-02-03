@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, Dispatch, SetStateAction, useEffect } from 'react';
-import { View, ViewStyle } from "react-native";
+import { TouchableOpacity, View, ViewStyle } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 import { useForm, Controller, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 
@@ -20,6 +20,7 @@ import Title from 'components/Title';
 import { TagsSelector } from 'components/TagsSelector';
 import Toast, { ToastProps } from 'components/Toast';
 import colors from 'global/colors';
+import { runOnJS, runOnUI } from 'react-native-reanimated';
 
 type FormValues = {
     description: string;
@@ -61,12 +62,14 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
             amount: parseInt(data.amount),
             types: selectedTags.current as any
         } as SubService;
+        console.log(newSubService)
+        handleHideToast();
         setSubServices((previousValue: SubService[]) => [...previousValue, newSubService]);
         reset();
         serviceBottomSheetCloseHandler();
     };
 
-    /* const onChange = (arg: any) => {
+    const onChange = (arg: any) => {
         return {
             value: arg.nativeEvent.text,
         };
@@ -76,11 +79,17 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
         toastRef.current.show();
     }, [])
 
+    const handleHideToast = useCallback(() => {
+        toastRef.current.hide();
+    }, [])
+
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
-        handleShowToast();
-        console.log("rodou")
-        handleShowToast();
-    } */
+        console.log(errors)
+        setToastProps({ preset: "error", message: "Preencha os campos corretamente." })
+        setTimeout(() => {
+            handleShowToast();
+        }, 25);
+    }
 
     return (
         <BottomSheet
@@ -196,7 +205,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                 <ActionButton
                     label='Adicionar serviço'
                     icon='add'
-                    onPress={handleSubmit(onSubmit)}
+                    onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>
             <Toast

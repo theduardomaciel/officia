@@ -152,14 +152,14 @@ const Section0 = ({ updateHandler }: Section) => {
             <SubSectionWrapper
                 header={{
                     title: "Serviços",
-                    children: subServices && subServices.length > 0 && <Text className='font-medium text-primary-red text-xs opacity-80'>
+                    children: subServices && subServices?.length > 0 && <Text className='font-medium text-primary-red text-xs opacity-80'>
                         Arraste para excluir
                     </Text>
                 }}
             >
                 <View className='w-full'>
                     {
-                        subServices && subServices.length === 0 && (
+                        subServices && subServices?.length === 0 && (
                             <Text className='text-sm text-center text-black dark:text-white'>
                                 Nenhum serviço adicionado.
                             </Text>
@@ -167,7 +167,9 @@ const Section0 = ({ updateHandler }: Section) => {
                     }
                     {
                         subServices.map((subService, index) => (
-                            <ServicePreview key={index.toString()} subService={subService} setSubServices={setSubServices} />
+                            <View className='mb-4' key={index.toString()}>
+                                <ServicePreview subService={subService} setSubServices={setSubServices} />
+                            </View>
                         ))
                     }
                 </View>
