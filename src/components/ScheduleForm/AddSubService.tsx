@@ -1,7 +1,7 @@
-import React, { useRef, useCallback, Dispatch, SetStateAction } from 'react';
-import { View } from "react-native";
+import React, { useRef, useCallback, Dispatch, SetStateAction, useEffect } from 'react';
+import { View, ViewStyle } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
-import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+import { useForm, Controller, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 
 // Utils
 import { v4 as uuidv4 } from 'uuid';
@@ -18,6 +18,8 @@ import Label from 'components/Label';
 import ActionButton from 'components/ActionButton';
 import Title from 'components/Title';
 import { TagsSelector } from 'components/TagsSelector';
+import Toast, { ToastProps } from 'components/Toast';
+import colors from 'global/colors';
 
 type FormValues = {
     description: string;
@@ -26,7 +28,15 @@ type FormValues = {
     amount: string;
 };
 
+const borderErrorStyle = {
+    borderColor: colors.primary.red,
+    borderWidth: 1,
+} as ViewStyle;
+
 export default function AddSubService({ setSubServices, serviceBottomSheetRef }: { serviceBottomSheetRef: React.MutableRefObject<any>, setSubServices: Dispatch<SetStateAction<SubService[]>> }) {
+    const toastRef = useRef<any>(null);
+    const [toastProps, setToastProps] = React.useState<ToastProps>({ preset: "error", message: "Não foi possível adicionar o serviço." });
+
     const selectedTags = useRef<Tag[] | null>(null);
 
     const serviceBottomSheetCloseHandler = useCallback(() => {
@@ -42,8 +52,6 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
         },
     });
 
-    console.log(errors)
-
     const onSubmit: SubmitHandler<FormValues> = data => {
         const newSubService = {
             id: uuidv4(),
@@ -58,11 +66,21 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
         serviceBottomSheetCloseHandler();
     };
 
-    const onChange = (arg: any) => {
+    /* const onChange = (arg: any) => {
         return {
             value: arg.nativeEvent.text,
         };
     };
+
+    const handleShowToast = useCallback(() => {
+        toastRef.current.show();
+    }, [])
+
+    const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
+        handleShowToast();
+        console.log("rodou")
+        handleShowToast();
+    } */
 
     return (
         <BottomSheet
@@ -91,8 +109,10 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                                 onBlur={onBlur}
                                 onChangeText={value => onChange(value)}
                                 value={value}
+                                style={!!errors.description && borderErrorStyle}
                                 placeholder='Ex: Aplicação de silicone em box de banheiro'
                                 pallette='dark'
+                                required
                             />
                         )}
                         name="description"
@@ -104,7 +124,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
                                     label='Detalhes do Serviço'
-                                    style={{ minHeight: 100, paddingTop: 15 }}
+                                    style={[{ minHeight: 100, paddingTop: 15 }, !!errors.details && borderErrorStyle]}
                                     multiline
                                     onBlur={onBlur}
                                     onChangeText={value => onChange(value)}
@@ -127,9 +147,12 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                                         onBlur={onBlur}
                                         onChangeText={value => onChange(value)}
                                         value={value}
+                                        style={!!errors.price && borderErrorStyle}
                                         label='Preço Unitário'
+                                        placeholder='R$'
                                         pallette='dark'
                                         keyboardType={"number-pad"}
+                                        required
                                     />
                                 )}
                                 name="price"
@@ -143,6 +166,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                                     <Input
                                         onBlur={onBlur}
                                         onChangeText={value => onChange(value)}
+                                        style={!!errors.amount && borderErrorStyle}
                                         value={value}
                                         label='Quantidade'
                                         pallette='dark'
@@ -175,6 +199,12 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                     onPress={handleSubmit(onSubmit)}
                 />
             </View>
+            <Toast
+                ref={toastRef}
+                toastProps={toastProps}
+                toastPosition="top"
+                toastOffset={"80%"}
+            />
         </BottomSheet>
     )
 }

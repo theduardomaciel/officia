@@ -16,7 +16,7 @@ SplashScreen.preventAutoHideAsync();
 
 import Routes from 'routes';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PortalProvider } from '@gorhom/portal';
+import { PortalProvider, PortalHost } from '@gorhom/portal';
 
 export default function App() {
     const { colorScheme } = useColorScheme()
@@ -40,6 +40,7 @@ export default function App() {
         <GestureHandlerRootView style={{ flex: 1 }} className={"bg-white dark:bg-gray-300"} onLayout={onLayoutRootView}>
             <SafeAreaProvider initialMetrics={initialWindowMetrics}>
                 <PortalProvider>
+                    <PortalHost name="ModalHost" />
                     <Routes />
                     <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
                 </PortalProvider>

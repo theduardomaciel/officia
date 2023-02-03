@@ -152,20 +152,17 @@ const Section0 = ({ updateHandler }: Section) => {
             <SubSectionWrapper
                 header={{
                     title: "Serviços",
-                    children: subServices.length > 0 && <Text className='font-medium text-primary-red text-xs opacity-80'>
+                    children: subServices && subServices.length > 0 && <Text className='font-medium text-primary-red text-xs opacity-80'>
                         Arraste para excluir
                     </Text>
                 }}
             >
                 <View className='w-full'>
                     {
-                        subServices.length === 0 && (
-                            <EmptyMessage
-                                message="Adicione um sub-serviço para que ele apareça aqui!"
-                                style={{
-                                    transform: [{ scale: 0.8 }]
-                                }}
-                            />
+                        subServices && subServices.length === 0 && (
+                            <Text className='text-sm text-center text-black dark:text-white'>
+                                Nenhum serviço adicionado.
+                            </Text>
                         )
                     }
                     {
