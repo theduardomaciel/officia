@@ -3,7 +3,7 @@ import { Animated, View, Text } from "react-native";
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { TouchableOpacity } from "react-native-gesture-handler";
 
-import type { SubService } from "utils/data";
+import type { SubService } from "types/service";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';

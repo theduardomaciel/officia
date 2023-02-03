@@ -1,14 +1,19 @@
 import React, { useRef, useCallback, Dispatch, SetStateAction, useEffect } from 'react';
 import { TouchableOpacity, View, ViewStyle } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
+
+// Form
 import { useForm, Controller, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 // Utils
 import { v4 as uuidv4 } from 'uuid';
 import { tags } from 'global/tags';
+import colors from 'global/colors';
 
 // Types
-import type { SubService } from 'utils/data';
+import type { SubService } from 'types/service';
 import type { Tag } from 'components/TagsSelector';
 
 // Components
@@ -18,9 +23,12 @@ import Label from 'components/Label';
 import ActionButton from 'components/ActionButton';
 import Title from 'components/Title';
 import { TagsSelector } from 'components/TagsSelector';
-import Toast, { ToastProps } from 'components/Toast';
-import colors from 'global/colors';
-import { runOnJS, runOnUI } from 'react-native-reanimated';
+import { Toast } from 'components/Toast';
+
+const borderErrorStyle = {
+    borderColor: colors.primary.red,
+    borderWidth: 1,
+} as ViewStyle;
 
 type FormValues = {
     description: string;
@@ -29,14 +37,24 @@ type FormValues = {
     amount: string;
 };
 
-const borderErrorStyle = {
-    borderColor: colors.primary.red,
-    borderWidth: 1,
-} as ViewStyle;
+const schema = z.object({
+    description: z.string().min(10, { message: 'A descrição do serviço deve ter pelo menos 10 caracteres.' }).max(40, { message: 'A descrição do serviço deve ter no máximo 40 caracteres.' }),
+    details: z.string(),
+    price: z.string().min(1, { message: 'É necessário inserir um valor para o serviço.' }),
+    amount: z.string(),
+});
 
 export default function AddSubService({ setSubServices, serviceBottomSheetRef }: { serviceBottomSheetRef: React.MutableRefObject<any>, setSubServices: Dispatch<SetStateAction<SubService[]>> }) {
-    const toastRef = useRef<any>(null);
-    const [toastProps, setToastProps] = React.useState<ToastProps>({ preset: "error", message: "Não foi possível adicionar o serviço." });
+    const showToast = (errorMessage?: string) => {
+        Toast.show({
+            toastOffset: "30%",
+            toastProps: {
+                preset: "error",
+                title: "Por favor, preencha os campos corretamente.",
+                message: errorMessage || "Não foi possível adicionar o serviço."
+            },
+        })
+    }
 
     const selectedTags = useRef<Tag[] | null>(null);
 
@@ -51,6 +69,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
             price: '',
             amount: '1',
         },
+        resolver: zodResolver(schema),
     });
 
     const onSubmit: SubmitHandler<FormValues> = data => {
@@ -63,9 +82,8 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
             types: selectedTags.current as any
         } as SubService;
         console.log(newSubService)
-        handleHideToast();
+
         setSubServices((previousValue: SubService[]) => [...previousValue, newSubService]);
-        reset();
         serviceBottomSheetCloseHandler();
     };
 
@@ -75,20 +93,9 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
         };
     };
 
-    const handleShowToast = useCallback(() => {
-        toastRef.current.show();
-    }, [])
-
-    const handleHideToast = useCallback(() => {
-        toastRef.current.hide();
-    }, [])
-
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
         console.log(errors)
-        setToastProps({ preset: "error", message: "Preencha os campos corretamente." })
-        setTimeout(() => {
-            handleShowToast();
-        }, 25);
+        showToast(Object.values(errors)[0].message as string)
     }
 
     return (
@@ -208,12 +215,12 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>
-            <Toast
+            {/* <Toast
                 ref={toastRef}
                 toastProps={toastProps}
                 toastPosition="top"
                 toastOffset={"80%"}
-            />
+            /> */}
         </BottomSheet>
     )
 }

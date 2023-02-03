@@ -1,9 +1,12 @@
 import 'react-native-gesture-handler';
 import 'react-native-get-random-values'
 
-import { SafeAreaProvider, initialWindowMetrics, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PortalProvider, PortalHost } from '@gorhom/portal';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'nativewind/dist/use-color-scheme';
+
+import { useColorScheme } from 'nativewind';
 
 // Expo and App Loading
 import { useCallback } from 'react';
@@ -15,8 +18,7 @@ import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync();
 
 import Routes from 'routes';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PortalProvider, PortalHost } from '@gorhom/portal';
+import { Toast } from 'components/Toast';
 
 export default function App() {
     const { colorScheme } = useColorScheme()
@@ -40,9 +42,12 @@ export default function App() {
         <GestureHandlerRootView style={{ flex: 1 }} className={"bg-white dark:bg-gray-300"} onLayout={onLayoutRootView}>
             <SafeAreaProvider initialMetrics={initialWindowMetrics}>
                 <PortalProvider>
-                    <PortalHost name="ModalHost" />
                     <Routes />
                     <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+                    <Toast
+                        toastPosition="top"
+                        toastOffset={"80%"}
+                    />
                 </PortalProvider>
             </SafeAreaProvider>
         </GestureHandlerRootView>

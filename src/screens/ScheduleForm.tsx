@@ -16,7 +16,7 @@ import EmptyMessage from 'components/EmptyMessage';
 
 import AddSubService from 'components/ScheduleForm/AddSubService';
 
-import type { SubService } from 'utils/data';
+import type { SubService } from 'types/service';
 
 export default function ScheduleForm() {
     const { height } = useWindowDimensions();

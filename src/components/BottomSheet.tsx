@@ -151,9 +151,17 @@ const BottomSheet = forwardRef(({ children, height, overDragAmount = 0, canDismi
         minHeight: activeHeight,
     } as ViewStyle;
 
-    useImperativeHandle(ref, () => ({
-        expand, close, update
-    }), [])
+    useImperativeHandle(
+        ref,
+        useCallback(
+            () => ({
+                expand,
+                close,
+                update
+            }),
+            [expand, close, update]
+        )
+    );
 
     const BottomSheet = () => (
         <>

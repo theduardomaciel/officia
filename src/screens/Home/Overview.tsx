@@ -13,7 +13,7 @@ import colors from 'global/colors';
 
 import StatisticsCarousel from 'components/StatisticsCarousel';
 import { FilterView } from './Home';
-import type { Service } from 'utils/data';
+import type { Service } from 'types/service';
 
 interface DateOfServices {
     title: Date | string;

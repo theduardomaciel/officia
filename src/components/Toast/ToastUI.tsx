@@ -7,8 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import ErrorIcon from "assets/icons/error.svg";
 import colors from "global/colors";
 import { forwardRef, useCallback, useImperativeHandle } from "react";
-
-export interface ToastProps { title?: string, icon?: string, message?: string, preset?: "error" | "success"; }
+import { ToastConfig } from ".";
 
 const ERROR_TITLE = "Opa! Parece que algo deu errado!";
 const SUCCESS_TITLE = "Sucesso!";
@@ -18,18 +17,13 @@ const animProps = {
     stiffness: 300
 } as WithSpringConfig
 
-interface Props {
-    toastProps: ToastProps;
-    toastPosition?: "top" | "bottom";
-    toastOffset?: string;
-    autoDismissDelay?: number;
-}
-
-const Toast = forwardRef(({ toastProps, toastPosition = "top", toastOffset = "10%", autoDismissDelay = 5000 }: Props, ref) => {
+const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = "top", toastOffset = "100%", autoDismissDelay = 5000 }: ToastConfig, ref) => {
+    console.log(toastOffset)
     const { height: screenHeight } = Dimensions.get("screen");
 
     const activeHeight = parseFloat(toastOffset.split("%")[0]) / 100 * screenHeight;
     const newActiveHeight = screenHeight - activeHeight;
+    console.log(newActiveHeight, toastOffset)
 
     const topAnimation = useSharedValue(toastPosition === "top" ? -screenHeight : screenHeight);
 
@@ -82,13 +76,14 @@ const Toast = forwardRef(({ toastProps, toastPosition = "top", toastOffset = "10
 
     const show = useCallback(() => {
         'worklet';
+        console.log("Por incrível que pareça chegou aqui?")
         const timeout = setTimeout(() => {
             if (topAnimation.value === newActiveHeight) {
                 hide(toastPosition);
                 clearTimeout(timeout);
             }
         }, autoDismissDelay)
-        console.log("mostoru")
+        console.log(newActiveHeight, "newActiveHeight")
         topAnimation.value = withSpring(newActiveHeight, animProps);
     }, [])
 
@@ -97,14 +92,23 @@ const Toast = forwardRef(({ toastProps, toastPosition = "top", toastOffset = "10
         topAnimation.value = withSpring(direction === "bottom" ? screenHeight : -screenHeight, animProps)
     }, [])
 
-    useImperativeHandle(ref, () => ({
-        show, hide
-    }), [])
+    // This must use useCallback to ensure the ref doesn't get set to null and then a new ref every render.
+    useImperativeHandle(
+        ref,
+        useCallback(
+            () => ({
+                show,
+                hide
+            }),
+            [hide, show]
+        )
+    );
 
     return (
         <Portal>
             <PanGestureHandler onGestureEvent={gestureHandler}>
                 <Animated.View
+                    // onLayout={event => contentHeight.value = event.nativeEvent.layout.height}
                     style={animationStyle}
                     className="w-screen absolute top-0 left-0 px-6 z-10 flex items-center justify-center"
                 >
@@ -117,12 +121,13 @@ const Toast = forwardRef(({ toastProps, toastPosition = "top", toastOffset = "10
                                     toastProps?.preset === "success" ?
                                         <MaterialIcons name="check-circle" size={28} color={colors.white} />
                                         :
-                                        <MaterialIcons name={toastProps.icon as unknown as any} size={28} color={colors.white} />
+                                        <MaterialIcons name={toastProps?.icon as unknown as any} size={28} color={colors.white} />
                             }
                             <Text className="font-titleBold text-lg text-black dark:text-white">
-                                {toastProps?.preset === "error" ? ERROR_TITLE
-                                    : toastProps?.preset === "success" ? SUCCESS_TITLE
-                                        : toastProps?.title}
+                                {toastProps?.title ? toastProps?.title
+                                    : toastProps?.preset === "error" ? ERROR_TITLE
+                                        : toastProps?.preset === "success" ? SUCCESS_TITLE
+                                            : ""}
                             </Text>
                         </View>
                         <Text className="text-sm text-black dark:text-white">
@@ -135,4 +140,4 @@ const Toast = forwardRef(({ toastProps, toastPosition = "top", toastOffset = "10
     )
 });
 
-export default Toast;
+export default ToastUI;

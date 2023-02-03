@@ -15,6 +15,7 @@
     "@expo-google-fonts/inter": "^0.2.2",
     "@expo-google-fonts/raleway": "^0.2.2",
     "@gorhom/portal": "^1.0.14",
+    "@hookform/resolvers": "^2.9.10",
     "@react-navigation/bottom-tabs": "^6.5.3",
     "@react-navigation/native": "^6.1.2",
     "@react-navigation/native-stack": "^6.9.8",
@@ -41,7 +42,8 @@
     "react-native-safe-area-context": "4.4.1",
     "react-native-svg": "13.4.0",
     "react-native-web": "~0.18.9",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "zod": "^3.20.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

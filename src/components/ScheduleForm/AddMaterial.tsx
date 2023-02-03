@@ -7,7 +7,7 @@ import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { v4 as uuidv4 } from 'uuid';
 
 // Types
-import type { SubService } from 'utils/data';
+import type { SubService } from 'types/service';
 import type { Tag } from 'components/TagsSelector';
 
 // Components
