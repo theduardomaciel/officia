@@ -3,7 +3,7 @@ import { Animated, View, Text } from "react-native";
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { TouchableOpacity } from "react-native-gesture-handler";
 
-import type { SubService } from "types/service";
+import type { Material, SubService } from "types/service";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
@@ -33,34 +33,49 @@ const Category = ({ category }: { category: 'hydraulic' | 'eletric' | 'various' 
     </>
 )
 
-export const ServicePreviewStatic = ({ subService }: { subService: SubService }) => {
+export const PreviewStatic = ({ subService, material }: { subService?: SubService, material?: Material }) => {
+    if (!subService && !material) return null;
+
     return (
-        <View className='flex-row items-center justify-between w-full dark:bg-gray-200 rounded-sm p-3'>
+        <View className='flex-row items-center justify-between w-full dark:bg-gray-300 rounded-sm p-3'>
             <View className='flex-1 flex-col items-start justify-center gap-y-2 mr-3'>
                 <Text className='font-bold text-[15px] leading-none text-white'>
-                    {subService.description}
+                    {subService?.description || material?.name}
                 </Text>
                 <View className='flex-row'>
                     {
-                        subService.types && (
+                        subService && subService.types && (
                             <Category category={subService.types?.length > 1 ? "various" : subService.types[0]} />
                         )
                     }
+                    {
+                        material && <Text className="font-semibold text-black dark:text-white text-xs mr-1">
+                            {`${material?.availability === true ? "Fornecido como cortesia" : "Custo do cliente"}`}
+                        </Text>
+                    }
                     <Text className='text-white text-xs'>
-                        x{subService.amount}
+                        (x{subService?.amount || material?.amount})
                     </Text>
                 </View>
             </View>
-            <View className='px-3 py-1 bg-primary-green rounded-full'>
+            <View className={clsx('px-3 py-1 rounded-full', {
+                'bg-primary-green': subService?.price || material?.price,
+                'bg-primary-red': material?.availability === true
+            })}>
                 <Text className='font-bold text-xs text-white'>
-                    R$ {subService.price/* .toFixed(2) */}
+                    {material?.availability === true ? "-" : ""}R$ {subService?.price || (material?.price)}
                 </Text>
             </View>
         </View>
     )
 }
 
-export default function ServicePreview({ subService, setSubServices }: { subService: SubService, setSubServices: Dispatch<SetStateAction<SubService[]>> }) {
+interface SubServicePreviewProps {
+    subService: SubService;
+    setSubServices: Dispatch<SetStateAction<SubService[]>>;
+}
+
+export function ServicePreview({ subService, setSubServices }: SubServicePreviewProps) {
     const swipeableRef = useRef<any>(null);
 
     function deletePreService() {
@@ -95,12 +110,57 @@ export default function ServicePreview({ subService, setSubServices }: { subServ
                 />
             )}
         >
-            <ServicePreviewStatic subService={subService} />
+            <PreviewStatic subService={subService} />
         </Swipeable>
     )
 }
 
-const DeleteAction = ({ onPress, dragX, direction }: { onPress: () => void, progress: any, dragX: any, direction: "left" | "right" }) => {
+interface MaterialPreviewProps {
+    material: Material;
+    setMaterials: Dispatch<SetStateAction<Material[]>>;
+}
+
+export function MaterialPreview({ material, setMaterials }: MaterialPreviewProps) {
+    const swipeableRef = useRef<any>(null);
+
+    function deletePreService() {
+        if (swipeableRef.current) {
+            swipeableRef.current.close();
+        }
+        console.log('deletePreService')
+        setMaterials((prev) => prev.filter((m) => m.id !== material.id));
+    }
+
+    return (
+        <Swipeable
+            ref={swipeableRef}
+            friction={1.25}
+            leftThreshold={10}
+            rightThreshold={10}
+            enableTrackpadTwoFingerGesture
+            renderRightActions={(progress, dragX) => (
+                <DeleteAction
+                    onPress={deletePreService}
+                    progress={progress}
+                    dragX={dragX}
+                    direction="right"
+                />
+            )}
+            renderLeftActions={(progress, dragX) => (
+                <DeleteAction
+                    onPress={deletePreService}
+                    progress={progress}
+                    dragX={dragX}
+                    direction="left"
+                />
+            )}
+        >
+            <PreviewStatic material={material} />
+        </Swipeable>
+    )
+}
+
+export const DeleteAction = ({ onPress, dragX, direction }: { onPress: () => void, progress: any, dragX: any, direction: "left" | "right" }) => {
     const scale = dragX.interpolate({
         inputRange: [0, 50, 100, 101],
         outputRange: [-20, 0, 0, 1],

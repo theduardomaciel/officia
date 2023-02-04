@@ -1,5 +1,5 @@
-import React, { useRef, useCallback, Dispatch, SetStateAction, useEffect } from 'react';
-import { TouchableOpacity, View, ViewStyle } from "react-native";
+import React, { useRef, useCallback, Dispatch, SetStateAction } from 'react';
+import { TouchableOpacity, View, ViewStyle, Text } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 
 // Form
@@ -10,27 +10,32 @@ import * as z from 'zod';
 // Utils
 import { v4 as uuidv4 } from 'uuid';
 import { tags } from 'global/tags';
+
 import colors from 'global/colors';
+import { MaterialIcons } from "@expo/vector-icons";
 
 // Types
-import type { SubService } from 'types/service';
+import type { Material, SubService } from 'types/service';
 import type { Tag } from 'components/TagsSelector';
 
 // Components
 import BottomSheet from 'components/BottomSheet';
 import Input from 'components/Input';
 import Label from 'components/Label';
-import ActionButton from 'components/ActionButton';
+import { ActionButton, SubActionButton } from 'components/ActionButton';
 import Title from 'components/Title';
 import { TagsSelector } from 'components/TagsSelector';
-import { Toast } from 'components/Toast';
+import Toast from 'components/Toast';
+import AddMaterial from './AddMaterial';
+import { MaterialPreview } from 'components/ServicePreview';
+import { MARGIN, SubSectionWrapper } from './SubSectionWrapper';
 
 const borderErrorStyle = {
     borderColor: colors.primary.red,
     borderWidth: 1,
 } as ViewStyle;
 
-type FormValues = {
+interface FormValues {
     description: string;
     details: string;
     price: string;
@@ -44,22 +49,32 @@ const schema = z.object({
     amount: z.string(),
 });
 
-export default function AddSubService({ setSubServices, serviceBottomSheetRef }: { serviceBottomSheetRef: React.MutableRefObject<any>, setSubServices: Dispatch<SetStateAction<SubService[]>> }) {
+interface Props {
+    serviceBottomSheetRef: React.MutableRefObject<any>;
+    setSubServices: Dispatch<SetStateAction<SubService[]>>;
+    materials: Material[];
+    setMaterials: Dispatch<SetStateAction<Material[]>>;
+}
+
+export default function AddSubService({ setSubServices, serviceBottomSheetRef, materials, setMaterials }: Props) {
     const showToast = (errorMessage?: string) => {
         Toast.show({
-            toastOffset: "30%",
-            toastProps: {
-                preset: "error",
-                title: "Por favor, preencha os campos corretamente.",
-                message: errorMessage || "Não foi possível adicionar o serviço."
-            },
+            preset: "error",
+            title: "Por favor, preencha os campos corretamente.",
+            message: errorMessage || "Não foi possível adicionar o serviço."
         })
     }
 
     const selectedTags = useRef<Tag[] | null>(null);
 
+    const materialsBottomSheetRef = useRef<any>(null);
+    const materialBottomSheetOpenHandler = useCallback(() => {
+        materialsBottomSheetRef.current.expand();
+    }, [])
+
     const serviceBottomSheetCloseHandler = useCallback(() => {
         serviceBottomSheetRef.current.close();
+        console.log("Fecou")
     }, [])
 
     const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
@@ -82,9 +97,13 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
             types: selectedTags.current as any
         } as SubService;
         console.log(newSubService)
-
         setSubServices((previousValue: SubService[]) => [...previousValue, newSubService]);
-        serviceBottomSheetCloseHandler();
+
+        setTimeout(() => {
+            serviceBottomSheetCloseHandler();
+        }, 100)
+
+        Toast.hide();
     };
 
     const onChange = (arg: any) => {
@@ -100,7 +119,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
 
     return (
         <BottomSheet
-            height={"65%"}
+            height={"70%"}
             ref={serviceBottomSheetRef}
         >
             <View
@@ -154,7 +173,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                             rules={{ required: false }}
                         />
                     </View>
-                    <View className='flex-row w-full items-center justify-between'>
+                    <View className='flex-row w-full items-center justify-between' style={{ marginBottom: MARGIN }}>
                         <View className='flex-1 mr-3'>
                             <Controller
                                 control={control}
@@ -194,11 +213,40 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                             />
                         </View>
                     </View>
-                    <View className='flex-col align-top justify-start gap-y-2'>
+                    <SubSectionWrapper
+                        header={{
+                            title: "Materiais",
+                            children: materials && materials?.length > 0 && <Text className='font-medium text-primary-red text-xs opacity-80'>
+                                Arraste para excluir
+                            </Text>
+                        }}
+                    >
+                        <View className='w-full'>
+                            {
+                                materials && materials?.length === 0 && (
+                                    <Text className='text-sm text-center text-black dark:text-white mb-6'>
+                                        Nenhum material adicionado.
+                                    </Text>
+                                )
+                            }
+                            {
+                                materials.map((material, index) => (
+                                    <View className='mb-4' key={index.toString()}>
+                                        <MaterialPreview material={material} setMaterials={setMaterials} />
+                                    </View>
+                                ))
+                            }
+                        </View>
+                        <SubActionButton
+                            onPress={materialBottomSheetOpenHandler}
+                            label='Adicionar material'
+                        />
+                    </SubSectionWrapper>
+                    <View className='flex-col align-top justify-start'>
                         <Label>
                             Categorias
                         </Label>
-                        <View>
+                        <View className='mt-2'>
                             <TagsSelector
                                 tags={tags}
                                 onSelectTags={(newTags) => {
@@ -215,12 +263,10 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>
-            {/* <Toast
-                ref={toastRef}
-                toastProps={toastProps}
-                toastPosition="top"
-                toastOffset={"80%"}
-            /> */}
+            <AddMaterial
+                materialsBottomSheetRef={materialsBottomSheetRef}
+                setMaterials={setMaterials}
+            />
         </BottomSheet>
     )
 }

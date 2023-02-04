@@ -18,7 +18,7 @@ import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync();
 
 import Routes from 'routes';
-import { Toast } from 'components/Toast';
+import Toast from 'components/Toast';
 
 export default function App() {
     const { colorScheme } = useColorScheme()
@@ -46,7 +46,8 @@ export default function App() {
                     <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
                     <Toast
                         toastPosition="top"
-                        toastOffset={"80%"}
+                        maxDragDistance={65}
+                        toastOffset={"75%"}
                     />
                 </PortalProvider>
             </SafeAreaProvider>

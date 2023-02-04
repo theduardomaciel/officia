@@ -11,11 +11,12 @@ export interface ToastConfig {
     toastProps?: ToastProps;
     toastPosition?: "top" | "bottom";
     toastOffset?: string;
+    maxDragDistance?: number;
     autoDismissDelay?: number;
 }
 
 type ToastRef = {
-    show: (params: ToastConfig) => void;
+    show: (params: ToastProps) => void;
     hide: () => void;
 };
 
@@ -26,8 +27,11 @@ const ToastRoot = React.forwardRef((defaultProps: ToastConfig, ref) => {
 
     const toastRef = React.useRef<any | null>(null);
 
-    const show = React.useCallback((newConfig: ToastConfig) => {
-        setConfig(newConfig);
+    const show = React.useCallback((newProps: ToastProps) => {
+        setConfig(prevConfig => ({
+            ...prevConfig,
+            toastProps: newProps,
+        }));
         toastRef.current?.show();
     }, []);
 
@@ -78,7 +82,7 @@ function removeOldRef(oldRef: ToastRef | null) {
     refs = refs.filter((r) => r.current !== oldRef);
 }
 
-export function Toast(props: ToastConfig) {
+export default function Toast(props: ToastConfig) {
     const toastRef = React.useRef<ToastRef | null>(null);
 
     /*
@@ -129,7 +133,7 @@ function getRef() {
     return activeRef.current;
 }
 
-Toast.show = (showParams: ToastConfig) => {
+Toast.show = (showParams: ToastProps) => {
     getRef()?.show(showParams);
 };
 

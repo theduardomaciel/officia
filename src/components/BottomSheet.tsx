@@ -3,7 +3,7 @@ import { View, Dimensions, TouchableWithoutFeedback, ViewStyle } from "react-nat
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Portal } from "@gorhom/portal";
 
-import Animated, { interpolate, runOnJS, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withSpring, WithSpringConfig } from 'react-native-reanimated';
+import Animated, { interpolate, runOnJS, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withDecay, withSpring, WithSpringConfig } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const animProps = {
@@ -73,11 +73,18 @@ const BottomSheet = forwardRef(({ children, height, overDragAmount = 0, canDismi
             // Caso o usuário arraste o bottom sheet para além da posição inicial, ele é mantido na posição inicial
             if (heightLimitBehaviour === "lock" && event.translationY < 0) {
                 // Caso haja uma quantidade extra de arraste, o bottom sheet é mantido na posição inicial menos a quantidade extra de arraste
-                if (overDrag > 0) {
-                    topAnimation.value = newActiveHeight - overDrag;
+                if (overDrag > 0 && Math.abs(event.translationY) < overDrag) {
+                    topAnimation.value = ctx.startY + event.translationY;
                 } else {
                     // Caso não, o bottom sheet é mantido na posição inicial normalmente
-                    topAnimation.value = newActiveHeight;
+
+                    // Com overDrag, voltamos com suavidade
+                    if (overDrag > 0) {
+                        topAnimation.value = withSpring(newActiveHeight, animProps);
+                    } else {
+                        // Sem overDrag, somente limitamos o arraste
+                        topAnimation.value = newActiveHeight;
+                    }
                 }
             } else {
                 // Caso contrário, o bottom sheet acompanha o arraste do usuário
@@ -118,6 +125,13 @@ const BottomSheet = forwardRef(({ children, height, overDragAmount = 0, canDismi
                 } else if (heightLimitBehaviour === "lock") {
                     // Caso contrário, possuindo trava no limite de altura, voltaremos para a posição inicial caso o usuário deslize o suficiente para baixo
                     topAnimation.value = withSpring(newActiveHeight, animProps);
+                } else if (heightLimitBehaviour === "contentHeight") {
+                    const outOfBoundsHeight = contentHeight.value - activeHeight;
+                    topAnimation.value = withDecay({
+                        velocity: event.velocityY,
+                        deceleration: 0.995,
+                        clamp: [newActiveHeight - outOfBoundsHeight, newActiveHeight]
+                    });
                 }
             }
         }

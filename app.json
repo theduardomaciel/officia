@@ -1,15 +1,23 @@
 {
     "expo": {
         "name": "AndServ",
-        "slug": "andserv",
+        "slug": "officia",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
+        "platforms": [
+            "android"
+        ],
+        "primaryColor": "#1E1E1E",
         "userInterfaceStyle": "automatic",
         "splash": {
             "image": "./assets/splash.png",
             "resizeMode": "contain",
-            "backgroundColor": "#1E1F20"
+            "backgroundColor": "#1E1E1E"
+        },
+        "notification": {
+            "icon": "./assets/notification.png",
+            "iosDisplayInForeground": true
         },
         "updates": {
             "fallbackToCacheTimeout": 0
@@ -17,28 +25,45 @@
         "assetBundlePatterns": [
             "**/*"
         ],
-        "ios": {
-            "supportsTablet": true
-        },
         "android": {
             "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
-                "backgroundColor": "#DDDDE1"
+                "foregroundImage": "./assets/android/adaptive-icon.png",
+                "backgroundColor": "#1E1E1E"
             },
-            "softwareKeyboardLayoutMode": "pan"
+            "permissions": [],
+            "softwareKeyboardLayoutMode": "pan",
+            "splash": {
+                "backgroundColor": "#1E1E1E",
+                "mdpi": "./assets/android/splash/mdpi.png",
+                "hdpi": "./assets/android/splash/hdpi.png",
+                "xhdpi": "./assets/android/splash/xhdpi.png",
+                "xxhdpi": "./assets/android/splash/xxhdpi.png",
+                "xxxhdpi": "./assets/android/splash/xxxhdpi.png",
+                "dark": {
+                    "backgroundColor": "#1E1E1E",
+                    "mdpi": "./assets/android/splash/dark/mdpi.png",
+                    "hdpi": "./assets/android/splash/dark/hdpi.png",
+                    "xhdpi": "./assets/android/splash/dark/xhdpi.png",
+                    "xxhdpi": "./assets/android/splash/dark/xxhdpi.png",
+                    "xxxhdpi": "./assets/android/splash/dark/xxxhdpi.png"
+                }
+            }
         },
         "androidStatusBar": {
             "translucent": "true",
+            "barStyle": "light-content",
             "backgroundColor": "transparent"
         },
-        "androidNavigationBar": {
-            "visible": "true",
-            "backgroundColor": "#1E1F20",
-            "barStyle": "light-content"
-        },
-        "web": {
-            "favicon": "./assets/favicon.png"
-        },
+        "plugins": [
+            [
+                "expo-navigation-bar",
+                {
+                    "position": "absolute",
+                    "backgroundColor": "transparent"
+                }
+            ]
+        ],
+        "scheme": "officia",
         "jsEngine": "hermes"
     }
 }

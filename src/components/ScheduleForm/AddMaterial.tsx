@@ -1,70 +1,113 @@
-import React, { useRef, useCallback, Dispatch, SetStateAction } from 'react';
-import { View } from "react-native";
+import React, { useRef, useCallback, Dispatch, SetStateAction, useState } from 'react';
+import { View, TouchableOpacity, Text, ViewStyle } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
-import { useForm, Controller, SubmitHandler } from 'react-hook-form';
+
+// Form
+import { useForm, Controller, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 // Utils
 import { v4 as uuidv4 } from 'uuid';
 
 // Types
-import type { SubService } from 'types/service';
-import type { Tag } from 'components/TagsSelector';
+import type { Material } from 'types/service';
+
+import { useColorScheme } from 'nativewind';
+import { MaterialIcons } from "@expo/vector-icons";
+import colors from 'global/colors';
 
 // Components
 import BottomSheet from 'components/BottomSheet';
 import Input from 'components/Input';
 import Dropdown from 'components/Dropdown';
-import ActionButton from 'components/ActionButton';
+import { ActionButton } from 'components/ActionButton';
 import Title from 'components/Title';
+import Toast from 'components/Toast';
+import { MARGIN } from './SubSectionWrapper';
 
-type FormValues = {
+const borderErrorStyle = {
+    borderColor: colors.primary.red,
+    borderWidth: 1,
+} as ViewStyle;
+
+const schema = z.object({
+    name: z.string().max(40, { message: 'O nome do material deve ter no máximo 40 caracteres.' }),
+    description: z.string(),
+    price: z.string(),
+    amount: z.string(),
+    profitMargin: z.string(),
+});
+
+interface FormValues {
+    name: string;
     description: string;
-    details: string;
-    price: number;
-    amount: number;
+    price: string;
+    amount: string;
+    profitMargin: string;
 };
 
-export default function AddMaterial({ setSubServices, serviceBottomSheetRef }: { serviceBottomSheetRef: React.MutableRefObject<any>, setSubServices: Dispatch<SetStateAction<SubService[]>> }) {
-    const [preServiceAvailability, setPreServiceAvailability] = React.useState("unavailable");
-    const selectedTags = useRef<Tag[] | null>(null);
+interface Props {
+    materialsBottomSheetRef: React.MutableRefObject<any>;
+    setMaterials: Dispatch<SetStateAction<Material[]>>;
+}
 
-    const serviceBottomSheetCloseHandler = useCallback(() => {
-        serviceBottomSheetRef.current.close();
+export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: Props) {
+    const { colorScheme } = useColorScheme();
+    const [availability, setAvailability] = useState("unavailable");
+
+    const showToast = (errorMessage?: string) => {
+        Toast.show({
+            preset: "error",
+            title: "Por favor, preencha os campos corretamente.",
+            message: errorMessage || "Não foi possível adicionar o serviço."
+        })
+    }
+
+    const bottomSheetCloseHandler = useCallback(() => {
+        materialsBottomSheetRef.current.close();
     }, [])
 
-    const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
+    const { handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
+            name: '',
             description: '',
-            details: '',
-            price: 0,
-            amount: 1,
+            price: "",
+            amount: "1",
+            profitMargin: "",
         },
+        resolver: zodResolver(schema),
     });
 
     const onSubmit: SubmitHandler<FormValues> = data => {
-        const newSubService = {
+        const newMaterial = {
             id: uuidv4(),
+            name: data.name,
             description: data.description,
-            details: data.details,
-            price: data.price,
-            amount: data.amount,
-            types: selectedTags.current as any
-        } as SubService;
-        serviceBottomSheetCloseHandler();
-        setSubServices((previousValue: SubService[]) => [...previousValue, newSubService]);
-        reset();
+            price: parseFloat(data.price),
+            amount: parseFloat(data.amount),
+            profitMargin: parseFloat(data.profitMargin),
+            availability: availability === "unavailable" ? false : true,
+        } as Material;
+        setMaterials((previousValue: Material[]) => [...previousValue, newMaterial]);
+
+        setTimeout(() => {
+            bottomSheetCloseHandler();
+        }, 100);
+
+        Toast.hide();
+        /* reset(); */
     };
 
-    const onChange = (arg: any) => {
-        return {
-            value: arg.nativeEvent.text,
-        };
-    };
+    const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
+        console.log(errors)
+        showToast(Object.values(errors)[0].message as string)
+    }
 
     return (
         <BottomSheet
             height={"65%"}
-            ref={serviceBottomSheetRef}
+            ref={materialsBottomSheetRef}
         >
             <View
                 className='flex flex-1 gap-y-5'
@@ -77,21 +120,122 @@ export default function AddMaterial({ setSubServices, serviceBottomSheetRef }: {
                 <Title>
                     Adicionar material
                 </Title>
-                <ScrollView className='flex flex-1 gap-y-5 relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
-                    paddingBottom: 16
+                <ScrollView className='flex flex-1 flex-col relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
+                    paddingBottom: 16,
                 }}>
-
-
+                    <View>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            className='w-full flex-col items-center justify-center px-12 py-14 border rounded-lg border-dashed border-primary-green'
+                            style={{ marginBottom: MARGIN }}
+                        >
+                            <MaterialIcons name='add-photo-alternate' size={32} color={colorScheme === "dark" ? colors.white : colors.black} />
+                            <Text className='font-medium text-sm text-black dark:text-white mt-1'>
+                                Adicionar imagem do produto
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Controller
+                        control={control}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label='Material'
+                                onBlur={onBlur}
+                                onChangeText={value => onChange(value)}
+                                value={value}
+                                style={[!!errors.description && borderErrorStyle, { marginBottom: MARGIN }]}
+                                placeholder='Painel LED de sobreposição, etc...'
+                                pallette='dark'
+                                required
+                            />
+                        )}
+                        name="name"
+                        rules={{ required: true }}
+                    />
+                    <Controller
+                        control={control}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label='Descrição'
+                                onBlur={onBlur}
+                                onChangeText={value => onChange(value)}
+                                value={value}
+                                style={[!!errors.description && borderErrorStyle, { marginBottom: MARGIN }]}
+                                placeholder='Marca Tigre, 12mm, etc...'
+                                pallette='dark'
+                            />
+                        )}
+                        name="description"
+                        rules={{ required: false }}
+                    />
+                    <View className='flex-row w-full items-center justify-between' style={{ marginBottom: MARGIN }}>
+                        <View className='flex-1 mr-3'>
+                            <Controller
+                                control={control}
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label='Preço Unitário'
+                                        onBlur={onBlur}
+                                        onChangeText={value => onChange(value)}
+                                        value={value}
+                                        style={!!errors.description && borderErrorStyle}
+                                        placeholder='R$'
+                                        keyboardType='number-pad'
+                                        pallette='dark'
+                                        required
+                                    />
+                                )}
+                                name="price"
+                                rules={{ required: true }}
+                            />
+                        </View>
+                        <View className='flex-1'>
+                            <Controller
+                                control={control}
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label='Quantidade'
+                                        onBlur={onBlur}
+                                        onChangeText={value => onChange(value)}
+                                        value={value}
+                                        style={!!errors.description && borderErrorStyle}
+                                        placeholder='1 item'
+                                        keyboardType='number-pad'
+                                        pallette='dark'
+                                        required
+                                    />
+                                )}
+                                name="amount"
+                                rules={{ required: true }}
+                            />
+                        </View>
+                    </View>
                     <View className='flex-row w-full items-center justify-between'>
                         <View className='flex-1 mr-3'>
-                            <Input label='Margem de Lucro' pallette='dark' keyboardType={"number-pad"} />
+                            <Controller
+                                control={control}
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <Input
+                                        label='Margem de Lucro'
+                                        onBlur={onBlur}
+                                        onChangeText={value => onChange(value)}
+                                        value={value}
+                                        style={!!errors.description && borderErrorStyle}
+                                        placeholder='0%'
+                                        keyboardType='number-pad'
+                                        pallette='dark'
+                                    />
+                                )}
+                                name="profitMargin"
+                                rules={{ required: false }}
+                            />
                         </View>
                         <View className='flex-1'>
                             <Dropdown
                                 label='Disponibilidade'
                                 bottomSheetHeight={"20%"}
-                                setSelected={setPreServiceAvailability}
-                                selected={preServiceAvailability}
+                                setSelected={setAvailability}
+                                selected={availability}
                                 pallette='dark'
                                 data={[
                                     { label: "Disponível", value: "available" },
@@ -101,9 +245,9 @@ export default function AddMaterial({ setSubServices, serviceBottomSheetRef }: {
                     </View>
                 </ScrollView>
                 <ActionButton
-                    label='Adicionar serviço'
+                    label='Adicionar material'
                     icon='add'
-                    onPress={handleSubmit(onSubmit)}
+                    onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>
         </BottomSheet>

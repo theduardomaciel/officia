@@ -6,7 +6,7 @@ import Animated, { cancelAnimation, interpolate, useAnimatedGestureHandler, useA
 import { MaterialIcons } from "@expo/vector-icons";
 import ErrorIcon from "assets/icons/error.svg";
 import colors from "global/colors";
-import { forwardRef, useCallback, useImperativeHandle } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
 import { ToastConfig } from ".";
 
 const ERROR_TITLE = "Opa! Parece que algo deu errado!";
@@ -17,19 +17,20 @@ const animProps = {
     stiffness: 300
 } as WithSpringConfig
 
-const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = "top", toastOffset = "100%", autoDismissDelay = 5000 }: ToastConfig, ref) => {
-    console.log(toastOffset)
+const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = "top", toastOffset = "100%", maxDragDistance, autoDismissDelay = 5000 }: ToastConfig, ref) => {
     const { height: screenHeight } = Dimensions.get("screen");
+    const currentTimeout = useRef<any>(null);
 
-    const activeHeight = parseFloat(toastOffset.split("%")[0]) / 100 * screenHeight;
-    const newActiveHeight = screenHeight - activeHeight;
-    console.log(newActiveHeight, toastOffset)
+    const contentHeight = useSharedValue(0);
+
+    const activeHeight = useSharedValue(parseFloat(toastOffset.split("%")[0]) / 100 * screenHeight);
+    const newActiveHeight = screenHeight - activeHeight.value;
 
     const topAnimation = useSharedValue(toastPosition === "top" ? -screenHeight : screenHeight);
-
     const animationStyle = useAnimatedStyle(() => {
-        const top = topAnimation.value;
-        const display = top === screenHeight || top === -screenHeight ? "none" : "flex";
+        const compensation = contentHeight.value > 0 ? contentHeight.value / 2 : 0;
+        const top = topAnimation.value - compensation; // removemos metade do tamanho do conteúdo para que o conteúdo fique centralizado
+        const display = top === screenHeight - compensation || top === -screenHeight - compensation ? "none" : "flex";
         const opacity = interpolate(
             topAnimation.value,
             [(screenHeight / 8), newActiveHeight, -(screenHeight / 8)],
@@ -50,24 +51,20 @@ const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = 
         },
         onActive: (event, ctx: any) => {
             // Caso o usuário arraste o bottom sheet para além da posição inicial, ele é mantido na posição inicial
-            topAnimation.value = ctx.startY + event.translationY;
+            if (maxDragDistance && (toastPosition === "bottom" && event.translationY < -maxDragDistance || toastPosition === "top" && event.translationY > maxDragDistance)) {
+                topAnimation.value = withSpring(ctx.startY, animProps);
+            } else {
+                topAnimation.value = ctx.startY + event.translationY;
+            }
         },
         onEnd: (event) => {
-            // Se o usuário arrastar o suficiente, o bottom sheet é fechado
-            if (topAnimation.value > newActiveHeight + DISMISS_TOLERANCE) {
+            // Se o usuário arrastar o suficiente, o toast é fechado
+            if (topAnimation.value > newActiveHeight + DISMISS_TOLERANCE && toastPosition === "bottom") {
                 // Arrastado para baixo
-                topAnimation.value = withSpring(screenHeight, animProps, () => {
-                    if (toastPosition === "top") {
-                        topAnimation.value = -screenHeight;
-                    }
-                });
-            } else if (topAnimation.value < newActiveHeight - DISMISS_TOLERANCE) {
+                topAnimation.value = withSpring(screenHeight, animProps);
+            } else if (topAnimation.value < newActiveHeight - DISMISS_TOLERANCE && toastPosition === "top") {
                 // Arrastado para cima
-                topAnimation.value = withSpring(-screenHeight, animProps, () => {
-                    if (toastPosition === "bottom") {
-                        topAnimation.value = screenHeight;
-                    }
-                });
+                topAnimation.value = withSpring(-screenHeight, animProps);
             } else {
                 topAnimation.value = withSpring(newActiveHeight, animProps);
             }
@@ -76,19 +73,17 @@ const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = 
 
     const show = useCallback(() => {
         'worklet';
-        console.log("Por incrível que pareça chegou aqui?")
-        const timeout = setTimeout(() => {
-            if (topAnimation.value === newActiveHeight) {
-                hide(toastPosition);
-                clearTimeout(timeout);
-            }
+        console.log("Por incrível que pareça chegou aqui!")
+        currentTimeout.current = setTimeout(() => {
+            hide(toastPosition);
+            clearTimeout(currentTimeout.current);
         }, autoDismissDelay)
-        console.log(newActiveHeight, "newActiveHeight")
         topAnimation.value = withSpring(newActiveHeight, animProps);
     }, [])
 
     const hide = useCallback((direction: "top" | "bottom") => {
         'worklet';
+        currentTimeout.current && clearTimeout(currentTimeout.current);
         topAnimation.value = withSpring(direction === "bottom" ? screenHeight : -screenHeight, animProps)
     }, [])
 
@@ -98,7 +93,7 @@ const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = 
         useCallback(
             () => ({
                 show,
-                hide
+                hide,
             }),
             [hide, show]
         )
@@ -108,11 +103,13 @@ const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = 
         <Portal>
             <PanGestureHandler onGestureEvent={gestureHandler}>
                 <Animated.View
-                    // onLayout={event => contentHeight.value = event.nativeEvent.layout.height}
-                    style={animationStyle}
+                    style={[animationStyle]}
                     className="w-screen absolute top-0 left-0 px-6 z-10 flex items-center justify-center"
                 >
-                    <View className="w-full flex-col items-start px-4 py-3 bg-white dark:bg-gray-200 border border-dashed border-primary-red rounded">
+                    <View
+                        onLayout={event => contentHeight.value = event.nativeEvent.layout.height}
+                        className="w-full flex-col items-start px-4 py-3 bg-white dark:bg-gray-200 border border-dashed border-primary-red rounded"
+                    >
                         <View className="flex-col items-start">
                             {
                                 toastProps?.preset === "error" ?

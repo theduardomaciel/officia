@@ -1,9 +1,7 @@
-import { TouchableOpacity, Text, TouchableOpacityProps } from "react-native";
+import { TouchableOpacity, Text } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
-import { ViewProps } from "react-native";
-import { forwardRef } from "react";
 
 interface Props {
     label: string;
@@ -11,7 +9,7 @@ interface Props {
     onPress: () => void;
 }
 
-const ActionButton = forwardRef(({ onPress, label, icon }: Props, ref) => {
+export const ActionButton = ({ onPress, label, icon }: Props) => {
     return (
         <TouchableOpacity
             activeOpacity={0.8}
@@ -19,12 +17,25 @@ const ActionButton = forwardRef(({ onPress, label, icon }: Props, ref) => {
             onPress={onPress}
             ref={(ref) => { ref = ref }}
         >
-            <MaterialIcons name={icon as unknown as any} size={18} color={colors.white} />
+            <MaterialIcons name={icon as unknown as any || 'add'} size={18} color={colors.white} />
             <Text className='ml-2 font-medium text-white text-sm'>
                 {label}
             </Text>
         </TouchableOpacity>
     )
-})
+}
 
-export default ActionButton;
+export const SubActionButton = ({ onPress, label, icon }: Props) => {
+    return (
+        <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={onPress}
+            className='flex-row items-center justify-center w-full py-3 bg-gray-300 border border-gray-100 rounded'
+        >
+            <MaterialIcons name={icon as unknown as any || 'add'} size={18} color={colors.white} />
+            <Text className='ml-2 font-medium text-white text-sm'>
+                {label}
+            </Text>
+        </TouchableOpacity>
+    )
+}

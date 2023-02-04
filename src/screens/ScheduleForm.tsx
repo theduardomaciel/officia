@@ -6,17 +6,19 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
 import Header from 'components/Header';
-import { SectionsNavigator } from 'components/SectionsNavigator';
-import BottomSheet, { animProps } from 'components/BottomSheet';
 import Input from 'components/Input';
-import Label from 'components/Label';
+import { SectionsNavigator } from 'components/SectionsNavigator';
 import { StaticCalendar } from 'components/Calendar';
-import ServicePreview from 'components/ServicePreview';
-import EmptyMessage from 'components/EmptyMessage';
 
+import BottomSheet, { animProps } from 'components/BottomSheet';
 import AddSubService from 'components/ScheduleForm/AddSubService';
 
-import type { SubService } from 'types/service';
+import { ServicePreview } from 'components/ServicePreview';
+import { MARGIN, SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
+
+import type { Material, SubService } from 'types/service';
+import { SubActionButton } from 'components/ActionButton';
+import Modal from 'components/Modal';
 
 export default function ScheduleForm() {
     const { height } = useWindowDimensions();
@@ -99,46 +101,16 @@ export default function ScheduleForm() {
     )
 }
 
-const MARGIN = 20;
-
 type updateHandler = (id: number) => void;
 interface Section {
     updateHandler: updateHandler;
 }
 
-interface SubSectionWrapperProps {
-    header: {
-        title: string;
-        icon?: string;
-        children?: React.ReactNode;
-    },
-    children: React.ReactNode
-}
-
-const SubSectionWrapper = ({ header, children }: SubSectionWrapperProps) => {
-    return (
-        <View className='w-full flex-col items-start justify-start gap-y-5' style={{ marginBottom: MARGIN }}>
-            <View className='w-full flex-row items-center justify-between'>
-                <View className='flex-row items-center justify-start'>
-                    {
-                        header.icon && (
-                            <MaterialIcons name={header.icon as unknown as any} size={18} style={{ marginRight: 10 }} />
-                        )
-                    }
-                    <Label>
-                        {header.title}
-                    </Label>
-                </View>
-                {header.children}
-            </View>
-            {children}
-        </View>
-    )
-}
-
 const Section0 = ({ updateHandler }: Section) => {
     const [subServices, setSubServices] = React.useState<SubService[]>([]);
+    const [materials, setMaterials] = React.useState<Material[]>([]);
 
+    const dateModalRef = useRef<any>(null);
     const serviceBottomSheetRef = useRef<any>(null);
 
     const serviceBottomSheetOpenHandler = useCallback(() => {
@@ -160,7 +132,7 @@ const Section0 = ({ updateHandler }: Section) => {
                 <View className='w-full'>
                     {
                         subServices && subServices?.length === 0 && (
-                            <Text className='text-sm text-center text-black dark:text-white'>
+                            <Text className='text-sm text-center text-black dark:text-white mb-6'>
                                 Nenhum serviço adicionado.
                             </Text>
                         )
@@ -173,23 +145,22 @@ const Section0 = ({ updateHandler }: Section) => {
                         ))
                     }
                 </View>
-                <TouchableOpacity
-                    activeOpacity={0.8}
+                <SubActionButton
                     onPress={serviceBottomSheetOpenHandler}
-                    className='flex-row items-center justify-center w-full py-3 bg-primary-green rounded'
-                >
-                    <MaterialIcons name='add' size={18} color={colors.white} />
-                    <Text className='ml-2 font-medium text-white text-sm'>
-                        Adicionar serviço
-                    </Text>
-                </TouchableOpacity>
+                    label='Adicionar serviço'
+                />
             </SubSectionWrapper>
 
             <SubSectionWrapper header={{ title: "Data" }}>
                 <StaticCalendar style={{ padding: 16, backgroundColor: colors.gray[600] }} />
             </SubSectionWrapper>
 
-            <Input label='Indeterminado' style={{ marginBottom: MARGIN }} />
+            <Input
+                onPress={() => dateModalRef.current.open()}
+                label='Horário'
+                editable={false}
+                style={{ marginBottom: MARGIN }}
+            />
 
             <Input label='Informações Adicionais' style={{ marginBottom: MARGIN }} />
 
@@ -198,7 +169,24 @@ const Section0 = ({ updateHandler }: Section) => {
             <AddSubService
                 serviceBottomSheetRef={serviceBottomSheetRef}
                 setSubServices={setSubServices}
+                materials={materials}
+                setMaterials={setMaterials}
             />
+            <Modal ref={dateModalRef}
+                title={"Selecione o horário"}
+                icon="calendar-today"
+                buttons={[
+                    {
+                        label: "Confirmar",
+                        onPress: () => { },
+                        closeOnPress: true,
+                    }
+                ]}
+                cancelButton
+            >
+                <View className='w-full h-9 bg-red-200'>
+                </View>
+            </Modal>
         </>
     )
 }
@@ -208,6 +196,7 @@ const Section1 = ({ updateHandler }: Section) => {
         <>
             <Input label='Nome do Serviço' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN }} />
             <NextButton section={1} updateHandler={updateHandler} />
+
         </>
     )
 }
@@ -215,10 +204,7 @@ const Section1 = ({ updateHandler }: Section) => {
 const Section2 = ({ updateHandler }: Section) => {
     return (
         <>
-            <Input label='Nome do Serviço' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN * 16 }} />
-            <Input label='Altura média' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN * 7 }} />
-            <Input label='Altura média' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN * 5 }} />
-            <Input label='Altura média' placeholder='Serviço n. 011-2023' style={{ marginBottom: MARGIN }} />
+
             <NextButton section={2} updateHandler={updateHandler} />
         </>
     )
@@ -232,7 +218,6 @@ const NextButton = ({ section, updateHandler }: { section: number, updateHandler
             onPress={section === 2 ? () => updateHandler(0) : () => updateHandler(section + 1)}
             style={{
                 backgroundColor: section === 2 ? colors.primary.green : colors.gray[200],
-                /* marginBottom: 24 */
             }}
         >
             <Text className='font-bold text-white text-base'>

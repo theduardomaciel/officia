@@ -11,7 +11,7 @@ import Dropdown from 'components/Dropdown';
 import Input from 'components/Input';
 
 export default function BankAccount() {
-    const [selected, setSelected] = React.useState("Nenhum banco");
+    const [selected, setSelected] = React.useState("unselected");
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
@@ -26,6 +26,7 @@ export default function BankAccount() {
                             modalLabel='Selecione um banco'
                             selected={selected}
                             setSelected={setSelected}
+                            overDragAmount={65}
                             data={[
                                 { label: "Nenhum banco", value: "unselected" },
                                 { label: "Banco do Brasil", value: "bb" },

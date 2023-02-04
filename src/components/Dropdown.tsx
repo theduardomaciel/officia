@@ -15,6 +15,7 @@ import BottomSheet from "./BottomSheet";
 interface Props extends TouchableOpacityProps {
     label: string;
     modalLabel?: string;
+    overDragAmount?: number;
     data: {
         label: string;
         value: string;
@@ -25,7 +26,7 @@ interface Props extends TouchableOpacityProps {
     setSelected: (value: string) => void;
 }
 
-export default function Dropdown({ label, modalLabel, data, bottomSheetHeight, pallette, selected, setSelected, ...rest }: Props) {
+export default function Dropdown({ label, modalLabel, overDragAmount, data, bottomSheetHeight, pallette, selected, setSelected, ...rest }: Props) {
     const { colorScheme } = useColorScheme();
 
     const bottomSheetRef = useRef<any>(null);
@@ -59,6 +60,7 @@ export default function Dropdown({ label, modalLabel, data, bottomSheetHeight, p
                 </TouchableOpacity>
             </View>
             <BottomSheet
+                overDragAmount={overDragAmount || 0}
                 height={bottomSheetHeight || "40%"}
                 ref={bottomSheetRef}
             >
