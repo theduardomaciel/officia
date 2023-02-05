@@ -1,6 +1,3 @@
-import 'react-native-gesture-handler';
-import 'react-native-get-random-values'
-
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PortalProvider, PortalHost } from '@gorhom/portal';

@@ -41,29 +41,42 @@
                 "xxxhdpi": "./assets/android/splash/xxxhdpi.png",
                 "dark": {
                     "backgroundColor": "#1E1E1E",
-                    "mdpi": "./assets/android/splash/dark/mdpi.png",
-                    "hdpi": "./assets/android/splash/dark/hdpi.png",
-                    "xhdpi": "./assets/android/splash/dark/xhdpi.png",
-                    "xxhdpi": "./assets/android/splash/dark/xxhdpi.png",
-                    "xxxhdpi": "./assets/android/splash/dark/xxxhdpi.png"
+                    "mdpi": "./assets/android/splash/mdpi.png",
+                    "hdpi": "./assets/android/splash/hdpi.png",
+                    "xhdpi": "./assets/android/splash/xhdpi.png",
+                    "xxhdpi": "./assets/android/splash/xxhdpi.png",
+                    "xxxhdpi": "./assets/android/splash/xxxhdpi.png"
                 }
-            }
+            },
+            "package": "com.theduardomaciel.officia"
         },
         "androidStatusBar": {
             "translucent": "true",
             "barStyle": "light-content",
-            "backgroundColor": "transparent"
+            "backgroundColor": "#1E1E1E"
         },
         "plugins": [
             [
                 "expo-navigation-bar",
                 {
                     "position": "absolute",
-                    "backgroundColor": "transparent"
+                    "backgroundColor": "#1E1E1E"
                 }
+            ],
+            [
+                "./withAndroidSplashScreen.js"
             ]
         ],
         "scheme": "officia",
-        "jsEngine": "hermes"
+        "jsEngine": "hermes",
+        "extra": {
+            "expo-navigation-bar": {
+                "position": "absolute",
+                "backgroundColor": "#1E1E1E"
+            },
+            "eas": {
+                "projectId": "9de284c1-eab2-4ed1-89d5-6b3cdb6e7597"
+            }
+        }
     }
 }

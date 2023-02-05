@@ -19,6 +19,8 @@ import { MARGIN, SubSectionWrapper } from 'components/ScheduleForm/SubSectionWra
 import type { Material, SubService } from 'types/service';
 import { SubActionButton } from 'components/ActionButton';
 import Modal from 'components/Modal';
+import DatePicker from 'react-native-date-picker';
+import { useColorScheme } from 'nativewind';
 
 export default function ScheduleForm() {
     const { height } = useWindowDimensions();
@@ -107,6 +109,9 @@ interface Section {
 }
 
 const Section0 = ({ updateHandler }: Section) => {
+    const { colorScheme } = useColorScheme();
+
+    const [date, setDate] = React.useState(new Date())
     const [subServices, setSubServices] = React.useState<SubService[]>([]);
     const [materials, setMaterials] = React.useState<Material[]>([]);
 
@@ -159,10 +164,11 @@ const Section0 = ({ updateHandler }: Section) => {
                 onPress={() => dateModalRef.current.open()}
                 label='Horário'
                 editable={false}
+                value={`${date.getHours()}:${date.getMinutes()}`}
                 style={{ marginBottom: MARGIN }}
             />
 
-            <Input label='Informações Adicionais' style={{ marginBottom: MARGIN }} />
+            <Input label='Informações Adicionais' textAlignVertical='top' style={{ marginBottom: MARGIN, minHeight: 100, paddingTop: 15 }} />
 
             <NextButton section={0} updateHandler={updateHandler} />
 
@@ -184,7 +190,17 @@ const Section0 = ({ updateHandler }: Section) => {
                 ]}
                 cancelButton
             >
-                <View className='w-full h-9 bg-red-200'>
+                <View className='flex flex-1 w-full items-center justify-center'>
+                    <DatePicker
+                        date={date}
+                        onDateChange={setDate}
+                        fadeToColor={colorScheme === "light" ? colors.white : colors.gray[200]}
+                        androidVariant="nativeAndroid"
+                        minuteInterval={15}
+                        mode='time'
+                        locale='en'
+                        is24hourSource='locale'
+                    />
                 </View>
             </Modal>
         </>
