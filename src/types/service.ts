@@ -31,5 +31,6 @@ export interface Service {
     subServices: SubService[];
     materials: Material[];
     date: Date | string;
+    status: 'pending' | 'warranty' | 'archived';
     client?: Client;
 }

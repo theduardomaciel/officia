@@ -133,8 +133,12 @@ const monthInfos = Array.from({ length: 12 }, (_, index) => {
     return getMonthInfo(index, new Date());
 })
 
+export interface CalendarDate { date: number; month: number; }
+
 interface CalendarProps {
     style?: ViewStyle;
+    selectedDate?: CalendarDate;
+    setSelectedDate?: (date: CalendarDate) => void;
 }
 
 export default function Calendar({ style }: CalendarProps) {
@@ -254,19 +258,12 @@ export default function Calendar({ style }: CalendarProps) {
     )
 }
 
-export function StaticCalendar({ style }: CalendarProps) {
+export function StaticCalendar({ style, selectedDate, setSelectedDate }: CalendarProps) {
     const currentDate = new Date();
+
     const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
 
     const { monthDates, firstDayOfMonth, lastDayOfMonth, remainingDaysOnLastMonth, remainingDaysOnNextMonth } = monthInfos[currentMonth];
-
-    const canDecrease = currentMonth > 0;
-    const canIncrease = currentMonth < 11;
-
-
-    function worklet(index: number) {
-        setCurrentMonth(currentMonth + index);
-    }
 
     return (
         <View className="flex-col w-full bg-black dark:bg-gray-500 rounded-xl" style={style ? style : { padding: 16 }}>
@@ -307,8 +304,8 @@ export function StaticCalendar({ style }: CalendarProps) {
                             <DayView
                                 key={`calendar_${index}`}
                                 date={new Date(currentDate.getFullYear(), date.month, date.date)}
-                                onPress={() => { }}
-                                isToday={date.date == currentDate.getDate() && index >= firstDayOfMonth && index <= lastDayOfMonth}
+                                onPress={() => setSelectedDate && setSelectedDate(date)}
+                                isToday={selectedDate ? date === selectedDate : date.date == currentDate.getDate() && index >= firstDayOfMonth && index <= lastDayOfMonth}
                                 invert
                                 style={{
                                     opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,

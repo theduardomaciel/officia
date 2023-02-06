@@ -1,0 +1,22 @@
+import { Model } from "@nozbe/watermelondb";
+import { field, readonly, date, relation } from "@nozbe/watermelondb/decorators";
+import { Associations } from "@nozbe/watermelondb/Model";
+import { ServiceModel } from "./serviceModel";
+
+export class MaterialModel extends Model {
+    static table = "materials";
+    static associations: Associations = {
+        services: { type: 'belongs_to', key: 'service_id' },
+    }
+
+    @readonly @date('created_at') createdAt!: number;
+    @field("name") name!: string;
+    @field("description") description!: string;
+    @field("image_url") image_url!: string;
+    @field("price") price!: string;
+    @field("amount") amount!: number;
+    @field("profit_margin") profitMargin!: number;
+    @field("service_id") service_id!: string;
+
+    @relation('services', 'service_id') service!: ServiceModel;
+}

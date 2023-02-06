@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, UIManager } from 'react-native';
 import * as NavigationBar from "expo-navigation-bar";
 import { useColorScheme } from 'nativewind/dist/use-color-scheme';
 
@@ -14,14 +14,18 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Header from 'components/Header';
 import EmptyMessage from 'components/EmptyMessage';
 import { Tag, TagsSelector } from 'components/TagsSelector';
+import Calendar, { WeekView, WeekDays } from 'components/Calendar';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-import Calendar, { WeekView, WeekDays } from 'components/Calendar';
-import { UIManager } from 'react-native';
 import { tags } from 'global/tags';
+import { Service } from 'types/service';
+
+import { database } from 'database';
+import { ServiceModel } from 'database/models/serviceModel';
+import { Q } from '@nozbe/watermelondb';
 
 export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
     <View className='bg-black dark:bg-gray-200 flex-row items-center  h-full mr-3 px-3 rounded-full'>
@@ -37,20 +41,22 @@ export default function Home() {
     const { colorScheme } = useColorScheme();
     const insets = useSafeAreaInsets();
 
+    const [pendingServices, setPendingServices] = useState<Array<ServiceModel> | undefined>(undefined)
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(false)
 
-    /* async function fetchData() {
+    async function fetchData() {
         try {
-            const response = await api.get('/summary');
-            setSummary(response.data)
+            const servicesCollection = database.get<ServiceModel>('services')
+            const services = await servicesCollection.query(Q.where('status', "pending")).fetch()
+            setPendingServices(services)
         } catch (error) {
             console.log(error, "erro")
-            setSummary([])
+            setPendingServices([])
         }
-    } */
+    }
 
     useFocusEffect(useCallback(() => {
-        //fetchData()
+        fetchData()
         NavigationBar.setPositionAsync("absolute")
         NavigationBar.setBackgroundColorAsync("transparent")
     }, []))

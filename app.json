@@ -34,6 +34,7 @@
             "softwareKeyboardLayoutMode": "pan",
             "splash": {
                 "backgroundColor": "#1E1E1E",
+                "resizeMode": "cover",
                 "mdpi": "./assets/android/splash/mdpi.png",
                 "hdpi": "./assets/android/splash/hdpi.png",
                 "xhdpi": "./assets/android/splash/xhdpi.png",
@@ -51,7 +52,7 @@
             "package": "com.theduardomaciel.officia"
         },
         "androidStatusBar": {
-            "translucent": "true",
+            "translucent": true,
             "barStyle": "light-content",
             "backgroundColor": "#1E1E1E"
         },
