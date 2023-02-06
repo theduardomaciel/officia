@@ -3,11 +3,12 @@ import { Animated, View, Text } from "react-native";
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { TouchableOpacity } from "react-native-gesture-handler";
 
-import type { Material, SubService } from "types/service";
-
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 import clsx from "clsx";
+
+import { SubServiceModel } from "database/models/subServiceModel";
+import { MaterialModel } from "database/models/materialModel";
 
 const categories = {
     hydraulic: {
@@ -24,7 +25,9 @@ const categories = {
     }
 }
 
-const Category = ({ category }: { category: 'hydraulic' | 'eletric' | 'various' }) => (
+type Types = 'hydraulic' | 'eletric' | 'various';
+
+const Category = ({ category }: { category: Types }) => (
     <>
         <MaterialIcons name={categories[category].icon as unknown as any} size={12} color={colors.white} style={{ marginRight: 5 }} />
         <Text className='font-semibold text-black dark:text-white text-xs mr-1'>
@@ -33,7 +36,7 @@ const Category = ({ category }: { category: 'hydraulic' | 'eletric' | 'various' 
     </>
 )
 
-export const PreviewStatic = ({ subService, material }: { subService?: SubService, material?: Material }) => {
+export const PreviewStatic = ({ subService, material }: { subService?: SubServiceModel, material?: MaterialModel }) => {
     if (!subService && !material) return null;
 
     return (
@@ -45,7 +48,7 @@ export const PreviewStatic = ({ subService, material }: { subService?: SubServic
                 <View className='flex-row'>
                     {
                         subService && subService.types && (
-                            <Category category={subService.types?.length > 1 ? "various" : subService.types[0]} />
+                            <Category category={subService.types?.length > 1 ? "various" : subService.types[0] as Types} />
                         )
                     }
                     {
@@ -71,8 +74,8 @@ export const PreviewStatic = ({ subService, material }: { subService?: SubServic
 }
 
 interface SubServicePreviewProps {
-    subService: SubService;
-    setSubServices: Dispatch<SetStateAction<SubService[]>>;
+    subService: SubServiceModel;
+    setSubServices: Dispatch<SetStateAction<SubServiceModel[]>>;
 }
 
 export function ServicePreview({ subService, setSubServices }: SubServicePreviewProps) {
@@ -116,8 +119,8 @@ export function ServicePreview({ subService, setSubServices }: SubServicePreview
 }
 
 interface MaterialPreviewProps {
-    material: Material;
-    setMaterials: Dispatch<SetStateAction<Material[]>>;
+    material: MaterialModel;
+    setMaterials: Dispatch<SetStateAction<MaterialModel[]>>;
 }
 
 export function MaterialPreview({ material, setMaterials }: MaterialPreviewProps) {

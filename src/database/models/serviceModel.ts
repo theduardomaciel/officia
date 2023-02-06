@@ -1,6 +1,9 @@
 import { Model } from "@nozbe/watermelondb";
-import { field, readonly, date } from "@nozbe/watermelondb/decorators";
+import { field, readonly, date, children, relation } from "@nozbe/watermelondb/decorators";
 import { Associations } from "@nozbe/watermelondb/Model";
+import { ClientModel } from "./clientModel";
+import { MaterialModel } from "./materialModel";
+import { SubServiceModel } from "./subServiceModel";
 
 export class ServiceModel extends Model {
     static table = "services";
@@ -9,11 +12,12 @@ export class ServiceModel extends Model {
         materials: { type: "has_many", foreignKey: "service_id" },
     }
 
-    @readonly @date('created_at') createdAt!: number;
     @field("name") name!: string;
-    @field("sub_services") subServices!: string;
-    @field("materials") materials!: string;
-    @field("status") status!: string;
     @date("date") date!: string;
-    @field("client") client!: string;
+    @field("status") status!: string;
+    @readonly @date('created_at') createdAt!: number;
+
+    @children("sub_services") subServices!: SubServiceModel[];
+    @children("materials") materials!: MaterialModel[];
+    @relation("client", "service_id") client!: ClientModel;
 }

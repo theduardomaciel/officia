@@ -14,9 +14,9 @@ export function Checkbox({ title, checked = false, ...rest }: Props) {
     const entering = (targetValues: any) => {
         'worklet';
         const animations = {
-            opacity: withTiming(1, { duration: 500 }),
+            opacity: withTiming(1, { duration: 150 }),
             transform: [
-                { scale: withSpring(1, { mass: 0.5, damping: 10, stiffness: 50 }) },
+                { scale: withSpring(1, { mass: 0.2, damping: 10, stiffness: 50 }) },
             ],
         };
         const initialValues = {
@@ -30,20 +30,24 @@ export function Checkbox({ title, checked = false, ...rest }: Props) {
     };
 
     return (
-        <TouchableOpacity activeOpacity={0.8} className='flex-row mb-2 items-center' {...rest}>
+        <TouchableOpacity
+            activeOpacity={0.8}
+            className='flex-row mb-2 items-center'
+            {...rest}
+        >
             {
                 checked ?
                     <Animated.View
-                        className='h-8 w-8 bg-green-500 rounded-lg items-center justify-center'
+                        className='h-[30px] w-[30px] bg-primary-green rounded-[9px] items-center justify-center'
                         entering={entering}
-                        exiting={ZoomOut}
+                        exiting={ZoomOut.duration(100)}
                     >
                         <Feather name='check' size={20} color={colors.white} />
                     </Animated.View>
                     :
-                    <View className='h-8 w-8 bg-zinc-800 rounded-lg items-center justify-center' />
+                    <View className='h-[30px] w-[30px] bg-gray-300 rounded-lg items-center justify-center' />
             }
-            <Text className={'text-white ml-3 font-normal'}>
+            <Text className={'text-white ml-3 flex-1 font-normal'} ellipsizeMode="tail" /* numberOfLines={1} */>
                 {title}
             </Text>
         </TouchableOpacity>

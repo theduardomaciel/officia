@@ -5,6 +5,7 @@ import colors from "global/colors";
 import clsx from "clsx";
 
 import Label from "./Label";
+import { forwardRef } from "react";
 
 interface Props extends TextInputProps {
     label?: string;
@@ -14,7 +15,7 @@ interface Props extends TextInputProps {
     onPress?: () => void;
 }
 
-export default function Input({ label, icon, pallette, required, onPress, ...rest }: Props) {
+const Input = forwardRef(({ label, icon, pallette, required, multiline, onPress, ...rest }: Props, ref) => {
     const { colorScheme } = useColorScheme();
 
     const CustomInput = <TextInput
@@ -42,14 +43,14 @@ export default function Input({ label, icon, pallette, required, onPress, ...res
                         }
                         <Label>
                             {label}
+                            {
+                                required && (
+                                    <Text className="text-xs text-black dark:text-text-100">
+                                        {` `}*
+                                    </Text>
+                                )
+                            }
                         </Label>
-                        {
-                            required && (
-                                <Text className="text-xs text-black dark:text-text-100">
-                                    {` `}*
-                                </Text>
-                            )
-                        }
                     </View>
                 )
             }
@@ -64,17 +65,23 @@ export default function Input({ label, icon, pallette, required, onPress, ...res
                 )
                     : (
                         <TextInput
-                            {...rest}
-                            className={clsx("w-full px-4 py-2 rounded-lg text-white", {
+                            className={clsx("w-full px-4 py-2 rounded-lg border border-gray-300 text-white", {
                                 "bg-black dark:bg-gray-200": pallette !== "dark",
                                 "bg-black dark:bg-gray-300": pallette === "dark",
+                                "min-h-[100px] pt-4": multiline,
                             })}
+                            textAlignVertical={multiline ? "top" : "center"}
                             placeholderTextColor={colors.text[200]}
                             cursorColor={colors.text[200]}
                             selectionColor={colors.text[200]}
+                            multiline={multiline}
+                            ref={ref as any}
+                            {...rest}
                         />
                     )
             }
         </View>
     )
-}
+});
+
+export default Input;

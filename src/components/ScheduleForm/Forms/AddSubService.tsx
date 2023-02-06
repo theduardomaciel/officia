@@ -15,7 +15,6 @@ import colors from 'global/colors';
 import { MaterialIcons } from "@expo/vector-icons";
 
 // Types
-import type { Material, SubService } from 'types/service';
 import type { Tag } from 'components/TagsSelector';
 
 // Components
@@ -28,7 +27,9 @@ import { TagsSelector } from 'components/TagsSelector';
 import Toast from 'components/Toast';
 import AddMaterial from './AddMaterial';
 import { MaterialPreview } from 'components/ServicePreview';
-import { MARGIN, SubSectionWrapper } from './SubSectionWrapper';
+import { MARGIN, SubSectionWrapper } from '../SubSectionWrapper';
+import { SubServiceModel } from 'database/models/subServiceModel';
+import { MaterialModel } from 'database/models/materialModel';
 
 const borderErrorStyle = {
     borderColor: colors.primary.red,
@@ -51,9 +52,9 @@ const schema = z.object({
 
 interface Props {
     serviceBottomSheetRef: React.MutableRefObject<any>;
-    setSubServices: Dispatch<SetStateAction<SubService[]>>;
-    materials: Material[];
-    setMaterials: Dispatch<SetStateAction<Material[]>>;
+    setSubServices: Dispatch<SetStateAction<SubServiceModel[]>>;
+    materials: MaterialModel[];
+    setMaterials: Dispatch<SetStateAction<MaterialModel[]>>;
 }
 
 export default function AddSubService({ setSubServices, serviceBottomSheetRef, materials, setMaterials }: Props) {
@@ -67,14 +68,14 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef, m
 
     const selectedTags = useRef<Tag[] | null>(null);
 
-    const materialsBottomSheetRef = useRef<any>(null);
-    const materialBottomSheetOpenHandler = useCallback(() => {
-        materialsBottomSheetRef.current.expand();
-    }, [])
-
     const serviceBottomSheetCloseHandler = useCallback(() => {
         serviceBottomSheetRef.current.close();
         console.log("Fecou")
+    }, [])
+
+    const materialsBottomSheetRef = useRef<any>(null);
+    const materialBottomSheetOpenHandler = useCallback(() => {
+        materialsBottomSheetRef.current.expand();
     }, [])
 
     const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
@@ -89,15 +90,15 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef, m
 
     const onSubmit: SubmitHandler<FormValues> = data => {
         const newSubService = {
-            id: uuidv4(),
             description: data.description,
             details: data.details,
             price: parseFloat(data.price),
             amount: parseInt(data.amount),
             types: selectedTags.current as any
-        } as SubService;
+        };
         console.log(newSubService)
-        setSubServices((previousValue: SubService[]) => [...previousValue, newSubService]);
+
+        setSubServices((previousValue: SubServiceModel[]) => [...previousValue, newSubService as unknown as SubServiceModel]);
 
         setTimeout(() => {
             serviceBottomSheetCloseHandler();
@@ -114,12 +115,12 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef, m
 
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
         console.log(errors)
-        showToast(Object.values(errors)[0].message as string)
+        showToast(Object.values(errors).map(error => error.message).join('\n'))
     }
 
     return (
         <BottomSheet
-            height={"70%"}
+            height={"65%"}
             ref={serviceBottomSheetRef}
         >
             <View
@@ -263,10 +264,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef, m
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>
-            <AddMaterial
-                materialsBottomSheetRef={materialsBottomSheetRef}
-                setMaterials={setMaterials}
-            />
+            <AddMaterial materialsBottomSheetRef={materialsBottomSheetRef} setMaterials={setMaterials} />
         </BottomSheet>
     )
 }

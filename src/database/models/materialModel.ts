@@ -12,10 +12,11 @@ export class MaterialModel extends Model {
     @readonly @date('created_at') createdAt!: number;
     @field("name") name!: string;
     @field("description") description!: string;
-    @field("image_url") image_url!: string;
+    @field("image_url") image_url!: string | null;
     @field("price") price!: string;
     @field("amount") amount!: number;
-    @field("profit_margin") profitMargin!: number;
+    @field("profit_margin") profitMargin!: number | null;
+    @field("availability") availability!: boolean;
     @field("service_id") service_id!: string;
 
     @relation('services', 'service_id') service!: ServiceModel;

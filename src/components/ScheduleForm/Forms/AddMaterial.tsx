@@ -10,9 +10,6 @@ import * as z from 'zod';
 // Utils
 import { v4 as uuidv4 } from 'uuid';
 
-// Types
-import type { Material } from 'types/service';
-
 import { useColorScheme } from 'nativewind';
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
@@ -24,7 +21,10 @@ import Dropdown from 'components/Dropdown';
 import { ActionButton } from 'components/ActionButton';
 import Title from 'components/Title';
 import Toast from 'components/Toast';
-import { MARGIN } from './SubSectionWrapper';
+
+// Utils
+import { MARGIN } from '../SubSectionWrapper';
+import { MaterialModel } from 'database/models/materialModel';
 
 const borderErrorStyle = {
     borderColor: colors.primary.red,
@@ -49,7 +49,7 @@ interface FormValues {
 
 interface Props {
     materialsBottomSheetRef: React.MutableRefObject<any>;
-    setMaterials: Dispatch<SetStateAction<Material[]>>;
+    setMaterials: Dispatch<SetStateAction<MaterialModel[]>>;
 }
 
 export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: Props) {
@@ -65,7 +65,11 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
     }
 
     const bottomSheetCloseHandler = useCallback(() => {
-        materialsBottomSheetRef.current.close();
+        if (materialsBottomSheetRef.current) {
+            materialsBottomSheetRef.current.close();
+        } else {
+            console.log('BottomSheet ref is null');
+        }
     }, [])
 
     const { handleSubmit, control, reset, formState: { errors } } = useForm({
@@ -81,15 +85,16 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
 
     const onSubmit: SubmitHandler<FormValues> = data => {
         const newMaterial = {
-            id: uuidv4(),
             name: data.name,
             description: data.description,
             price: parseFloat(data.price),
             amount: parseFloat(data.amount),
             profitMargin: parseFloat(data.profitMargin),
             availability: availability === "unavailable" ? false : true,
-        } as Material;
-        setMaterials((previousValue: Material[]) => [...previousValue, newMaterial]);
+        };
+        console.log(newMaterial)
+
+        setMaterials((previousValue: MaterialModel[]) => [...previousValue, newMaterial as unknown as MaterialModel]);
 
         setTimeout(() => {
             bottomSheetCloseHandler();
@@ -101,14 +106,11 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
 
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
         console.log(errors)
-        showToast(Object.values(errors)[0].message as string)
+        showToast(Object.values(errors).map(error => error.message).join('\n'))
     }
 
     return (
-        <BottomSheet
-            height={"65%"}
-            ref={materialsBottomSheetRef}
-        >
+        <BottomSheet height={"65%"} ref={materialsBottomSheetRef}>
             <View
                 className='flex flex-1 gap-y-5'
                 style={{

@@ -27,10 +27,11 @@ interface BottomSheetProps {
         suppressHandle?: boolean;
         suppressBackdrop?: boolean;
         suppressPortal?: boolean;
-    }
+    };
+    onDismiss?: () => void;
 }
 
-const BottomSheet = forwardRef(({ children, height, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues, colors }: BottomSheetProps, ref) => {
+const BottomSheet = forwardRef(({ children, onDismiss, height, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues, colors }: BottomSheetProps, ref) => {
     const insets = useSafeAreaInsets();
 
     const overDrag = overDragAmount && overDragAmount > 0 ? overDragAmount : 0;
@@ -97,7 +98,7 @@ const BottomSheet = forwardRef(({ children, height, overDragAmount = 0, canDismi
 
                 // O !smallWithContentHeight previne que o usuário possa arrastar para cima quando o bottom sheet é pequeno demais para ser arrastado para cima
                 if (insideBounds && event.translationY < 0 && !smallWithContentHeight || event.translationY > 0) {
-                    topAnimation.value = ctx.startY + event.translationY;
+                    topAnimation.value = Math.max(ctx.startY + event.translationY, newActiveHeight - outOfBoundsHeight);
                 }
                 /* console.log("outOfBoundsHeight", outOfBoundsHeight)
                 console.log("contentHeight", contentHeight.value)
@@ -113,6 +114,7 @@ const BottomSheet = forwardRef(({ children, height, overDragAmount = 0, canDismi
             // Se o usuário arrastar o suficiente, o bottom sheet é fechado
             if (canDismiss && topAnimation.value > newActiveHeight + DISMISS_TOLERANCE) {
                 topAnimation.value = withSpring(screenHeight, animProps);
+                onDismiss && onDismiss();
             } else {
                 // Volta para a posição inicial caso:
                 // 1. a opção de dismiss estiver desativada
@@ -183,6 +185,7 @@ const BottomSheet = forwardRef(({ children, height, overDragAmount = 0, canDismi
                 !defaultValues?.suppressBackdrop && (
                     <TouchableWithoutFeedback onPress={() => {
                         close();
+                        onDismiss && onDismiss();
                     }}>
                         <Animated.View
                             style={[backdropAnimationStyle, colors?.backdrop ? { backgroundColor: colors?.backdrop } : {},]}

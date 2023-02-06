@@ -3,26 +3,33 @@ import { View, Text, TextProps } from "react-native";
 import { useColorScheme } from "nativewind";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
+import { FC, SVGProps } from "react";
 
 interface Props extends TextProps {
-    icon?: string
+    icon?: {
+        name: string;
+        size?: number;
+        color?: string;
+    }
+    CustomIcon?: FC<SVGProps<SVGSVGElement>>;
 }
 
-export default function Label({ children, icon, ...rest }: Props) {
+export default function Label({ children, icon, CustomIcon, ...rest }: Props) {
     const { colorScheme } = useColorScheme();
-
     return (
         <View className="w-full flex-row items-center justify-start">
             {
-                icon && (
+                (icon || CustomIcon) && (
                     <View className="mr-2">
                         {
-                            typeof icon === "string" ?
-                                <MaterialIcons
-                                    name={icon as unknown as any}
-                                    size={18} color={colorScheme === "dark" ? colors.text[100] : colors.black}
-                                />
-                                : icon
+                            CustomIcon && <CustomIcon fontSize={18} color={colors.text[100]} />
+                        }
+                        {
+                            icon && <MaterialIcons
+                                name={icon.name as unknown as any}
+                                size={icon.size || 18}
+                                color={icon.color || colorScheme === "dark" ? colors.text[100] : colors.black}
+                            />
                         }
                     </View>
                 )

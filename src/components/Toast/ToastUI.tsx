@@ -120,7 +120,9 @@ const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = 
                                         :
                                         <MaterialIcons name={toastProps?.icon as unknown as any} size={28} color={colors.white} />
                             }
-                            <Text className="font-titleBold text-lg text-black dark:text-white">
+                            <Text className="font-titleBold text-lg mb-1 text-black dark:text-white" style={{
+                                lineHeight: 20
+                            }}>
                                 {toastProps?.title ? toastProps?.title
                                     : toastProps?.preset === "error" ? ERROR_TITLE
                                         : toastProps?.preset === "success" ? SUCCESS_TITLE
