@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ViewStyle } from "react-native";
 
 import { useColorScheme } from "nativewind";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -12,22 +12,23 @@ export interface Section {
     updateHandler: (id: number) => void;
 }
 
-interface SubSectionWrapper {
+export interface SubSectionWrapperProps {
     header: {
         title: string;
         icon?: string;
         customIcon?: FC<SVGProps<SVGSVGElement>>;
         children?: React.ReactNode;
     },
-    children: React.ReactNode
+    style?: ViewStyle;
+    children?: React.ReactNode
 }
 
 
 export const MARGIN = 20;
 
-export const SubSectionWrapper = ({ header, children }: SubSectionWrapper) => {
+export const SubSectionWrapper = ({ header, children, style }: SubSectionWrapperProps) => {
     return (
-        <View className='w-full flex-col items-start justify-start gap-y-4' style={{ marginBottom: MARGIN }}>
+        <View className='w-full flex-col items-start justify-start gap-y-4' style={[{ marginBottom: MARGIN }, style]}>
             <View className='w-full flex-row items-center justify-between'>
                 <Label
                     icon={header.icon ? { name: header.icon } : undefined}
@@ -43,7 +44,7 @@ export const SubSectionWrapper = ({ header, children }: SubSectionWrapper) => {
     )
 }
 
-export const SubSection = ({ header, children }: SubSectionWrapper) => {
+export const SubSection = ({ header, children }: SubSectionWrapperProps) => {
     return (
         <View className='w-full flex-col items-start justify-start gap-y-2' style={{ marginBottom: MARGIN }}>
             <View className='w-full flex-row items-center justify-between'>

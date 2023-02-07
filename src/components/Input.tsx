@@ -19,14 +19,18 @@ const Input = forwardRef(({ label, icon, pallette, required, multiline, onPress,
     const { colorScheme } = useColorScheme();
 
     const CustomInput = <TextInput
-        {...rest}
-        className={clsx("w-full px-4 py-2 rounded-lg text-white", {
+        className={clsx("w-full px-4 py-2 rounded-lg border border-gray-300 text-white", {
             "bg-black dark:bg-gray-200": pallette !== "dark",
             "bg-black dark:bg-gray-300": pallette === "dark",
+            "min-h-[100px] pt-4": multiline,
         })}
+        textAlignVertical={multiline ? "top" : "center"}
+        multiline={multiline}
         placeholderTextColor={colorScheme === "dark" ? colors.text[200] : colors.white}
         cursorColor={colorScheme === "dark" ? colors.text[200] : colors.white}
         selectionColor={colorScheme === "dark" ? colors.text[200] : colors.white}
+        ref={ref as any}
+        {...rest}
     />
 
     return (
@@ -63,22 +67,7 @@ const Input = forwardRef(({ label, icon, pallette, required, multiline, onPress,
                         {CustomInput}
                     </TouchableOpacity>
                 )
-                    : (
-                        <TextInput
-                            className={clsx("w-full px-4 py-2 rounded-lg border border-gray-300 text-white", {
-                                "bg-black dark:bg-gray-200": pallette !== "dark",
-                                "bg-black dark:bg-gray-300": pallette === "dark",
-                                "min-h-[100px] pt-4": multiline,
-                            })}
-                            textAlignVertical={multiline ? "top" : "center"}
-                            placeholderTextColor={colors.text[200]}
-                            cursorColor={colors.text[200]}
-                            selectionColor={colors.text[200]}
-                            multiline={multiline}
-                            ref={ref as any}
-                            {...rest}
-                        />
-                    )
+                    : CustomInput
             }
         </View>
     )

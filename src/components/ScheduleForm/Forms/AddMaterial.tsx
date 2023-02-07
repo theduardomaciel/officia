@@ -29,6 +29,8 @@ import { MaterialModel } from 'database/models/materialModel';
 const borderErrorStyle = {
     borderColor: colors.primary.red,
     borderWidth: 1,
+    borderTopColor: colors.primary.red,
+    borderBottomColor: colors.primary.red,
 } as ViewStyle;
 
 const schema = z.object({

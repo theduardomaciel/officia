@@ -23,12 +23,12 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
     const { colorScheme } = useColorScheme();
 
     const currentDate = new Date();
-    const name = useRef('');
 
+    const [name, setName] = useState('')
     const [subServices, setSubServices] = useState<SubServiceModel[]>([]);
     const [selectedDate, setSelectedDate] = useState<CalendarDate | undefined>(undefined);
     const [hourAndMinute, setHourAndMinute] = useState(new Date())
-    const additionalInfo = useRef('');
+    const [additionalInfo, setAdditionalInfo] = useState('');
     const [materials, setMaterials] = useState<MaterialModel[]>([]);
 
     const dateModalRef = useRef<any>(null);
@@ -38,15 +38,28 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
         serviceBottomSheetRef.current.expand();
     }, [])
 
+    const MemoDatePicker = () => (
+        <View className='flex flex-1 w-full items-center justify-center'>
+            <DatePicker
+                date={hourAndMinute}
+                onDateChange={setHourAndMinute}
+                fadeToColor={colorScheme === "light" ? colors.white : colors.gray[200]}
+                androidVariant="nativeAndroid"
+                minuteInterval={15}
+                mode='time'
+            /* is24hourSource='locale' */
+            />
+        </View>
+    )
+
     return (
         <SectionBottomSheet bottomSheetRef={bottomSheetRef} expanded={true}>
             <Input
                 label='Nome do Serviço'
                 placeholder={`Serviço ${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`}
                 style={{ marginBottom: MARGIN }}
-                onChange={(e) => {
-                    name.current = e.nativeEvent.text;
-                }}
+                onChangeText={setName}
+                maxLength={30}
             />
 
             <SubSectionWrapper
@@ -80,14 +93,18 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
             </SubSectionWrapper>
 
             <SubSectionWrapper header={{ title: "Data" }}>
-                <StaticCalendar selectedDate={selectedDate} setSelectedDate={setSelectedDate} style={{ padding: 16, backgroundColor: colors.gray[600] }} />
+                <StaticCalendar
+                    selectedDate={selectedDate}
+                    setSelectedDate={setSelectedDate}
+                    style={{ padding: 16, backgroundColor: colors.gray[600] }}
+                />
             </SubSectionWrapper>
 
             <Input
                 onPress={() => dateModalRef.current.open()}
                 label='Horário'
                 editable={false}
-                value={`${hourAndMinute.getHours()}:${hourAndMinute.getMinutes()}`}
+                value={`${hourAndMinute.getHours()}:${hourAndMinute.getMinutes()}${hourAndMinute.getMinutes() < 10 ? '0' : ''}`}
                 style={{ marginBottom: MARGIN }}
             />
 
@@ -96,9 +113,8 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
                 textAlignVertical='top'
                 style={{ marginBottom: MARGIN }}
                 multiline
-                onChange={(e) => {
-                    additionalInfo.current = e.nativeEvent.text;
-                }}
+                onChangeText={setAdditionalInfo}
+                maxLength={200}
                 placeholder='Ex: O serviço deve ser realizado na sala 2, no 2º andar.'
             />
 
@@ -122,18 +138,7 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
                 ]}
                 cancelButton
             >
-                <View className='flex flex-1 w-full items-center justify-center'>
-                    <DatePicker
-                        date={hourAndMinute}
-                        onDateChange={setHourAndMinute}
-                        fadeToColor={colorScheme === "light" ? colors.white : colors.gray[200]}
-                        androidVariant="nativeAndroid"
-                        minuteInterval={15}
-                        mode='time'
-                        locale='en'
-                        is24hourSource='locale'
-                    />
-                </View>
+                <MemoDatePicker />
             </Modal>
         </SectionBottomSheet>
     )

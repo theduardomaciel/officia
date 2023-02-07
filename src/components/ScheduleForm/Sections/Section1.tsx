@@ -24,16 +24,16 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
     const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>('full');
     const [splitMethod, setSplitMethod] = useState<SplitMethod | null>('percentage');
 
-    const agreementPercentageRef = useRef<RefProps>(null);
-    const agreementInitialValueRef = useRef<RefProps>(null);
+    const [agreementInitialPercentage, setAgreementInitialPercentage] = useState<string>("50");
+    const [agreementInitialValue, setAgreementInitialValue] = useState<string>("0");
 
     const [remainingValue, setRemainingValue] = useState<RemainingValue>("afterCompletion");
-    const installmentsRef = useRef<RefProps>(null);
+    const [installmentsAmount, setInstallmentsAmount] = useState<string>("2x");
 
     const checkedPaymentMethodsRef = useRef<string[]>([]);
 
     const [warrantyPeriodType, setWarrantyPeriodType] = useState<WarrantyPeriod>('days');
-    const warrantyPeriodRef = useRef<RefProps>(null);
+    const [warrantyPeriod, setWarrantyPeriod] = useState<string>("30");
 
     return (
         <SectionBottomSheet bottomSheetRef={bottomSheetRef}>
@@ -86,7 +86,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                             splitMethod === "percentage" ? (
                                 <SubSection header={{ title: `Qual o percentual do acordo?` }}>
                                     <View>
-                                        <StaticToggleGroup
+                                        <ToggleGroup
                                             data={[
                                                 {
                                                     label: '30%',
@@ -104,13 +104,14 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                                 },
                                                 maxValue: 100
                                             }}
-                                            ref={agreementPercentageRef}
+                                            selected={agreementInitialPercentage}
+                                            setSelected={(value) => setAgreementInitialPercentage(value as string)}
                                         />
                                     </View>
                                 </SubSection>
                             ) : <SubSection header={{ title: `Qual o valor inicial a ser pago com o acordo?` }}>
                                 <View>
-                                    <StaticToggleGroup
+                                    <ToggleGroup
                                         data={[
                                             {
                                                 label: 'metade',
@@ -123,7 +124,8 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                                 keyboardType: "number-pad"
                                             }
                                         }}
-                                        ref={agreementInitialValueRef}
+                                        selected={agreementInitialValue}
+                                        setSelected={(value) => setAgreementInitialValue(value as string)}
                                     />
                                 </View>
                             </SubSection>
@@ -156,7 +158,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                     (paymentCondition === "installments" || paymentCondition === "agreement" && remainingValue === "withInstallments") && (
                         <SubSection header={{ title: "Em quantas parcelas o valor será dividido?" }}>
                             <View>
-                                <StaticToggleGroup
+                                <ToggleGroup
                                     data={[
                                         {
                                             label: '2x',
@@ -173,7 +175,8 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    ref={installmentsRef}
+                                    selected={installmentsAmount}
+                                    setSelected={(value) => setInstallmentsAmount(value as string)}
                                 />
                             </View>
                         </SubSection>
@@ -225,7 +228,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                     {
                         warrantyPeriodType === "days" ? (
                             <View>
-                                <StaticToggleGroup
+                                <ToggleGroup
                                     data={[
                                         {
                                             label: '30 dias',
@@ -242,12 +245,13 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    ref={warrantyPeriodRef}
+                                    selected={warrantyPeriod}
+                                    setSelected={(value) => setWarrantyPeriod(value as string)}
                                 />
                             </View>
                         ) : warrantyPeriodType === "months" ? (
                             <View>
-                                <StaticToggleGroup
+                                <ToggleGroup
                                     data={[
                                         {
                                             label: '1 mês',
@@ -264,12 +268,13 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    ref={warrantyPeriodRef}
+                                    selected={warrantyPeriod}
+                                    setSelected={(value) => setWarrantyPeriod(value as string)}
                                 />
                             </View>
                         ) : (
                             <View>
-                                <StaticToggleGroup
+                                <ToggleGroup
                                     data={[
                                         {
                                             label: '1 ano',
@@ -287,7 +292,8 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    ref={warrantyPeriodRef}
+                                    selected={warrantyPeriod}
+                                    setSelected={(value) => setWarrantyPeriod(value as string)}
                                 />
                             </View>
                         )
