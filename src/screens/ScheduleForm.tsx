@@ -27,7 +27,13 @@ export default function ScheduleForm() {
             stiffness: 400
         });
         sections[id].current.expand();
+        console.log(section1Ref.current.paymentCondition, section1Ref.current.checkedPaymentMethods.getChecked())
+
     }, [])
+
+    const section0Ref = useRef<any>(null);
+    const section1Ref = useRef<any>(null);
+
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -63,7 +69,7 @@ export default function ScheduleForm() {
                     <Section0 bottomSheetRef={section0BottomSheetRef} updateHandler={updateHandler} />
                 </Section0ContextProvider>
                 <Section1ContextProvider>
-                    <Section1 bottomSheetRef={section1BottomSheetRef} updateHandler={updateHandler} />
+                    <Section1 bottomSheetRef={section1BottomSheetRef} ref={section1Ref} updateHandler={updateHandler} />
                 </Section1ContextProvider>
                 <Section0ContextProvider>
                     <Section1ContextProvider>

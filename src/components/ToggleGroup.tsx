@@ -1,5 +1,5 @@
 import colors from "global/colors";
-import { Dispatch, forwardRef, memo, SetStateAction, useImperativeHandle, useRef, useState } from "react";
+import { Dispatch, forwardRef, memo, SetStateAction, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { TouchableOpacity, View, Text, TextInput, TextInputProps } from "react-native";
 import Input from "./Input";
 
@@ -9,21 +9,21 @@ type ToggleGroupData = {
 }
 
 type ToggleGroupManualValue = {
-    onChange?: (value: string) => void;
     inputProps: TextInputProps;
     maxValue?: number;
 }
 
 interface ToggleGroupProps {
     data: ToggleGroupData[];
-    selected: string | null;
-    setSelected: (value: string | null) => void;
+    onUpdate?: Dispatch<SetStateAction<any>>;
+    callbackOnUpdate?: Dispatch<SetStateAction<any>>;
     manualValue?: ToggleGroupManualValue;
 }
 
-const ToggleGroupUI = memo(function ToggleGroupUI({ data, selected, setSelected, manualValue }: ToggleGroupProps) {
+const ToggleGroupUI = memo(function ToggleGroupUI({ data, onUpdate, manualValue }: ToggleGroupProps) {
     const inputRef = useRef<TextInput>(null);
     const [value, setValue] = useState<string>("");
+    const [selected, setSelected] = useState<string | null>(null);
 
     return (
         <View className="flex-row w-full items-center justify-between">
@@ -34,6 +34,7 @@ const ToggleGroupUI = memo(function ToggleGroupUI({ data, selected, setSelected,
                             activeOpacity={0.6}
                             key={index}
                             onPress={() => {
+                                /* onUpdate && onUpdate(item.value); */
                                 inputRef.current?.blur();
                                 setSelected(item.value)
                             }}
@@ -58,20 +59,13 @@ const ToggleGroupUI = memo(function ToggleGroupUI({ data, selected, setSelected,
                         <Input
                             ref={inputRef}
                             onChangeText={(value) => {
+                                /* onUpdate && onUpdate(value); */
                                 setValue(value)
-                                manualValue.onChange && manualValue.onChange(value);
                             }}
                             value={value}
-                            onFocus={() => {
-                                setSelected(null)
-                                setTimeout(() => {
-                                    inputRef.current?.focus();
-                                }, 1000);
-                            }}
+                            onFocus={() => setSelected(null)}
                             onBlur={() => {
-                                console.log(value, manualValue.maxValue)
                                 if (manualValue.maxValue && parseInt(value) > manualValue.maxValue) {
-                                    console.log("max value")
                                     setValue(manualValue.maxValue.toString());
                                 }
                             }}
@@ -93,16 +87,16 @@ const ToggleGroupUI = memo(function ToggleGroupUI({ data, selected, setSelected,
     )
 })
 
-export default function ToggleGroup({ data, selected, setSelected, manualValue }: ToggleGroupProps) {
+export default function ToggleGroup({ data, onUpdate, callbackOnUpdate, manualValue }: ToggleGroupProps) {
     return <ToggleGroupUI
         data={data}
-        selected={selected}
-        setSelected={setSelected}
+        onUpdate={onUpdate}
+        callbackOnUpdate={callbackOnUpdate}
         manualValue={manualValue}
     />
 };
 
-interface StaticToggleGroupProps {
+/* interface StaticToggleGroupProps {
     data: ToggleGroupData[];
     manualValue?: ToggleGroupManualValue;
 }
@@ -131,4 +125,4 @@ export const StaticToggleGroup = forwardRef(({ data, manualValue }: StaticToggle
             maxValue: manualValue.maxValue,
         }}
     />
-});
+}); */

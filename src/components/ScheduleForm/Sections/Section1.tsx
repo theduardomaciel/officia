@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { View, Text } from "react-native";
 
 import { useColorScheme } from 'nativewind';
@@ -8,7 +8,7 @@ import CurrencyExchangeIcon from 'src/assets/icons/currency_exchange.svg';
 // Components
 import SectionBottomSheet from '../SectionBottomSheet';
 import { NextButton, Section, SubSection, SubSectionWrapper } from '../SubSectionWrapper';
-import ToggleGroup, { RefProps, StaticToggleGroup } from 'components/ToggleGroup';
+import ToggleGroup from 'components/ToggleGroup';
 import CheckboxesGroups from 'components/CheckboxesGroup';
 import Input from 'components/Input';
 import { useScheduleFormSection1Context } from 'components/contexts/Section1Context';
@@ -21,8 +21,8 @@ type WarrantyPeriod = 'days' | 'months' | 'years';
 
 const paymentMethods = ['Boleto', 'Dinheiro', 'Transferência Bancária', 'Cartão de Crédito', 'Cartão de Débito', 'Pix']
 
-export default function Section1({ bottomSheetRef, updateHandler }: Section) {
-    /* const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>('full');
+const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) => {
+    const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>('full');
     const [splitMethod, setSplitMethod] = useState<SplitMethod | null>('percentage');
 
     const [agreementInitialPercentage, setAgreementInitialPercentage] = useState<string>("50");
@@ -31,12 +31,12 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
     const [remainingValue, setRemainingValue] = useState<RemainingValue>("afterCompletion");
     const [installmentsAmount, setInstallmentsAmount] = useState<string>("2x");
 
-    const checkedPaymentMethodsRef = useRef<string[]>([]);
+    const checkedPaymentMethods = useRef<string[]>([]);
 
     const [warrantyPeriodType, setWarrantyPeriodType] = useState<WarrantyPeriod>('days');
-    const [warrantyPeriod, setWarrantyPeriod] = useState<string>("30"); */
+    const [warrantyPeriod, setWarrantyPeriod] = useState<string>("30");
 
-    const {
+    /* const {
         data: {
             paymentCondition,
             splitMethod,
@@ -58,7 +58,30 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
             setWarrantyPeriodType,
             setWarrantyPeriod
         }
-    } = useScheduleFormSection1Context();
+    } = useScheduleFormSection1Context(); */
+
+    useImperativeHandle(ref, () => {
+        return {
+            /* getPaymentCondition: () => paymentCondition,
+            getSplitMethod: () => splitMethod,
+            getAgreementInitialPercentage: () => agreementInitialPercentage,
+            getAgreementInitialValue: () => agreementInitialValue,
+            getRemainingValue: () => remainingValue,
+            getCheckedPaymentMethods: () => checkedPaymentMethods.current,
+            getInstallmentsAmount: () => installmentsAmount,
+            getWarrantyPeriodType: () => warrantyPeriodType,
+            getWarrantyPeriod: () => warrantyPeriod */
+            paymentCondition,
+            splitMethod,
+            agreementInitialPercentage,
+            agreementInitialValue,
+            remainingValue,
+            checkedPaymentMethods: checkedPaymentMethods.current,
+            installmentsAmount,
+            warrantyPeriodType,
+            warrantyPeriod
+        }
+    }, [paymentCondition, splitMethod, agreementInitialPercentage, agreementInitialValue, remainingValue, installmentsAmount, warrantyPeriodType, warrantyPeriod]);
 
     return (
         <SectionBottomSheet bottomSheetRef={bottomSheetRef}>
@@ -80,8 +103,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                     value: 'agreement',
                                 }
                             ]}
-                            selected={paymentCondition}
-                            setSelected={(value) => setPaymentCondition(value as PaymentCondition)}
+                            onUpdate={setPaymentCondition}
                         />
                     </View>
                     {
@@ -98,8 +120,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             value: 'money',
                                         },
                                     ]}
-                                    selected={splitMethod}
-                                    setSelected={(value) => setSplitMethod(value as SplitMethod)}
+                                    onUpdate={setSplitMethod}
                                 />
                             </View>
                         )
@@ -129,8 +150,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                                 },
                                                 maxValue: 100
                                             }}
-                                            selected={agreementInitialPercentage}
-                                            setSelected={(value) => setAgreementInitialPercentage(value as string)}
+                                            onUpdate={setAgreementInitialPercentage}
                                         />
                                     </View>
                                 </SubSection>
@@ -149,8 +169,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                                 keyboardType: "number-pad"
                                             }
                                         }}
-                                        selected={agreementInitialValue}
-                                        setSelected={(value) => setAgreementInitialValue(value as string)}
+                                        onUpdate={setAgreementInitialValue}
                                     />
                                 </View>
                             </SubSection>
@@ -172,8 +191,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             value: 'withInstallments',
                                         },
                                     ]}
-                                    selected={remainingValue}
-                                    setSelected={(value) => setRemainingValue(value as RemainingValue)}
+                                    onUpdate={setRemainingValue}
                                 />
                             </View>
                         </SubSection>
@@ -200,8 +218,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    selected={installmentsAmount}
-                                    setSelected={(value) => setInstallmentsAmount(value as string)}
+                                    onUpdate={setInstallmentsAmount}
                                 />
                             </View>
                         </SubSection>
@@ -248,8 +265,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                     value: "years",
                                 }
                             ]}
-                            selected={warrantyPeriodType}
-                            setSelected={(value) => setWarrantyPeriodType(value as WarrantyPeriod)}
+                            onUpdate={(value) => setWarrantyPeriodType(value as WarrantyPeriod)}
                         />
                     </View>
                     {
@@ -272,8 +288,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    selected={warrantyPeriod}
-                                    setSelected={(value) => setWarrantyPeriod(value as string)}
+                                    onUpdate={setWarrantyPeriod}
                                 />
                             </View>
                         ) : warrantyPeriodType === "months" ? (
@@ -295,8 +310,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    selected={warrantyPeriod}
-                                    setSelected={(value) => setWarrantyPeriod(value as string)}
+                                    onUpdate={setWarrantyPeriod}
                                 />
                             </View>
                         ) : (
@@ -319,8 +333,7 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    selected={warrantyPeriod}
-                                    setSelected={(value) => setWarrantyPeriod(value as string)}
+                                    onUpdate={setWarrantyPeriod}
                                 />
                             </View>
                         )
@@ -346,4 +359,6 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
             <NextButton section={1} updateHandler={updateHandler} />
         </SectionBottomSheet>
     )
-}
+});
+
+export default Section1;
