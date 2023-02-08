@@ -11,6 +11,7 @@ import { NextButton, Section, SubSection, SubSectionWrapper } from '../SubSectio
 import ToggleGroup, { RefProps, StaticToggleGroup } from 'components/ToggleGroup';
 import CheckboxesGroups from 'components/CheckboxesGroup';
 import Input from 'components/Input';
+import { useScheduleFormSection1Context } from 'components/contexts/Section1Context';
 
 // Types
 type PaymentCondition = 'full' | 'installments' | 'agreement';
@@ -21,7 +22,7 @@ type WarrantyPeriod = 'days' | 'months' | 'years';
 const paymentMethods = ['Boleto', 'Dinheiro', 'Transferência Bancária', 'Cartão de Crédito', 'Cartão de Débito', 'Pix']
 
 export default function Section1({ bottomSheetRef, updateHandler }: Section) {
-    const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>('full');
+    /* const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>('full');
     const [splitMethod, setSplitMethod] = useState<SplitMethod | null>('percentage');
 
     const [agreementInitialPercentage, setAgreementInitialPercentage] = useState<string>("50");
@@ -33,7 +34,31 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
     const checkedPaymentMethodsRef = useRef<string[]>([]);
 
     const [warrantyPeriodType, setWarrantyPeriodType] = useState<WarrantyPeriod>('days');
-    const [warrantyPeriod, setWarrantyPeriod] = useState<string>("30");
+    const [warrantyPeriod, setWarrantyPeriod] = useState<string>("30"); */
+
+    const {
+        data: {
+            paymentCondition,
+            splitMethod,
+            agreementInitialPercentage,
+            agreementInitialValue,
+            remainingValue,
+            checkedPaymentMethods,
+            installmentsAmount,
+            warrantyPeriodType,
+            warrantyPeriod
+        },
+        setData: {
+            setPaymentCondition,
+            setSplitMethod,
+            setAgreementInitialPercentage,
+            setAgreementInitialValue,
+            setRemainingValue,
+            setInstallmentsAmount,
+            setWarrantyPeriodType,
+            setWarrantyPeriod
+        }
+    } = useScheduleFormSection1Context();
 
     return (
         <SectionBottomSheet bottomSheetRef={bottomSheetRef}>
@@ -193,7 +218,9 @@ export default function Section1({ bottomSheetRef, updateHandler }: Section) {
                 <View>
                     <CheckboxesGroups
                         data={paymentMethods}
-                        ref={checkedPaymentMethodsRef}
+                        ref={checkedPaymentMethods}
+                    /* checked={checkedPaymentMethods}
+                    setChecked={setCheckedPaymentMethods} */
                     />
                 </View>
             </SubSectionWrapper>

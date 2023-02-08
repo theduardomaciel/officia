@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Keyboard, TouchableWithoutFeedback, View } from "react-native";
 import { useSharedValue, withSpring } from 'react-native-reanimated';
 
@@ -8,6 +8,8 @@ import { SectionsNavigator } from 'components/SectionsNavigator';
 import Section0 from 'components/ScheduleForm/Sections/Section0';
 import Section1 from 'components/ScheduleForm/Sections/Section1';
 import Section2 from 'components/ScheduleForm/Sections/Section2';
+import { Section0ContextProvider } from 'components/contexts/Section0Context';
+import { Section1ContextProvider } from 'components/contexts/Section1Context';
 
 export default function ScheduleForm() {
     const selectedSectionId = useSharedValue(0);
@@ -57,9 +59,17 @@ export default function ScheduleForm() {
                         }
                     ]}
                 />
-                <Section0 bottomSheetRef={section0BottomSheetRef} updateHandler={updateHandler} />
-                <Section1 bottomSheetRef={section1BottomSheetRef} updateHandler={updateHandler} />
-                <Section2 bottomSheetRef={section2BottomSheetRef} updateHandler={updateHandler} />
+                <Section0ContextProvider>
+                    <Section0 bottomSheetRef={section0BottomSheetRef} updateHandler={updateHandler} />
+                </Section0ContextProvider>
+                <Section1ContextProvider>
+                    <Section1 bottomSheetRef={section1BottomSheetRef} updateHandler={updateHandler} />
+                </Section1ContextProvider>
+                <Section0ContextProvider>
+                    <Section1ContextProvider>
+                        <Section2 bottomSheetRef={section2BottomSheetRef} updateHandler={updateHandler} />
+                    </Section1ContextProvider>
+                </Section0ContextProvider>
             </View>
         </TouchableWithoutFeedback>
     )

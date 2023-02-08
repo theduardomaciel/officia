@@ -1,5 +1,5 @@
 import colors from "global/colors";
-import { Dispatch, forwardRef, SetStateAction, useImperativeHandle, useRef, useState } from "react";
+import { Dispatch, forwardRef, memo, SetStateAction, useImperativeHandle, useRef, useState } from "react";
 import { TouchableOpacity, View, Text, TextInput, TextInputProps } from "react-native";
 import Input from "./Input";
 
@@ -21,9 +21,9 @@ interface ToggleGroupProps {
     manualValue?: ToggleGroupManualValue;
 }
 
-function ToggleGroupUI({ data, selected, setSelected, manualValue }: ToggleGroupProps) {
+const ToggleGroupUI = memo(function ToggleGroupUI({ data, selected, setSelected, manualValue }: ToggleGroupProps) {
     const inputRef = useRef<TextInput>(null);
-    const inputValueRef = useRef("");
+    const [value, setValue] = useState<string>("");
 
     return (
         <View className="flex-row w-full items-center justify-between">
@@ -58,16 +58,21 @@ function ToggleGroupUI({ data, selected, setSelected, manualValue }: ToggleGroup
                         <Input
                             ref={inputRef}
                             onChangeText={(value) => {
-                                inputValueRef.current = value;
+                                setValue(value)
                                 manualValue.onChange && manualValue.onChange(value);
                             }}
-                            onFocus={() => setSelected(null)}
+                            value={value}
+                            onFocus={() => {
+                                setSelected(null)
+                                setTimeout(() => {
+                                    inputRef.current?.focus();
+                                }, 1000);
+                            }}
                             onBlur={() => {
-                                console.log(parseInt(inputValueRef.current), manualValue.maxValue)
-                                if (manualValue.maxValue && parseInt(inputValueRef.current) > manualValue.maxValue) {
+                                console.log(value, manualValue.maxValue)
+                                if (manualValue.maxValue && parseInt(value) > manualValue.maxValue) {
                                     console.log("max value")
-                                    inputValueRef.current = "";
-                                    inputRef.current?.clear();
+                                    setValue(manualValue.maxValue.toString());
                                 }
                             }}
                             style={{
@@ -86,7 +91,7 @@ function ToggleGroupUI({ data, selected, setSelected, manualValue }: ToggleGroup
             }
         </View>
     )
-}
+})
 
 export default function ToggleGroup({ data, selected, setSelected, manualValue }: ToggleGroupProps) {
     return <ToggleGroupUI

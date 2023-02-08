@@ -5,7 +5,7 @@ import colors from "global/colors";
 import clsx from "clsx";
 
 import Label from "./Label";
-import { forwardRef } from "react";
+import { forwardRef, useMemo } from "react";
 
 interface Props extends TextInputProps {
     label?: string;
@@ -18,20 +18,22 @@ interface Props extends TextInputProps {
 const Input = forwardRef(({ label, icon, pallette, required, multiline, onPress, ...rest }: Props, ref) => {
     const { colorScheme } = useColorScheme();
 
-    const CustomInput = <TextInput
-        className={clsx("w-full px-4 py-2 rounded-lg border border-gray-300 text-white", {
-            "bg-black dark:bg-gray-200": pallette !== "dark",
-            "bg-black dark:bg-gray-300": pallette === "dark",
-            "min-h-[100px] pt-4": multiline,
-        })}
-        textAlignVertical={multiline ? "top" : "center"}
-        multiline={multiline}
-        placeholderTextColor={colorScheme === "dark" ? colors.text[200] : colors.white}
-        cursorColor={colorScheme === "dark" ? colors.text[200] : colors.white}
-        selectionColor={colorScheme === "dark" ? colors.text[200] : colors.white}
-        ref={ref as any}
-        {...rest}
-    />
+    const CustomInput = useMemo(() => (
+        <TextInput
+            className={clsx("w-full px-4 py-2 rounded-lg border border-gray-300 text-white", {
+                "bg-black dark:bg-gray-200": pallette !== "dark",
+                "bg-black dark:bg-gray-300": pallette === "dark",
+                "min-h-[100px] pt-4": multiline,
+            })}
+            textAlignVertical={multiline ? "top" : "center"}
+            multiline={multiline}
+            placeholderTextColor={colorScheme === "dark" ? colors.text[200] : colors.white}
+            cursorColor={colorScheme === "dark" ? colors.text[200] : colors.white}
+            selectionColor={colorScheme === "dark" ? colors.text[200] : colors.white}
+            ref={ref as any}
+            {...rest}
+        />
+    ), [pallette, multiline, colorScheme, ref, rest]);
 
     return (
         <View className="flex-col align-top justify-start gap-y-2">

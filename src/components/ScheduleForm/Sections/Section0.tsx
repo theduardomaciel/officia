@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { View, Text } from "react-native";
 import DatePicker from 'react-native-date-picker';
 
@@ -16,20 +16,28 @@ import { SubActionButton } from 'components/ActionButton';
 import { ServicePreview } from 'components/ServicePreview';
 
 // Types
-import type { SubServiceModel } from 'database/models/subServiceModel';
-import type { MaterialModel } from 'database/models/materialModel';
+import { useScheduleFormSection0Context } from 'components/contexts/Section0Context';
 
 export default function Section0({ bottomSheetRef, updateHandler }: Section) {
     const { colorScheme } = useColorScheme();
 
     const currentDate = new Date();
-
-    const [name, setName] = useState('')
-    const [subServices, setSubServices] = useState<SubServiceModel[]>([]);
-    const [selectedDate, setSelectedDate] = useState<CalendarDate | undefined>(undefined);
-    const [hourAndMinute, setHourAndMinute] = useState(new Date())
-    const [additionalInfo, setAdditionalInfo] = useState('');
-    const [materials, setMaterials] = useState<MaterialModel[]>([]);
+    const {
+        data: {
+            subServices,
+            date,
+            time,
+            materials
+        },
+        setData: {
+            setName,
+            setSubServices,
+            setDate,
+            setTime,
+            setAdditionalInfo,
+            setMaterials
+        }
+    } = useScheduleFormSection0Context();
 
     const dateModalRef = useRef<any>(null);
 
@@ -38,19 +46,46 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
         serviceBottomSheetRef.current.expand();
     }, [])
 
-    const MemoDatePicker = () => (
-        <View className='flex flex-1 w-full items-center justify-center'>
-            <DatePicker
-                date={hourAndMinute}
-                onDateChange={setHourAndMinute}
-                fadeToColor={colorScheme === "light" ? colors.white : colors.gray[200]}
-                androidVariant="nativeAndroid"
-                minuteInterval={15}
-                mode='time'
-            /* is24hourSource='locale' */
-            />
-        </View>
-    )
+    const DatePickerModal = memo(function DatePickerModal() {
+        const newDate = useRef(new Date());
+
+        const onDateChange = useCallback((date: Date) => {
+            newDate.current = date;
+        }, [])
+
+        const onConfirm = () => {
+            dateModalRef.current.close();
+            setTime(newDate.current)
+        }
+
+        return (
+            <Modal
+                ref={dateModalRef}
+                title={"Selecione o horário"}
+                icon="calendar-today"
+                buttons={[
+                    {
+                        label: "Confirmar",
+                        onPress: onConfirm,
+                        closeOnPress: true,
+                    }
+                ]}
+                cancelButton
+            >
+                <View className='flex flex-1 w-full items-center justify-center'>
+                    <DatePicker
+                        date={newDate.current}
+                        onDateChange={onDateChange}
+                        fadeToColor={colorScheme === "light" ? colors.white : colors.gray[200]}
+                        androidVariant="nativeAndroid"
+                        minuteInterval={15}
+                        mode='time'
+                    /* is24hourSource='locale' */
+                    />
+                </View>
+            </Modal>
+        )
+    });
 
     return (
         <SectionBottomSheet bottomSheetRef={bottomSheetRef} expanded={true}>
@@ -94,8 +129,8 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
 
             <SubSectionWrapper header={{ title: "Data" }}>
                 <StaticCalendar
-                    selectedDate={selectedDate}
-                    setSelectedDate={setSelectedDate}
+                    selectedDate={date}
+                    setSelectedDate={setDate}
                     style={{ padding: 16, backgroundColor: colors.gray[600] }}
                 />
             </SubSectionWrapper>
@@ -104,7 +139,7 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
                 onPress={() => dateModalRef.current.open()}
                 label='Horário'
                 editable={false}
-                value={`${hourAndMinute.getHours()}:${hourAndMinute.getMinutes()}${hourAndMinute.getMinutes() < 10 ? '0' : ''}`}
+                value={`${time.getHours()}:${time.getMinutes()}${time.getMinutes() < 10 ? '0' : ''}`}
                 style={{ marginBottom: MARGIN }}
             />
 
@@ -126,20 +161,8 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
                 materials={materials}
                 setMaterials={setMaterials}
             />
-            <Modal ref={dateModalRef}
-                title={"Selecione o horário"}
-                icon="calendar-today"
-                buttons={[
-                    {
-                        label: "Confirmar",
-                        onPress: () => { },
-                        closeOnPress: true,
-                    }
-                ]}
-                cancelButton
-            >
-                <MemoDatePicker />
-            </Modal>
+
+            <DatePickerModal />
         </SectionBottomSheet>
     )
 }

@@ -11,6 +11,8 @@ import PaymentMethodsIcon from 'assets/icons/currency_exchange.svg';
 import SectionBottomSheet from '../SectionBottomSheet';
 import { MARGIN, NextButton, Section, SubSection, SubSectionWrapper, SubSectionWrapperProps } from '../SubSectionWrapper';
 import Label from 'components/Label';
+import { useScheduleFormSection0Context } from 'components/contexts/Section0Context';
+import { useScheduleFormSection1Context } from 'components/contexts/Section1Context';
 
 interface ReviewSectionProps {
     wrapperProps: SubSectionWrapperProps;
@@ -37,6 +39,9 @@ const ReviewSection = ({ wrapperProps, value, multiline }: ReviewSectionProps) =
 )
 
 export default function Section2({ bottomSheetRef, updateHandler }: Section) {
+    const { data: { name, date, time } } = useScheduleFormSection0Context();
+    const { data: { paymentCondition, checkedPaymentMethods } } = useScheduleFormSection1Context();
+
     return (
         <SectionBottomSheet bottomSheetRef={bottomSheetRef}>
             <View className='flex-col w-full items-start justify-center mb-5'>
@@ -50,7 +55,7 @@ export default function Section2({ bottomSheetRef, updateHandler }: Section) {
 
             <ReviewSection
                 wrapperProps={{ header: { title: "Nome do Serviço" } }}
-                value={"---"}
+                value={name || "Serviço sem nome"}
             />
             <View className='flex-row w-full'>
                 <ReviewSection
@@ -58,14 +63,18 @@ export default function Section2({ bottomSheetRef, updateHandler }: Section) {
                         header: { title: "Data" },
                         style: { flex: 1, marginRight: 10 },
                     }}
-                    value={"---"}
+                    value={new Date(`${date?.month}-${date?.date}-2023`).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                    })}
                 />
                 <ReviewSection
                     wrapperProps={{
                         header: { title: "Hora" },
                         style: { flex: 1 },
                     }}
-                    value={"---"}
+                    value={`${time?.getHours()}:${time?.getMinutes()}`}
                 />
             </View>
 
@@ -74,7 +83,7 @@ export default function Section2({ bottomSheetRef, updateHandler }: Section) {
                     header: { title: "Condições	de Pagamento", icon: "credit-card" },
                     style: { flex: 1 },
                 }}
-                value={"---"}
+                value={paymentCondition || "---"}
             />
 
             <ReviewSection
@@ -82,7 +91,7 @@ export default function Section2({ bottomSheetRef, updateHandler }: Section) {
                     header: { title: "Métodos de Pagamento", customIcon: PaymentMethodsIcon as any },
                     style: { flex: 1 },
                 }}
-                value={"---"}
+                value={checkedPaymentMethods?.length ? checkedPaymentMethods.join(', ') : "---"}
             />
 
             <NextButton section={2} updateHandler={updateHandler} />

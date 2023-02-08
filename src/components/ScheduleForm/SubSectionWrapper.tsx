@@ -5,7 +5,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 import Label from "components/Label";
-import { FC, SVGProps } from "react";
+import { FC, memo, SVGProps } from "react";
 
 export interface Section {
     bottomSheetRef: React.RefObject<any>;
@@ -26,7 +26,7 @@ export interface SubSectionWrapperProps {
 
 export const MARGIN = 20;
 
-export const SubSectionWrapper = ({ header, children, style }: SubSectionWrapperProps) => {
+export const SubSectionWrapper = memo(({ header, children, style }: SubSectionWrapperProps) => {
     return (
         <View className='w-full flex-col items-start justify-start gap-y-4' style={[{ marginBottom: MARGIN }, style]}>
             <View className='w-full flex-row items-center justify-between'>
@@ -42,7 +42,7 @@ export const SubSectionWrapper = ({ header, children, style }: SubSectionWrapper
             {children}
         </View>
     )
-}
+})
 
 export const SubSection = ({ header, children }: SubSectionWrapperProps) => {
     return (

@@ -4,9 +4,11 @@ import { Checkbox } from "./Checkbox";
 
 interface Props {
     data: string[];
+    /* checked: string[];
+    setChecked: (checked: string[]) => void; */
 }
 
-const CheckboxesGroups = forwardRef(({ data }: Props, ref) => {
+const CheckboxesGroups = forwardRef(({ data/* , checked, setChecked */ }: Props, ref) => {
     const [checked, setChecked] = useState<string[]>([]);
 
     useImperativeHandle(ref, () => ({
