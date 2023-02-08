@@ -39,8 +39,8 @@ const ReviewSection = ({ wrapperProps, value, multiline }: ReviewSectionProps) =
 )
 
 export default function Section2({ bottomSheetRef, updateHandler }: Section) {
-    const { data: { name, date, time } } = useScheduleFormSection0Context();
-    const { data: { paymentCondition, checkedPaymentMethods } } = useScheduleFormSection1Context();
+    /* const { data: { name, date, time } } = useScheduleFormSection0Context();
+    const { data: { paymentCondition, checkedPaymentMethods } } = useScheduleFormSection1Context(); */
 
     return (
         <SectionBottomSheet bottomSheetRef={bottomSheetRef}>

@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { View, Text } from "react-native";
 
 import { useColorScheme } from 'nativewind';
@@ -8,7 +8,7 @@ import CurrencyExchangeIcon from 'src/assets/icons/currency_exchange.svg';
 // Components
 import SectionBottomSheet from '../SectionBottomSheet';
 import { NextButton, Section, SubSection, SubSectionWrapper } from '../SubSectionWrapper';
-import ToggleGroup from 'components/ToggleGroup';
+import ToggleGroup, { ToggleGroupWithManualValue } from 'components/ToggleGroup';
 import CheckboxesGroups from 'components/CheckboxesGroup';
 import Input from 'components/Input';
 import { useScheduleFormSection1Context } from 'components/contexts/Section1Context';
@@ -22,6 +22,8 @@ type WarrantyPeriod = 'days' | 'months' | 'years';
 const paymentMethods = ['Boleto', 'Dinheiro', 'Transferência Bancária', 'Cartão de Crédito', 'Cartão de Débito', 'Pix']
 
 const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) => {
+    const checkedPaymentMethods = useRef<string[]>([]);
+
     const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>('full');
     const [splitMethod, setSplitMethod] = useState<SplitMethod | null>('percentage');
 
@@ -31,60 +33,11 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
     const [remainingValue, setRemainingValue] = useState<RemainingValue>("afterCompletion");
     const [installmentsAmount, setInstallmentsAmount] = useState<string>("2x");
 
-    const checkedPaymentMethods = useRef<string[]>([]);
-
     const [warrantyPeriodType, setWarrantyPeriodType] = useState<WarrantyPeriod>('days');
-    const [warrantyPeriod, setWarrantyPeriod] = useState<string>("30");
+    //const [warrantyPeriod, setWarrantyPeriod] = useState<string>("30");
 
-    /* const {
-        data: {
-            paymentCondition,
-            splitMethod,
-            agreementInitialPercentage,
-            agreementInitialValue,
-            remainingValue,
-            checkedPaymentMethods,
-            installmentsAmount,
-            warrantyPeriodType,
-            warrantyPeriod
-        },
-        setData: {
-            setPaymentCondition,
-            setSplitMethod,
-            setAgreementInitialPercentage,
-            setAgreementInitialValue,
-            setRemainingValue,
-            setInstallmentsAmount,
-            setWarrantyPeriodType,
-            setWarrantyPeriod
-        }
-    } = useScheduleFormSection1Context(); */
-
-    useImperativeHandle(ref, () => {
-        return {
-            /* getPaymentCondition: () => paymentCondition,
-            getSplitMethod: () => splitMethod,
-            getAgreementInitialPercentage: () => agreementInitialPercentage,
-            getAgreementInitialValue: () => agreementInitialValue,
-            getRemainingValue: () => remainingValue,
-            getCheckedPaymentMethods: () => checkedPaymentMethods.current,
-            getInstallmentsAmount: () => installmentsAmount,
-            getWarrantyPeriodType: () => warrantyPeriodType,
-            getWarrantyPeriod: () => warrantyPeriod */
-            paymentCondition,
-            splitMethod,
-            agreementInitialPercentage,
-            agreementInitialValue,
-            remainingValue,
-            checkedPaymentMethods: checkedPaymentMethods.current,
-            installmentsAmount,
-            warrantyPeriodType,
-            warrantyPeriod
-        }
-    }, [paymentCondition, splitMethod, agreementInitialPercentage, agreementInitialValue, remainingValue, installmentsAmount, warrantyPeriodType, warrantyPeriod]);
-
-    return (
-        <SectionBottomSheet bottomSheetRef={bottomSheetRef}>
+    const Subsection1 = useMemo(() => {
+        return (
             <SubSectionWrapper header={{ title: "Condições de Pagamento", icon: "credit-card" }}>
                 <View className='flex-col w-full gap-y-2'>
                     <View>
@@ -103,7 +56,9 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                     value: 'agreement',
                                 }
                             ]}
-                            onUpdate={setPaymentCondition}
+                            selected={paymentCondition}
+                            updateState={setPaymentCondition}
+                            name="paymentCondition"
                         />
                     </View>
                     {
@@ -120,7 +75,9 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                             value: 'money',
                                         },
                                     ]}
-                                    onUpdate={setSplitMethod}
+                                    selected={splitMethod}
+                                    updateState={setSplitMethod}
+                                    name="splitMethod"
                                 />
                             </View>
                         )
@@ -132,7 +89,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                             splitMethod === "percentage" ? (
                                 <SubSection header={{ title: `Qual o percentual do acordo?` }}>
                                     <View>
-                                        <ToggleGroup
+                                        <ToggleGroupWithManualValue
                                             data={[
                                                 {
                                                     label: '30%',
@@ -150,13 +107,15 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                                 },
                                                 maxValue: 100
                                             }}
-                                            onUpdate={setAgreementInitialPercentage}
+                                        /* selected={agreementInitialPercentage}
+                                        updateState={setAgreementInitialPercentage}
+                                        name="agreementInitialPercentage" */
                                         />
                                     </View>
                                 </SubSection>
                             ) : <SubSection header={{ title: `Qual o valor inicial a ser pago com o acordo?` }}>
                                 <View>
-                                    <ToggleGroup
+                                    <ToggleGroupWithManualValue
                                         data={[
                                             {
                                                 label: 'metade',
@@ -169,7 +128,9 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                                 keyboardType: "number-pad"
                                             }
                                         }}
-                                        onUpdate={setAgreementInitialValue}
+                                    /* selected={agreementInitialValue}
+                                    updateState={setAgreementInitialValue}
+                                    name="agreementInitialValue" */
                                     />
                                 </View>
                             </SubSection>
@@ -191,7 +152,9 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                             value: 'withInstallments',
                                         },
                                     ]}
-                                    onUpdate={setRemainingValue}
+                                    selected={remainingValue}
+                                    updateState={setRemainingValue}
+                                    name="remainingValue"
                                 />
                             </View>
                         </SubSection>
@@ -201,7 +164,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                     (paymentCondition === "installments" || paymentCondition === "agreement" && remainingValue === "withInstallments") && (
                         <SubSection header={{ title: "Em quantas parcelas o valor será dividido?" }}>
                             <View>
-                                <ToggleGroup
+                                <ToggleGroupWithManualValue
                                     data={[
                                         {
                                             label: '2x',
@@ -218,30 +181,20 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    onUpdate={setInstallmentsAmount}
+                                /* selected={installmentsAmount}
+                                updateState={setInstallmentsAmount}
+                                name="installmentsAmount" */
                                 />
                             </View>
                         </SubSection>
                     )
                 }
             </SubSectionWrapper>
+        )
+    }, [paymentCondition, splitMethod, agreementInitialPercentage, agreementInitialValue, remainingValue, installmentsAmount]);
 
-            <SubSectionWrapper
-                header={{
-                    title: "Métodos de Pagamento",
-                    customIcon: CurrencyExchangeIcon as any,
-                }}
-            >
-                <View>
-                    <CheckboxesGroups
-                        data={paymentMethods}
-                        ref={checkedPaymentMethods}
-                    /* checked={checkedPaymentMethods}
-                    setChecked={setCheckedPaymentMethods} */
-                    />
-                </View>
-            </SubSectionWrapper>
-
+    const Subsection2 = useMemo(() => {
+        return (
             <SubSectionWrapper
                 header={{
                     title: "Métodos de Pagamento",
@@ -265,13 +218,15 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                     value: "years",
                                 }
                             ]}
-                            onUpdate={(value) => setWarrantyPeriodType(value as WarrantyPeriod)}
+                            selected={warrantyPeriodType}
+                            updateState={(value) => setWarrantyPeriodType(value as WarrantyPeriod)}
+                            name="warrantyPeriodType"
                         />
                     </View>
                     {
                         warrantyPeriodType === "days" ? (
                             <View>
-                                <ToggleGroup
+                                <ToggleGroupWithManualValue
                                     data={[
                                         {
                                             label: '30 dias',
@@ -288,12 +243,14 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    onUpdate={setWarrantyPeriod}
+                                /* selected={warrantyPeriod}
+                                updateState={setWarrantyPeriod}
+                                name="warrantyPeriod" */
                                 />
                             </View>
                         ) : warrantyPeriodType === "months" ? (
                             <View>
-                                <ToggleGroup
+                                <ToggleGroupWithManualValue
                                     data={[
                                         {
                                             label: '1 mês',
@@ -310,12 +267,14 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    onUpdate={setWarrantyPeriod}
+                                /* selected={warrantyPeriod}
+                                updateState={setWarrantyPeriod}
+                                name="warrantyPeriod" */
                                 />
                             </View>
                         ) : (
                             <View>
-                                <ToggleGroup
+                                <ToggleGroupWithManualValue
                                     data={[
                                         {
                                             label: '1 ano',
@@ -333,7 +292,8 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                             keyboardType: "number-pad"
                                         }
                                     }}
-                                    onUpdate={setWarrantyPeriod}
+                                /* updateState={setWarrantyPeriod}
+                                name="warrantyPeriod" */
                                 />
                             </View>
                         )
@@ -355,6 +315,30 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                     </SubSection>
                 </View>
             </SubSectionWrapper>
+        )
+    }, [warrantyPeriodType]);
+
+    return (
+        <SectionBottomSheet bottomSheetRef={bottomSheetRef}>
+
+            {Subsection1}
+            <SubSectionWrapper
+                header={{
+                    title: "Métodos de Pagamento",
+                    customIcon: CurrencyExchangeIcon as any,
+                }}
+            >
+                <View>
+                    <CheckboxesGroups
+                        data={paymentMethods}
+                        ref={checkedPaymentMethods}
+                    /* checked={checkedPaymentMethods}
+                    setChecked={setCheckedPaymentMethods} */
+                    />
+                </View>
+            </SubSectionWrapper>
+
+            {Subsection2}
 
             <NextButton section={1} updateHandler={updateHandler} />
         </SectionBottomSheet>

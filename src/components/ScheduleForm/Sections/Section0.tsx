@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect, memo, useMemo } from 'react';
+import React, { useRef, useState, useCallback, useEffect, memo, useMemo, forwardRef } from 'react';
 import { View, Text } from "react-native";
 import DatePicker from 'react-native-date-picker';
 
@@ -17,12 +17,13 @@ import { ServicePreview } from 'components/ServicePreview';
 
 // Types
 import { useScheduleFormSection0Context } from 'components/contexts/Section0Context';
+import { SubServiceModel } from 'database/models/subServiceModel';
+import { MaterialModel } from 'database/models/materialModel';
 
-export default function Section0({ bottomSheetRef, updateHandler }: Section) {
+const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section) => {
     const { colorScheme } = useColorScheme();
 
-    const currentDate = new Date();
-    const {
+    /* const {
         data: {
             subServices,
             date,
@@ -37,7 +38,13 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
             setAdditionalInfo,
             setMaterials
         }
-    } = useScheduleFormSection0Context();
+    } = useScheduleFormSection0Context(); */
+    const [name, setName] = useState('')
+    const [subServices, setSubServices] = useState<SubServiceModel[]>([]);
+    const [date, setDate] = useState<CalendarDate | undefined>(undefined);
+    const [time, setTime] = useState(new Date())
+    const [additionalInfo, setAdditionalInfo] = useState('');
+    const [materials, setMaterials] = useState<MaterialModel[]>([]);
 
     const dateModalRef = useRef<any>(null);
 
@@ -139,7 +146,7 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
                 onPress={() => dateModalRef.current.open()}
                 label='Horário'
                 editable={false}
-                value={`${time.getHours()}:${time.getMinutes()}${time.getMinutes() < 10 ? '0' : ''}`}
+                value={`${time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}
                 style={{ marginBottom: MARGIN }}
             />
 
@@ -165,4 +172,6 @@ export default function Section0({ bottomSheetRef, updateHandler }: Section) {
             <DatePickerModal />
         </SectionBottomSheet>
     )
-}
+});
+
+export default Section0;
