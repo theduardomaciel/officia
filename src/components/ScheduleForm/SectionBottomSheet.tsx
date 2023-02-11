@@ -8,9 +8,11 @@ interface Props {
     children: React.ReactNode;
     bottomSheetRef: React.RefObject<any>;
     expanded?: boolean;
+    onDismissed?: () => void;
+    onExpanded?: () => void;
 }
 
-export default function ScheduleFormSection({ children, bottomSheetRef, expanded = false }: Props) {
+export default function ScheduleFormSection({ children, bottomSheetRef, expanded = false, onDismissed, onExpanded }: Props) {
     return (
         <BottomSheet
             ref={bottomSheetRef}
@@ -26,6 +28,8 @@ export default function ScheduleFormSection({ children, bottomSheetRef, expanded
             colors={{
                 background: colors.gray[500],
             }}
+            onDismissed={onDismissed}
+            onExpanded={onExpanded}
         >
             <View
                 className="flex flex-1"

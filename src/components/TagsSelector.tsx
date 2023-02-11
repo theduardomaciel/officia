@@ -14,11 +14,11 @@ import colors from 'global/colors';
 
 export interface Tag {
     title: string;
+    value: string;
     icon?: string;
 }
 
-type TagObject = Tag & {
-    id: number;
+export type TagObject = Tag & {
     checked: boolean;
 }
 
@@ -36,7 +36,7 @@ export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButto
     const { colorScheme } = useColorScheme();
 
     const [sectionData, setSectionData] = useState(tags.map((tag: Tag, index: number) => {
-        return { ...tag, checked: false, id: index }
+        return { ...tag, checked: false }
     }));
 
     function updateTagsData(updatedSectionData: TagObject[]) {
@@ -49,7 +49,7 @@ export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButto
     const renderItem = ({ item, index }: { item: TagObject, index: number }) => (
         <>
             <TouchableOpacity
-                key={item.id}
+                key={item.value}
                 className={clsx('bg-black dark:bg-gray-200 rounded-full h-[30px] flex-row px-4 py-1 mr-2 items-center justify-center', {
                     'border-primary-green border-[1.25px]': item.checked,
                     'bg-black dark:bg-gray-300': pallette === "dark",
@@ -65,16 +65,16 @@ export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButto
                         if (uniqueSelection) {
                             updatedSectionData = [...sectionData].map(tag => {
                                 // Fazemos essa verificação para que seja possível remover a seleção dos outros items
-                                if (tag.id !== item.id) {
+                                if (tag.value !== item.value) {
                                     tag.checked = false;
                                 }
                                 return tag;
                             })
                         }
-                        updatedSectionData.find(tag => tag.id === item.id)!.checked = !item.checked;
+                        updatedSectionData.find(tag => tag.value === item.value)!.checked = !item.checked;
 
                         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                        onSelectTags(updatedSectionData) // Passa os dados atualizados para o componente pai
+                        onSelectTags(updatedSectionData.filter(tag => tag.checked === true)) // Passa os dados atualizados para o componente pai
                         updateTagsData(updatedSectionData) // Atualiza os dados do componente
                     }
                 }}
@@ -117,7 +117,7 @@ export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButto
             showsHorizontalScrollIndicator={false}
             data={sectionData}
             renderItem={renderItem}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={item => item.value}
         />
     )
 }

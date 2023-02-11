@@ -21,7 +21,6 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 import { tags } from 'global/tags';
-import { Service } from 'types/service';
 
 import { database } from 'database';
 import { ServiceModel } from 'database/models/serviceModel';

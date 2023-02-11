@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect, memo, useMemo, forwardRef } from 'react';
+import React, { useRef, useState, useCallback, useEffect, memo, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { View, Text } from "react-native";
 import DatePicker from 'react-native-date-picker';
 
@@ -13,37 +13,35 @@ import SectionBottomSheet from '../SectionBottomSheet';
 import { CalendarDate, StaticCalendar } from 'components/Calendar';
 import { MARGIN, NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
 import { SubActionButton } from 'components/ActionButton';
-import { ServicePreview } from 'components/ServicePreview';
+import { MaterialPreview, ServicePreview } from 'components/ServicePreview';
 
 // Types
-import { useScheduleFormSection0Context } from 'components/contexts/Section0Context';
 import { SubServiceModel } from 'database/models/subServiceModel';
 import { MaterialModel } from 'database/models/materialModel';
 
-const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section) => {
-    const { colorScheme } = useColorScheme();
+// Forms
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import AddMaterial from '../Forms/AddMaterial';
 
-    /* const {
-        data: {
-            subServices,
-            date,
-            time,
-            materials
-        },
-        setData: {
-            setName,
-            setSubServices,
-            setDate,
-            setTime,
-            setAdditionalInfo,
-            setMaterials
-        }
-    } = useScheduleFormSection0Context(); */
-    const [name, setName] = useState('')
+const schema = z.object({
+    name: z.string().max(30),
+    additionalInfo: z.string().max(200),
+});
+
+interface FormData {
+    name: string;
+    additionalInfo: string;
+}
+
+const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) => {
+    const { colorScheme } = useColorScheme();
+    const currentDate = new Date();
+
     const [subServices, setSubServices] = useState<SubServiceModel[]>([]);
-    const [date, setDate] = useState<CalendarDate | undefined>(undefined);
-    const [time, setTime] = useState(new Date())
-    const [additionalInfo, setAdditionalInfo] = useState('');
+    const [date, setDate] = useState<CalendarDate>({ date: currentDate.getDate() + 1, month: currentDate.getMonth() });
+    const [time, setTime] = useState(currentDate)
     const [materials, setMaterials] = useState<MaterialModel[]>([]);
 
     const dateModalRef = useRef<any>(null);
@@ -51,6 +49,11 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section) => {
     const serviceBottomSheetRef = useRef<any>(null);
     const serviceBottomSheetOpenHandler = useCallback(() => {
         serviceBottomSheetRef.current.expand();
+    }, [])
+
+    const materialsBottomSheetRef = useRef<any>(null);
+    const materialBottomSheetOpenHandler = useCallback(() => {
+        materialsBottomSheetRef.current.expand();
     }, [])
 
     const DatePickerModal = memo(function DatePickerModal() {
@@ -94,14 +97,41 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section) => {
         )
     });
 
+    const { control, getValues, reset, formState: { errors } } = useForm<FormData>({
+        resolver: zodResolver(schema),
+    });
+
+    useImperativeHandle(ref, () => ({
+        getData: () => {
+            const name = getValues('name');
+            const additionalInfo = getValues('additionalInfo');
+
+            return {
+                name,
+                subServices,
+                materials,
+                date,
+                time,
+                additionalInfo
+            }
+        }
+    }));
+
     return (
         <SectionBottomSheet bottomSheetRef={bottomSheetRef} expanded={true}>
-            <Input
-                label='Nome do Serviço'
-                placeholder={`Serviço ${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`}
-                style={{ marginBottom: MARGIN }}
-                onChangeText={setName}
-                maxLength={30}
+            <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                        label='Nome do Serviço'
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{ marginBottom: MARGIN }}
+                        placeholder={`Serviço ${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`}
+                    />
+                )}
+                name="name"
             />
 
             <SubSectionWrapper
@@ -134,6 +164,33 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section) => {
                 />
             </SubSectionWrapper>
 
+            <SubSectionWrapper
+                header={{
+                    title: "Materiais",
+                }}
+            >
+                <View className='w-full'>
+                    {
+                        materials && materials?.length === 0 && (
+                            <Text className='text-sm text-center text-black dark:text-white mb-6'>
+                                Nenhum material adicionado.
+                            </Text>
+                        )
+                    }
+                    {
+                        materials.map((material, index) => (
+                            <View className='mb-4' key={index.toString()}>
+                                <MaterialPreview material={material} setMaterials={setMaterials} />
+                            </View>
+                        ))
+                    }
+                </View>
+                <SubActionButton
+                    onPress={materialBottomSheetOpenHandler}
+                    label='Adicionar material'
+                />
+            </SubSectionWrapper>
+
             <SubSectionWrapper header={{ title: "Data" }}>
                 <StaticCalendar
                     selectedDate={date}
@@ -150,22 +207,32 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section) => {
                 style={{ marginBottom: MARGIN }}
             />
 
-            <Input
-                label='Informações Adicionais'
-                textAlignVertical='top'
-                style={{ marginBottom: MARGIN }}
-                multiline
-                onChangeText={setAdditionalInfo}
-                maxLength={200}
-                placeholder='Ex: O serviço deve ser realizado na sala 2, no 2º andar.'
+            <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                        label='Informações Adicionais'
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        style={{ marginBottom: MARGIN }}
+                        placeholder='Ex: O serviço deve ser realizado na sala 2, no 2º andar.'
+                        textAlignVertical='top'
+                        multiline
+                    />
+                )}
+                name="additionalInfo"
             />
 
-            <NextButton section={0} updateHandler={updateHandler} />
+            <NextButton onPress={() => updateHandler && updateHandler(1)} />
 
             <AddSubService
                 serviceBottomSheetRef={serviceBottomSheetRef}
                 setSubServices={setSubServices}
-                materials={materials}
+            />
+
+            <AddMaterial
+                materialsBottomSheetRef={materialsBottomSheetRef}
                 setMaterials={setMaterials}
             />
 

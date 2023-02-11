@@ -1,4 +1,4 @@
 export const tags = [
-    { title: 'Hidráulico', icon: "plumbing" },
-    { title: 'Elétrico', icon: "bolt" },
+    { title: 'Hidráulico', icon: "plumbing", value: "hydraulic" },
+    { title: 'Elétrico', icon: "bolt", value: "electric" },
 ]

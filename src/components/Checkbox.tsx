@@ -8,9 +8,10 @@ import colors from "tailwindcss/colors";
 interface Props extends TouchableOpacityProps {
     checked?: boolean;
     title: string;
+    customKey: string;
 }
 
-export function Checkbox({ title, checked = false, ...rest }: Props) {
+export function Checkbox({ title, checked = false, customKey, ...rest }: Props) {
     const entering = (targetValues: any) => {
         'worklet';
         const animations = {
@@ -31,6 +32,7 @@ export function Checkbox({ title, checked = false, ...rest }: Props) {
 
     return (
         <TouchableOpacity
+            key={customKey}
             activeOpacity={0.8}
             className='flex-row mb-2 items-center'
             {...rest}
@@ -40,7 +42,7 @@ export function Checkbox({ title, checked = false, ...rest }: Props) {
                     <Animated.View
                         className='h-[30px] w-[30px] bg-primary-green rounded-[9px] items-center justify-center'
                         entering={entering}
-                        exiting={ZoomOut.duration(100)}
+                    /* exiting={ZoomOut.duration(100)} */
                     >
                         <Feather name='check' size={20} color={colors.white} />
                     </Animated.View>

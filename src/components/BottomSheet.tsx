@@ -11,7 +11,7 @@ export const animProps = {
     stiffness: 400
 } as WithSpringConfig
 
-interface BottomSheetProps {
+export interface BottomSheetProps {
     children: React.ReactNode;
     height: string;
     heightLimitBehaviour?: /* 'top' | */ 'lock' | 'contentHeight';
@@ -29,9 +29,12 @@ interface BottomSheetProps {
         suppressPortal?: boolean;
     };
     onDismiss?: () => void;
+    onDismissed?: () => void;
+    onExpand?: () => void;
+    onExpanded?: () => void;
 }
 
-const BottomSheet = forwardRef(({ children, onDismiss, height, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues, colors }: BottomSheetProps, ref) => {
+const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, onExpanded, height, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues, colors }: BottomSheetProps, ref) => {
     const insets = useSafeAreaInsets();
 
     const overDrag = overDragAmount && overDragAmount > 0 ? overDragAmount : 0;
@@ -141,20 +144,28 @@ const BottomSheet = forwardRef(({ children, onDismiss, height, overDragAmount = 
 
     const expand = useCallback(() => {
         'worklet';
-        topAnimation.value = withSpring(newActiveHeight, animProps)
+        onExpand && runOnJS(onExpand)();
+        topAnimation.value = withSpring(newActiveHeight, animProps, () => {
+            onExpanded && runOnJS(onExpanded)();
+        })
     }, [])
 
     const close = useCallback(() => {
         'worklet';
-        topAnimation.value = withSpring(screenHeight, animProps)
+        //onDismiss && runOnJS(onDismiss)();
+        topAnimation.value = withSpring(screenHeight, animProps, () => {
+            onDismissed && runOnJS(onDismissed)();
+        })
     }, [])
 
     const update = useCallback((updateFunction: () => void) => {
         'worklet';
+        onExpand && runOnJS(onExpand)();
         topAnimation.value = withSpring(screenHeight, animProps, () => {
             if (updateFunction) {
                 runOnJS(updateFunction)();
             }
+            onExpanded && runOnJS(onExpanded)();
             topAnimation.value = withSpring(newActiveHeight, animProps)
         })
     }, [])

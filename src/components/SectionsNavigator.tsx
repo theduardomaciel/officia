@@ -7,7 +7,7 @@ interface Props {
     sections: {
         id: number;
         title: string;
-        onPress: () => void;
+        onPress?: () => void;
     }[]
     selectedId: SharedValue<number>;
 }
@@ -56,7 +56,7 @@ export function SectionsNavigator({ sections, selectedId }: Props) {
                         <TouchableOpacity
                             key={section.id}
                             activeOpacity={section.id === selectedId.value ? 0.7 : 1}
-                            onPress={section.onPress}
+                            onPress={section.onPress && section.onPress}
                             style={{
                                 marginRight: index === sections.length - 1 ? 0 : MARGIN_SIZE
                             }}

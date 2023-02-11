@@ -17,7 +17,7 @@ interface Props extends TextProps {
 export default function Label({ children, icon, CustomIcon, ...rest }: Props) {
     const { colorScheme } = useColorScheme();
     return (
-        <View className="w-full flex-row items-center justify-start">
+        <View className="flex-row items-center justify-start">
             {
                 (icon || CustomIcon) && (
                     <View className="mr-2">

@@ -15,7 +15,7 @@ const categories = {
         icon: "plumbing",
         name: "Hidráulico"
     },
-    eletric: {
+    electric: {
         icon: "bolt",
         name: "Elétrico"
     },
@@ -25,7 +25,7 @@ const categories = {
     }
 }
 
-type Types = 'hydraulic' | 'eletric' | 'various';
+type Types = 'hydraulic' | 'electric' | 'various';
 
 const Category = ({ category }: { category: Types }) => (
     <>

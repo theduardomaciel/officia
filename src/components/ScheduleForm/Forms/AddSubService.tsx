@@ -8,28 +8,24 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 // Utils
-import { v4 as uuidv4 } from 'uuid';
 import { tags } from 'global/tags';
 
 import colors from 'global/colors';
-import { MaterialIcons } from "@expo/vector-icons";
 
 // Types
 import type { Tag } from 'components/TagsSelector';
+import { MaterialModel } from 'database/models/materialModel';
+import { SubServiceModel } from 'database/models/subServiceModel';
 
 // Components
 import BottomSheet from 'components/BottomSheet';
 import Input from 'components/Input';
 import Label from 'components/Label';
-import { ActionButton, SubActionButton } from 'components/ActionButton';
+import { ActionButton } from 'components/ActionButton';
 import Title from 'components/Title';
 import { TagsSelector } from 'components/TagsSelector';
 import Toast from 'components/Toast';
-import AddMaterial from './AddMaterial';
-import { MaterialPreview } from 'components/ServicePreview';
 import { MARGIN, SubSectionWrapper } from '../SubSectionWrapper';
-import { SubServiceModel } from 'database/models/subServiceModel';
-import { MaterialModel } from 'database/models/materialModel';
 
 const borderErrorStyle = {
     borderColor: colors.primary.red,
@@ -55,11 +51,9 @@ const schema = z.object({
 interface Props {
     serviceBottomSheetRef: React.MutableRefObject<any>;
     setSubServices: Dispatch<SetStateAction<SubServiceModel[]>>;
-    materials: MaterialModel[];
-    setMaterials: Dispatch<SetStateAction<MaterialModel[]>>;
 }
 
-export default function AddSubService({ setSubServices, serviceBottomSheetRef, materials, setMaterials }: Props) {
+export default function AddSubService({ setSubServices, serviceBottomSheetRef }: Props) {
     const showToast = (errorMessage?: string) => {
         Toast.show({
             preset: "error",
@@ -72,12 +66,6 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef, m
 
     const serviceBottomSheetCloseHandler = useCallback(() => {
         serviceBottomSheetRef.current.close();
-        console.log("Fecou")
-    }, [])
-
-    const materialsBottomSheetRef = useRef<any>(null);
-    const materialBottomSheetOpenHandler = useCallback(() => {
-        materialsBottomSheetRef.current.expand();
     }, [])
 
     const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
@@ -91,12 +79,15 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef, m
     });
 
     const onSubmit: SubmitHandler<FormValues> = data => {
+        const tags = selectedTags.current?.map(tag => tag.value) ?? [];
+        console.log(tags)
+
         const newSubService = {
             description: data.description,
             details: data.details,
             price: parseFloat(data.price),
             amount: parseInt(data.amount),
-            types: selectedTags.current as any
+            types: tags,
         };
         console.log(newSubService)
 
@@ -216,35 +207,6 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef, m
                             />
                         </View>
                     </View>
-                    <SubSectionWrapper
-                        header={{
-                            title: "Materiais",
-                            children: materials && materials?.length > 0 && <Text className='font-medium text-primary-red text-xs opacity-80'>
-                                Arraste para excluir
-                            </Text>
-                        }}
-                    >
-                        <View className='w-full'>
-                            {
-                                materials && materials?.length === 0 && (
-                                    <Text className='text-sm text-center text-black dark:text-white mb-6'>
-                                        Nenhum material adicionado.
-                                    </Text>
-                                )
-                            }
-                            {
-                                materials.map((material, index) => (
-                                    <View className='mb-4' key={index.toString()}>
-                                        <MaterialPreview material={material} setMaterials={setMaterials} />
-                                    </View>
-                                ))
-                            }
-                        </View>
-                        <SubActionButton
-                            onPress={materialBottomSheetOpenHandler}
-                            label='Adicionar material'
-                        />
-                    </SubSectionWrapper>
                     <View className='flex-col align-top justify-start'>
                         <Label>
                             Categorias
@@ -266,7 +228,6 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef, m
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>
-            <AddMaterial materialsBottomSheetRef={materialsBottomSheetRef} setMaterials={setMaterials} />
         </BottomSheet>
     )
 }

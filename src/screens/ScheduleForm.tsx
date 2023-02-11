@@ -8,8 +8,6 @@ import { SectionsNavigator } from 'components/SectionsNavigator';
 import Section0 from 'components/ScheduleForm/Sections/Section0';
 import Section1 from 'components/ScheduleForm/Sections/Section1';
 import Section2 from 'components/ScheduleForm/Sections/Section2';
-import { Section0ContextProvider } from 'components/contexts/Section0Context';
-import { Section1ContextProvider } from 'components/contexts/Section1Context';
 
 export default function ScheduleForm() {
     const selectedSectionId = useSharedValue(0);
@@ -21,18 +19,18 @@ export default function ScheduleForm() {
     const sections = [section0BottomSheetRef, section1BottomSheetRef, section2BottomSheetRef];
 
     const updateHandler = useCallback((id: number) => {
-        sections[selectedSectionId.value].current.close();
-        selectedSectionId.value = withSpring(id, {
-            damping: 100,
-            stiffness: 400
-        });
-        sections[id].current.expand();
-        //console.log(section1Ref.current.paymentCondition, section1Ref.current.checkedPaymentMethods.getChecked())
+        if (sections[selectedSectionId.value] && sections[id]) {
+            sections[selectedSectionId.value].current.close();
+            selectedSectionId.value = withSpring(id, {
+                damping: 100,
+                stiffness: 400
+            });
+            sections[id].current.expand();
+        }
     }, [])
 
     const section0Ref = useRef<any>(null);
     const section1Ref = useRef<any>(null);
-
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -66,14 +64,8 @@ export default function ScheduleForm() {
                 />
                 <Section0 bottomSheetRef={section0BottomSheetRef} ref={section0Ref} updateHandler={updateHandler} />
                 <Section1 bottomSheetRef={section1BottomSheetRef} ref={section1Ref} updateHandler={updateHandler} />
-                <Section2 bottomSheetRef={section2BottomSheetRef} updateHandler={updateHandler} />
+                <Section2 bottomSheetRef={section2BottomSheetRef} formRefs={{ section0Ref, section1Ref }} />
             </View>
         </TouchableWithoutFeedback>
     )
 }
-
-/* async function getServiceNumber() {
-    const servicesCollection = database.get<ServiceModel>('services');
-    const count = await servicesCollection.query().fetchCount();
-    return count;
-} */
