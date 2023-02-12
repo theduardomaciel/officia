@@ -1,4 +1,4 @@
-import { TouchableOpacity, Text } from "react-native";
+import { TouchableOpacity, Text, ViewStyle } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
@@ -7,13 +7,17 @@ interface Props {
     label: string;
     icon?: string;
     onPress: () => void;
+    preset?: 'add' | 'edit';
 }
 
-export const ActionButton = ({ onPress, label, icon }: Props) => {
+export const ActionButton = ({ onPress, label, icon, preset }: Props) => {
     return (
         <TouchableOpacity
             activeOpacity={0.8}
             className='flex-row items-center justify-center w-full py-4 rounded bg-primary-green'
+            style={{
+                backgroundColor: preset === 'edit' ? colors.primary.blue : colors.primary.green
+            }}
             onPress={onPress}
             ref={(ref) => { ref = ref }}
         >

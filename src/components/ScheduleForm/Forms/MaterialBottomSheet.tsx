@@ -25,6 +25,7 @@ import Toast from 'components/Toast';
 // Utils
 import { MARGIN } from '../SubSectionWrapper';
 import { MaterialModel } from 'database/models/materialModel';
+import { runOnUI, useSharedValue } from 'react-native-reanimated';
 
 const borderErrorStyle = {
     borderColor: colors.primary.red,
@@ -34,9 +35,9 @@ const borderErrorStyle = {
 } as ViewStyle;
 
 const schema = z.object({
-    name: z.string().max(40, { message: 'O nome do material deve ter no máximo 40 caracteres.' }),
+    name: z.string().max(40, { message: 'O nome do material deve ter no máximo 40 caracteres.' }).min(3, { message: 'O nome do material deve ter no mínimo 3 caracteres.' }),
     description: z.string(),
-    price: z.string(),
+    price: z.string().min(1, { message: 'É necessário inserir um preço válido para o material.' }),
     amount: z.string(),
     profitMargin: z.string(),
 });
@@ -50,13 +51,15 @@ interface FormValues {
 };
 
 interface Props {
-    materialsBottomSheetRef: React.MutableRefObject<any>;
-    setMaterials: Dispatch<SetStateAction<MaterialModel[]>>;
+    bottomSheetRef: React.MutableRefObject<any>;
+    onSubmitForm?: (data: MaterialModel) => void;
+    editableData?: MaterialModel;
 }
 
-export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: Props) {
+export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, editableData = undefined }: Props) {
     const { colorScheme } = useColorScheme();
-    const [availability, setAvailability] = useState("unavailable");
+
+    const [availability, setAvailability] = useState(editableData?.availability ? "available" : "unavailable" ?? "unavailable");
 
     const showToast = (errorMessage?: string) => {
         Toast.show({
@@ -66,21 +69,13 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
         })
     }
 
-    const bottomSheetCloseHandler = useCallback(() => {
-        if (materialsBottomSheetRef.current) {
-            materialsBottomSheetRef.current.close();
-        } else {
-            console.log('BottomSheet ref is null');
-        }
-    }, [])
-
     const { handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
-            name: '',
-            description: '',
-            price: "",
-            amount: "1",
-            profitMargin: "",
+            name: editableData?.name ?? "",
+            description: editableData?.description ?? "",
+            price: editableData?.price.toString() ?? "",
+            amount: editableData?.amount.toString() ?? "",
+            profitMargin: editableData?.profitMargin?.toString() ?? "",
         },
         resolver: zodResolver(schema),
     });
@@ -90,20 +85,21 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
             name: data.name,
             description: data.description,
             price: parseFloat(data.price),
-            amount: parseFloat(data.amount),
-            profitMargin: parseFloat(data.profitMargin),
+            amount: (data.amount ? parseFloat(data.amount) : 1) ?? 1,
+            profitMargin: (data.profitMargin ? parseFloat(data.profitMargin) : 0),
             availability: availability === "unavailable" ? false : true,
         };
         console.log(newMaterial)
-
-        setMaterials((previousValue: MaterialModel[]) => [...previousValue, newMaterial as unknown as MaterialModel]);
-
-        setTimeout(() => {
-            bottomSheetCloseHandler();
-        }, 100);
-
         Toast.hide();
+        onSubmitForm && onSubmitForm(newMaterial as unknown as MaterialModel);
         /* reset(); */
+        setTimeout(() => {
+            try {
+                runOnUI(bottomSheetRef.current.close())('teste');
+            } catch {
+                console.log('error')
+            }
+        }, 500);
     };
 
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
@@ -112,7 +108,7 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
     }
 
     return (
-        <BottomSheet height={"65%"} ref={materialsBottomSheetRef}>
+        <BottomSheet height={"78%"} ref={bottomSheetRef}>
             <View
                 className='flex flex-1 gap-y-5'
                 style={{
@@ -122,7 +118,7 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
                 }}
             >
                 <Title>
-                    Adicionar material
+                    {editableData ? "Editar" : "Adicionar"} material
                 </Title>
                 <ScrollView className='flex flex-1 flex-col relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
                     paddingBottom: 16,
@@ -147,7 +143,7 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
                                 onBlur={onBlur}
                                 onChangeText={value => onChange(value)}
                                 value={value}
-                                style={[!!errors.description && borderErrorStyle, { marginBottom: MARGIN }]}
+                                style={[!!errors.name && borderErrorStyle, { marginBottom: MARGIN }]}
                                 placeholder='Painel LED de sobreposição, etc...'
                                 pallette='dark'
                                 required
@@ -182,7 +178,7 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
                                         onBlur={onBlur}
                                         onChangeText={value => onChange(value)}
                                         value={value}
-                                        style={!!errors.description && borderErrorStyle}
+                                        style={!!errors.price && borderErrorStyle}
                                         placeholder='R$'
                                         keyboardType='number-pad'
                                         pallette='dark'
@@ -202,7 +198,7 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
                                         onBlur={onBlur}
                                         onChangeText={value => onChange(value)}
                                         value={value}
-                                        style={!!errors.description && borderErrorStyle}
+                                        style={!!errors.amount && borderErrorStyle}
                                         placeholder='1 item'
                                         keyboardType='number-pad'
                                         pallette='dark'
@@ -224,7 +220,7 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
                                         onBlur={onBlur}
                                         onChangeText={value => onChange(value)}
                                         value={value}
-                                        style={!!errors.description && borderErrorStyle}
+                                        style={!!errors.profitMargin && borderErrorStyle}
                                         placeholder='0%'
                                         keyboardType='number-pad'
                                         pallette='dark'
@@ -249,8 +245,9 @@ export default function AddMaterial({ materialsBottomSheetRef, setMaterials }: P
                     </View>
                 </ScrollView>
                 <ActionButton
-                    label='Adicionar material'
-                    icon='add'
+                    label={`${editableData ? "Editar" : "Adicionar"} material`}
+                    icon={editableData ? "edit" : "add"}
+                    preset={editableData ? "edit" : "add"}
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>

@@ -8,22 +8,27 @@ import colors from 'global/colors';
 // Components
 import Modal from 'components/Modal';
 import Input from 'components/Input';
-import AddSubService from '../Forms/AddSubService';
 import SectionBottomSheet from '../SectionBottomSheet';
 import { CalendarDate, StaticCalendar } from 'components/Calendar';
 import { MARGIN, NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
 import { SubActionButton } from 'components/ActionButton';
-import { MaterialPreview, ServicePreview } from 'components/ServicePreview';
+import { Preview } from 'components/Preview';
 
 // Types
 import { SubServiceModel } from 'database/models/subServiceModel';
 import { MaterialModel } from 'database/models/materialModel';
 
+// Bottom Sheets
+import MaterialBottomSheet from '../Forms/MaterialBottomSheet';
+import SubServiceBottomSheet from '../Forms/SubServiceBottomSheet';
+
 // Forms
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import AddMaterial from '../Forms/AddMaterial';
+import { runOnUI } from 'react-native-reanimated';
+import Form from '../Forms/Form';
+
 
 const schema = z.object({
     name: z.string().max(30),
@@ -44,18 +49,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
     const [time, setTime] = useState(currentDate)
     const [materials, setMaterials] = useState<MaterialModel[]>([]);
 
-    const dateModalRef = useRef<any>(null);
-
-    const serviceBottomSheetRef = useRef<any>(null);
-    const serviceBottomSheetOpenHandler = useCallback(() => {
-        serviceBottomSheetRef.current.expand();
-    }, [])
-
-    const materialsBottomSheetRef = useRef<any>(null);
-    const materialBottomSheetOpenHandler = useCallback(() => {
-        materialsBottomSheetRef.current.expand();
-    }, [])
-
+    const timeModalRef = useRef<any>(null);
     const DatePickerModal = memo(function DatePickerModal() {
         const newDate = useRef(new Date());
 
@@ -64,13 +58,13 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
         }, [])
 
         const onConfirm = () => {
-            dateModalRef.current.close();
+            timeModalRef.current.close();
             setTime(newDate.current)
         }
 
         return (
             <Modal
-                ref={dateModalRef}
+                ref={timeModalRef}
                 title={"Selecione o horário"}
                 icon="calendar-today"
                 buttons={[
@@ -97,7 +91,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
         )
     });
 
-    const { control, getValues, reset, formState: { errors } } = useForm<FormData>({
+    const { control, getValues, formState: { errors } } = useForm<FormData>({
         resolver: zodResolver(schema),
     });
 
@@ -153,13 +147,33 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                     {
                         subServices.map((subService, index) => (
                             <View className='mb-4' key={index.toString()}>
-                                <ServicePreview subService={subService} setSubServices={setSubServices} />
+                                <Preview
+                                    subService={subService}
+                                    onDelete={() => {
+                                        setSubServices((prev) => prev.filter((s) => s.id !== subService.id));
+                                    }}
+                                    onEdit={() => {
+                                        Form.expand({
+                                            editableData: subService,
+                                            onSubmitForm: () => { },
+                                            type: "subService"
+                                        })
+                                    }}
+                                />
                             </View>
                         ))
                     }
                 </View>
                 <SubActionButton
-                    onPress={serviceBottomSheetOpenHandler}
+                    onPress={() => {
+                        Form.expand({
+                            editableData: undefined,
+                            onSubmitForm: (data: SubServiceModel) => {
+                                setSubServices((prev) => [...prev, data]);
+                            },
+                            type: "subService"
+                        })
+                    }}
                     label='Adicionar serviço'
                 />
             </SubSectionWrapper>
@@ -180,13 +194,33 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                     {
                         materials.map((material, index) => (
                             <View className='mb-4' key={index.toString()}>
-                                <MaterialPreview material={material} setMaterials={setMaterials} />
+                                <Preview
+                                    material={material}
+                                    onDelete={() => {
+                                        setMaterials((prev) => prev.filter((m) => m.id !== material.id));
+                                    }}
+                                    onEdit={() => {
+                                        Form.expand({
+                                            editableData: material,
+                                            onSubmitForm: () => { },
+                                            type: "material"
+                                        })
+                                    }}
+                                />
                             </View>
                         ))
                     }
                 </View>
                 <SubActionButton
-                    onPress={materialBottomSheetOpenHandler}
+                    onPress={() => {
+                        Form.expand({
+                            editableData: undefined,
+                            onSubmitForm: (data: MaterialModel) => {
+                                setMaterials((prev) => [...prev, data]);
+                            },
+                            type: "material"
+                        })
+                    }}
                     label='Adicionar material'
                 />
             </SubSectionWrapper>
@@ -200,7 +234,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
             </SubSectionWrapper>
 
             <Input
-                onPress={() => dateModalRef.current.open()}
+                onPress={() => timeModalRef.current.open()}
                 label='Horário'
                 editable={false}
                 value={`${time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}
@@ -225,16 +259,6 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
             />
 
             <NextButton onPress={() => updateHandler && updateHandler(1)} />
-
-            <AddSubService
-                serviceBottomSheetRef={serviceBottomSheetRef}
-                setSubServices={setSubServices}
-            />
-
-            <AddMaterial
-                materialsBottomSheetRef={materialsBottomSheetRef}
-                setMaterials={setMaterials}
-            />
 
             <DatePickerModal />
         </SectionBottomSheet>

@@ -73,20 +73,30 @@ export const PreviewStatic = ({ subService, material }: { subService?: SubServic
     )
 }
 
-interface SubServicePreviewProps {
-    subService: SubServiceModel;
-    setSubServices: Dispatch<SetStateAction<SubServiceModel[]>>;
+interface PreviewProps {
+    material?: MaterialModel;
+    subService?: SubServiceModel;
+    onDelete: () => void;
+    onEdit: () => void;
 }
 
-export function ServicePreview({ subService, setSubServices }: SubServicePreviewProps) {
+export function Preview({ material, subService, onDelete, onEdit }: PreviewProps) {
     const swipeableRef = useRef<any>(null);
 
-    function deletePreService() {
+    function deletePreview() {
         if (swipeableRef.current) {
             swipeableRef.current.close();
         }
+        onDelete();
         console.log('deletePreService')
-        setSubServices((prev) => prev.filter((s) => s.id !== subService.id));
+    }
+
+    function editPreview() {
+        if (swipeableRef.current) {
+            swipeableRef.current.close();
+        }
+        onEdit();
+        console.log('editPreService')
     }
 
     return (
@@ -97,86 +107,53 @@ export function ServicePreview({ subService, setSubServices }: SubServicePreview
             rightThreshold={10}
             enableTrackpadTwoFingerGesture
             renderRightActions={(progress, dragX) => (
-                <DeleteAction
-                    onPress={deletePreService}
+                <Action
+                    onPress={deletePreview}
                     progress={progress}
                     dragX={dragX}
                     direction="right"
+                    type="delete"
                 />
             )}
             renderLeftActions={(progress, dragX) => (
-                <DeleteAction
-                    onPress={deletePreService}
+                <Action
+                    onPress={editPreview}
                     progress={progress}
                     dragX={dragX}
                     direction="left"
+                    type="edit"
                 />
             )}
         >
-            <PreviewStatic subService={subService} />
+            <PreviewStatic material={material} subService={subService} />
         </Swipeable>
     )
 }
 
-interface MaterialPreviewProps {
-    material: MaterialModel;
-    setMaterials: Dispatch<SetStateAction<MaterialModel[]>>;
+interface Action {
+    onPress: () => void;
+    progress: any;
+    dragX: any;
+    direction: "left" | "right";
+    type: "delete" | "edit";
 }
 
-export function MaterialPreview({ material, setMaterials }: MaterialPreviewProps) {
-    const swipeableRef = useRef<any>(null);
-
-    function deletePreService() {
-        if (swipeableRef.current) {
-            swipeableRef.current.close();
-        }
-        console.log('deletePreService')
-        setMaterials((prev) => prev.filter((m) => m.id !== material.id));
-    }
-
-    return (
-        <Swipeable
-            ref={swipeableRef}
-            friction={1.25}
-            leftThreshold={10}
-            rightThreshold={10}
-            enableTrackpadTwoFingerGesture
-            renderRightActions={(progress, dragX) => (
-                <DeleteAction
-                    onPress={deletePreService}
-                    progress={progress}
-                    dragX={dragX}
-                    direction="right"
-                />
-            )}
-            renderLeftActions={(progress, dragX) => (
-                <DeleteAction
-                    onPress={deletePreService}
-                    progress={progress}
-                    dragX={dragX}
-                    direction="left"
-                />
-            )}
-        >
-            <PreviewStatic material={material} />
-        </Swipeable>
-    )
-}
-
-export const DeleteAction = ({ onPress, dragX, direction }: { onPress: () => void, progress: any, dragX: any, direction: "left" | "right" }) => {
+const Action = ({ onPress, dragX, direction, type }: Action) => {
     const scale = dragX.interpolate({
         inputRange: [0, 50, 100, 101],
         outputRange: [-20, 0, 0, 1],
     });
     return (
         <TouchableOpacity
-            className={clsx("flex-row items-center flex-1 w-16 justify-center  bg-primary-red", {
+            className={clsx("flex-row items-center flex-1 w-16 justify-center", {
                 "rounded-tr-sm rounded-br-sm": direction === "right",
                 "rounded-tl-sm rounded-bl-sm": direction === "left",
+                "bg-primary-red": type === "delete",
+                "bg-primary-blue": type === "edit",
             })}
             onPress={onPress}
         >
-            <MaterialIcons name="delete" size={24} color={colors.white} />
+            <MaterialIcons name={type === "delete" ? "delete" : "edit"} size={24} color={colors.white} />
             <Animated.View style={{ transform: [{ scale }] }} />
         </TouchableOpacity>
     );

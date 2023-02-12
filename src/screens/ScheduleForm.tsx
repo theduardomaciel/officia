@@ -8,6 +8,7 @@ import { SectionsNavigator } from 'components/SectionsNavigator';
 import Section0 from 'components/ScheduleForm/Sections/Section0';
 import Section1 from 'components/ScheduleForm/Sections/Section1';
 import Section2 from 'components/ScheduleForm/Sections/Section2';
+import Form from 'components/ScheduleForm/Forms/Form';
 
 export default function ScheduleForm() {
     const selectedSectionId = useSharedValue(0);
@@ -65,6 +66,8 @@ export default function ScheduleForm() {
                 <Section0 bottomSheetRef={section0BottomSheetRef} ref={section0Ref} updateHandler={updateHandler} />
                 <Section1 bottomSheetRef={section1BottomSheetRef} ref={section1Ref} updateHandler={updateHandler} />
                 <Section2 bottomSheetRef={section2BottomSheetRef} formRefs={{ section0Ref, section1Ref }} />
+                <Form type='material' />
+                <Form type='subService' />
             </View>
         </TouchableWithoutFeedback>
     )

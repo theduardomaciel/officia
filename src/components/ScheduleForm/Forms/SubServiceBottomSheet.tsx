@@ -49,11 +49,12 @@ const schema = z.object({
 });
 
 interface Props {
-    serviceBottomSheetRef: React.MutableRefObject<any>;
-    setSubServices: Dispatch<SetStateAction<SubServiceModel[]>>;
+    bottomSheetRef: React.MutableRefObject<any>;
+    onSubmitForm?: (data: MaterialModel) => void;
+    editableData?: MaterialModel;
 }
 
-export default function AddSubService({ setSubServices, serviceBottomSheetRef }: Props) {
+export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, editableData }: Props) {
     const showToast = (errorMessage?: string) => {
         Toast.show({
             preset: "error",
@@ -65,7 +66,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
     const selectedTags = useRef<Tag[] | null>(null);
 
     const serviceBottomSheetCloseHandler = useCallback(() => {
-        serviceBottomSheetRef.current.close();
+        bottomSheetRef.current.close();
     }, [])
 
     const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
@@ -91,11 +92,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
         };
         console.log(newSubService)
 
-        setSubServices((previousValue: SubServiceModel[]) => [...previousValue, newSubService as unknown as SubServiceModel]);
-
-        setTimeout(() => {
-            serviceBottomSheetCloseHandler();
-        }, 100)
+        //
 
         Toast.hide();
     };
@@ -114,7 +111,7 @@ export default function AddSubService({ setSubServices, serviceBottomSheetRef }:
     return (
         <BottomSheet
             height={"65%"}
-            ref={serviceBottomSheetRef}
+            ref={bottomSheetRef}
         >
             <View
                 className='flex flex-1 gap-y-5'

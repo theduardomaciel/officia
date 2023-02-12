@@ -38,7 +38,7 @@ function daysToMonthsOrYears(days: number) {
 // Types
 import type { Section0Props, Section0RefProps, Section1Props, Section1RefProps } from '../types';
 import type { ServiceModel } from 'database/models/serviceModel';
-import { PreviewStatic } from 'components/ServicePreview';
+import { PreviewStatic } from 'components/Preview';
 
 interface ReviewSectionProps {
     wrapperProps: SubSectionWrapperProps;

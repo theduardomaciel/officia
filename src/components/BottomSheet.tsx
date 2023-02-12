@@ -3,7 +3,7 @@ import { View, Dimensions, TouchableWithoutFeedback, ViewStyle } from "react-nat
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Portal } from "@gorhom/portal";
 
-import Animated, { interpolate, runOnJS, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withDecay, withSpring, WithSpringConfig } from 'react-native-reanimated';
+import Animated, { interpolate, runOnJS, runOnUI, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withDecay, withSpring, WithSpringConfig } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const animProps = {
@@ -152,7 +152,7 @@ const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, on
 
     const close = useCallback(() => {
         'worklet';
-        //onDismiss && runOnJS(onDismiss)();
+        onDismiss && runOnJS(onDismiss)();
         topAnimation.value = withSpring(screenHeight, animProps, () => {
             onDismissed && runOnJS(onDismissed)();
         })
