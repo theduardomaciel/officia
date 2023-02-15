@@ -45,9 +45,11 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
     const currentDate = new Date();
 
     const [subServices, setSubServices] = useState<SubServiceModel[]>([]);
-    const [date, setDate] = useState<CalendarDate>({ date: currentDate.getDate() + 1, month: currentDate.getMonth() });
+    const [date, setDate] = useState<CalendarDate | undefined>(undefined);
     const [time, setTime] = useState(currentDate)
     const [materials, setMaterials] = useState<MaterialModel[]>([]);
+
+    console.log(date)
 
     const timeModalRef = useRef<any>(null);
     const DatePickerModal = memo(function DatePickerModal() {

@@ -64,7 +64,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
     // Agreement
     const [splitMethod, setSplitMethod] = useState<SplitMethod | null>('percentage');
     const [agreementInitialPercentage, setAgreementInitialPercentage] = useState<string>("50");
-    const [agreementInitialValue, setAgreementInitialValue] = useState<string>("0");
+    const [agreementInitialValue, setAgreementInitialValue] = useState<string>("half");
     const [remainingValue, setRemainingValue] = useState<RemainingValue>("afterCompletion");
 
     // Installments
@@ -78,9 +78,9 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
         resolver: zodResolver(schema),
     });
 
-    const onSubmit = handleSubmit((data) => {
+    /* const onSubmit = handleSubmit((data) => {
         updateHandler && updateHandler(2)
-    });
+    }); */
 
     const SubSection1 = () => {
         return (
@@ -451,7 +451,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
             </SubSectionWrapper>
 
             <SubSection2 />
-            <NextButton onPress={onSubmit} />
+            <NextButton onPress={() => updateHandler && updateHandler(2)} />
         </SectionBottomSheet>
     )
 });

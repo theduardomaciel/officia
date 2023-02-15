@@ -14,7 +14,7 @@ import { MARGIN, NextButton, Section, SubSection, SubSectionWrapper, SubSectionW
 import Loading from 'components/Loading';
 
 // Utils
-import { database } from 'database';
+import { database } from 'database/index.native';
 
 // Functions
 
@@ -25,7 +25,6 @@ async function getServiceNumber() {
 }
 
 function daysToMonthsOrYears(days: number) {
-    console.log(days)
     if (days < 30) {
         return `${days} dia${days > 1 ? 's' : ''}`;
     }
@@ -39,6 +38,9 @@ function daysToMonthsOrYears(days: number) {
 import type { Section0Props, Section0RefProps, Section1Props, Section1RefProps } from '../types';
 import type { ServiceModel } from 'database/models/serviceModel';
 import { PreviewStatic } from 'components/Preview';
+import { useNavigation } from '@react-navigation/native';
+import { SubServiceModel } from 'database/models/subServiceModel';
+import { MaterialModel } from 'database/models/materialModel';
 
 interface ReviewSectionProps {
     wrapperProps: SubSectionWrapperProps;
@@ -66,6 +68,7 @@ interface Section2Props extends Section {
 }
 
 export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
+    const { navigate } = useNavigation();
     const { section0Ref, section1Ref } = formRefs;
 
     const currentDate = new Date();
@@ -75,22 +78,106 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
         if (formRefs) {
             const section0Data = section0Ref.current?.getData();
             const section1Data = section1Ref.current?.getData();
-            console.log({
-                ...section0Data,
-                ...section1Data,
-            })
-
-            const serviceId = await getServiceNumber();
 
             if (section0Data && section1Data) {
-                setData({
+                const serviceId = await getServiceNumber();
+                const newData = {
                     ...section0Data,
                     ...section1Data,
                     serviceId,
-                })
+                }
+
+                setData(newData)
             }
         }
     }
+
+    const onSubmit = useCallback(async () => {
+        const serviceDate = data?.date ? new Date(currentDate.getFullYear(), data.date.month, data.date.date, data.time.getHours(), data.time.getMinutes(), data.time.getSeconds()) : currentDate;
+        console.log(serviceDate.toISOString(), "serviceDate")
+
+        if (data) {
+            const formattedData = {
+                name: data.name || `Serviço n.0${data.serviceId}-${currentDate.getFullYear()}`,
+                date: serviceDate,
+                status: 'scheduled',
+                additionalInfo: data.additionalInfo,
+                paymentCondition: data.agreement && data.agreement.remainingValue === "afterCompletion" ? "agreement" : data.installments ? "installments" : "cash",
+                paymentMethods: data.checkedPaymentMethods,
+                splitMethod: data.agreement?.splitMethod ?? null,
+                agreementInitialValue: data.agreement?.agreementInitialValue ?? null,
+                installmentsAmount: data.installments?.installmentsAmount ?? null,
+                warrantyPeriod: data.warrantyDays,
+                warrantyDetails: data.warrantyDetails,
+            } as ServiceModel;
+
+            const serviceOnDatabase = await database.write(async () => {
+                const newService = await database.get<ServiceModel>('services').create((service) => {
+                    service.name = formattedData.name;
+                    service.date = formattedData.date;
+                    service.status = formattedData.status;
+                    service.additionalInfo = formattedData.additionalInfo;
+                    service.paymentCondition = formattedData.paymentCondition;
+                    service.paymentMethods = formattedData.paymentMethods;
+                    service.splitMethod = formattedData.splitMethod;
+                    service.agreementInitialValue = formattedData.agreementInitialValue;
+                    service.installmentsAmount = formattedData.installmentsAmount;
+                    service.warrantyPeriod = formattedData.warrantyPeriod;
+                    service.warrantyDetails = formattedData.warrantyDetails;
+                })
+
+                const batchSubServices = await Promise.all(data.subServices.map(async (subService) => {
+                    const newSubService = await database.get<SubServiceModel>('sub_services').prepareCreate((sub_service_db: any) => {
+                        sub_service_db.service.set(newService);
+                        sub_service_db.description = subService.description;
+                        sub_service_db.details = subService.details;
+                        sub_service_db.types = subService.types;
+                        sub_service_db.price = subService.price;
+                        sub_service_db.amount = subService.amount;
+                    })
+                    console.log(newSubService, "novo SUBSERVIÇO")
+                    return newSubService
+                }))
+
+                const batchMaterials = await Promise.all(data.materials.map(async (material) => {
+                    const newMaterial = await database.get<MaterialModel>('materials').prepareCreate((material_db: any) => {
+                        material_db.service.set(newService)
+                        material_db.name = material.name;
+                        material_db.description = material.description;
+                        material_db.image_url = material.image_url;
+                        material_db.price = material.price;
+                        material_db.amount = material.amount;
+                        material_db.profitMargin = material.profitMargin;
+                        material_db.availability = material.availability;
+                    })
+                    return newMaterial
+                }))
+
+                // Adicionamos os subserviços e os materiais ao serviço
+                await database.batch([...batchSubServices, ...batchMaterials])
+
+                /* const batchSubServices = await Promise.all(data.subServices.map(async (subService) => {
+                    const newSubService = await database.get<SubServiceModel>('sub_services').create((sub_service_db) => {
+                        sub_service_db.parent.set(newService);
+                        sub_service_db.description = subService.description;
+                        sub_service_db.details = subService.details;
+                        sub_service_db.types = subService.types;
+                        sub_service_db.price = subService.price;
+                        sub_service_db.amount = subService.amount;
+                    })
+                    console.log(newSubService, "novo SUBSERVIÇO")
+                    return newSubService
+                }))
+                console.warn(batchSubServices) */
+
+                return newService;
+            });
+
+            console.log(serviceOnDatabase, "Service created successfully (with subServices and materials).")
+
+            navigate("home", { createdService: true });
+        }
+    }, [data])
 
     const onDismissed = useCallback(() => {
         setData(undefined) // voltamos ao estado de carregamento
@@ -115,10 +202,14 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
                             value={data.name || `Serviço n.0${data.serviceId}-${currentDate.getFullYear()}`}
                         />
 
-                        <ReviewSection
-                            wrapperProps={{ header: { title: "Informações Adicionais" } }}
-                            value={data.additionalInfo ?? "[vazio]"}
-                        />
+                        {
+                            data.additionalInfo && (
+                                <ReviewSection
+                                    wrapperProps={{ header: { title: "Informações Adicionais" } }}
+                                    value={data.additionalInfo ?? "[vazio]"}
+                                />
+                            )
+                        }
 
                         <View className='flex-row w-full'>
                             <ReviewSection
@@ -126,7 +217,7 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
                                     header: { title: "Data" },
                                     style: { flex: 1, marginRight: 10 },
                                 }}
-                                value={new Date(`${currentDate.getFullYear()}-${data.date?.month! + 1}-${data.date?.date}T00:00:00Z`).toLocaleDateString('pt-BR', {
+                                value={new Date(`${currentDate.getFullYear()}-${data.date?.month! + 1}-${data.date?.date! + 1}T00:00:00Z`).toLocaleDateString('pt-BR', {
                                     day: '2-digit',
                                     month: '2-digit',
                                     year: 'numeric',
@@ -169,6 +260,15 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
                         />
 
                         {
+                            data.warrantyDetails && (
+                                <ReviewSection
+                                    wrapperProps={{ header: { title: "Condições da Garantia" } }}
+                                    value={data.warrantyDetails ?? "[vazio]"}
+                                />
+                            )
+                        }
+
+                        {
                             data.subServices && data.subServices.length > 0 && (
                                 <SubSectionWrapper
                                     style={{ flex: 1 }}
@@ -208,6 +308,7 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
 
                         <NextButton
                             isLastButton
+                            onPress={onSubmit}
                         />
                     </>
                 ) : <Loading message='Aguarde enquanto verificamos os dados do agendamento...' /> /* : (

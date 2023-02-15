@@ -99,7 +99,7 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
             } catch {
                 console.log('error')
             }
-        }, 500);
+        }, 100);
     };
 
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {

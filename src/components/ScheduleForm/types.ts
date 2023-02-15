@@ -33,6 +33,7 @@ export interface Section1Props {
         installmentsAmount: number;
     } | undefined;
     warrantyDays: number;
+    warrantyDetails: string;
 }
 
 export interface Section1RefProps {

@@ -26,6 +26,7 @@ import Title from 'components/Title';
 import { TagsSelector } from 'components/TagsSelector';
 import Toast from 'components/Toast';
 import { MARGIN, SubSectionWrapper } from '../SubSectionWrapper';
+import { runOnUI } from 'react-native-reanimated';
 
 const borderErrorStyle = {
     borderColor: colors.primary.red,
@@ -92,9 +93,16 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
         };
         console.log(newSubService)
 
-        //
-
         Toast.hide();
+        onSubmitForm && onSubmitForm(newSubService as unknown as MaterialModel);
+        /* reset(); */
+        setTimeout(() => {
+            try {
+                runOnUI(bottomSheetRef.current.close())('teste');
+            } catch {
+                console.log('error')
+            }
+        }, 100);
     };
 
     const onChange = (arg: any) => {

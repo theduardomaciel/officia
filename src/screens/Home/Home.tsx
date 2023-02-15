@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, Platform, UIManager } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity, Platform, UIManager, RefreshControl, SectionList, FlatListProps, ViewStyle } from 'react-native';
 import * as NavigationBar from "expo-navigation-bar";
 import { useColorScheme } from 'nativewind/dist/use-color-scheme';
 
@@ -22,9 +22,17 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 import { tags } from 'global/tags';
 
-import { database } from 'database';
+import { database } from 'database/index.native';
 import { ServiceModel } from 'database/models/serviceModel';
+
 import { Q } from '@nozbe/watermelondb';
+import withObservables from '@nozbe/with-observables'
+
+import Toast from 'components/Toast';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import Loading from 'components/Loading';
+import { FlatList } from 'react-native-gesture-handler';
+import ServicePreview from 'components/ServicePreview';
 
 export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
     <View className='bg-black dark:bg-gray-200 flex-row items-center  h-full mr-3 px-3 rounded-full'>
@@ -35,18 +43,49 @@ export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
     </View>
 )
 
-export default function Home() {
+export const isTodayOrTomorrow = (date: Date) => {
+    const today = new Date()
+    return (date.getDate() === today.getDate() || date.getDate() === today.getDate() + 1) ? true : false
+}
+
+function getWeekServices(services: ServiceModel[], week: Date) {
+    const weekServices = services.filter(service => {
+        const serviceDate = new Date(service.date)
+        return serviceDate.getDate() >= week.getDate() && serviceDate.getDate() <= week.getDate() + 6 && !isTodayOrTomorrow(serviceDate);
+    })
+    return weekServices.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).reverse()
+}
+
+function getMonthServices(services: ServiceModel[], month: Date, excludeElements: Array<ServiceModel> = []) {
+    const monthServices = services.filter(service => {
+        const serviceDate = new Date(service.date)
+        return serviceDate.getMonth() === month.getMonth() && serviceDate.getFullYear() === month.getFullYear() && !excludeElements.includes(service) && !isTodayOrTomorrow(serviceDate);
+    })
+    return monthServices
+}
+
+export default function Home({ route }: any) {
     const { navigate } = useNavigation()
     const { colorScheme } = useColorScheme();
-    const insets = useSafeAreaInsets();
 
-    const [pendingServices, setPendingServices] = useState<Array<ServiceModel> | undefined>(undefined)
+    const showCreatedServiceToast = useCallback(() => {
+        Toast.show({
+            preset: "success",
+            title: "Serviço criado com sucesso!",
+            message: "Agora você pode acessar o orçamento do serviço agendado.",
+        })
+    }, [])
+
+    const [pendingServices, setPendingServices] = useState<ServiceModel[] | undefined>(undefined)
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(false)
 
+    const currentDate = new Date();
     async function fetchData() {
+        setPendingServices(undefined)
         try {
-            const servicesCollection = database.get<ServiceModel>('services')
-            const services = await servicesCollection.query(Q.where('status', "pending")).fetch()
+            const services = await database
+                .get<ServiceModel>('services')
+                .query(Q.where('status', "scheduled")).fetch()
             setPendingServices(services)
         } catch (error) {
             console.log(error, "erro")
@@ -55,14 +94,45 @@ export default function Home() {
     }
 
     useFocusEffect(useCallback(() => {
-        fetchData()
+        if (pendingServices === undefined) {
+            fetchData()
+        }
+        if (route.createdService) {
+            showCreatedServiceToast()
+        }
         NavigationBar.setPositionAsync("absolute")
         NavigationBar.setBackgroundColorAsync("transparent")
     }, []))
 
+    const isolatedServices = pendingServices?.filter(service => isTodayOrTomorrow(service.date)) ?? []
+    const weekServices = getWeekServices(pendingServices || [], currentDate);
+    const monthServices = getMonthServices(pendingServices || [], currentDate, weekServices)
+    const otherServices = pendingServices?.filter(service => !isolatedServices.includes(service) && !weekServices.includes(service) && !monthServices.includes(service)) ?? []
+
+    const DATA = [
+        ...isolatedServices.length > 0 ? [{
+            title: 'blank',
+            data: isolatedServices,
+        }] : [],
+        ...weekServices.length > 0 ? [{
+            title: 'Esta semana',
+            data: weekServices,
+        }] : [],
+        ...monthServices.length > 0 ? [{
+            title: 'Este mês',
+            data: monthServices,
+        }] : [],
+        ...otherServices.length > 0 ? [{
+            title: 'Próximos',
+            data: otherServices,
+        }] : [],
+    ]
+
     function handleTagSelection(data: Tag[]) {
         /* console.log(data) */
     }
+
+    console.log(pendingServices?.map(service => [service.name, service.date.toLocaleDateString()]))
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5 relative'>
@@ -103,21 +173,62 @@ export default function Home() {
                     </Animated.View>
                 )
             }
-            <Animated.View className='flex flex-row items-start w-full' layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}>
+            <Animated.View className='flex-row items-start w-full' layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}>
                 <FilterView colorScheme={colorScheme} />
                 <TagsSelector
                     tags={tags}
                     onSelectTags={handleTagSelection}
                 />
             </Animated.View>
-            <Animated.ScrollView
+            <Animated.View
                 layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}
-                className='w-full h-full bg-light_gray-100 dark:bg-gray-200 rounded-xl mb-5'
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 50, height: 500, display: "flex", flex: 1, alignItems: 'center', justifyContent: "center" }}
+                className='flex-1 pb-3'
             >
-                <EmptyMessage />
-            </Animated.ScrollView>
+                {
+                    pendingServices && pendingServices.length === 0 ? (
+                        <Animated.View className='flex-1'>
+                            <EmptyMessage />
+                        </Animated.View>
+                    ) : pendingServices && pendingServices.length > 0 ? (
+                        <SectionList
+                            sections={DATA}
+                            keyExtractor={(item, index) => index.toString()}
+                            contentContainerStyle={{ flex: 1 }}
+                            renderSectionHeader={({ section: { title } }) => (
+                                title !== 'blank' ? <Title>
+                                    {title}
+                                </Title> : <></>
+                            )}
+                            renderItem={({ item, section }) => <EnhancedServicePreview
+                                key={item.id}
+                                service={item}
+                                additionalInfo={section.title === "Esta semana" || section.title === "blank" ? "day" : "date"}
+                                onPress={() => { } /* navigate("ServiceDetails", { service: item }) */}
+                            />
+                            }
+                        />
+                    ) : <Animated.View className='flex-1'>
+                        <Loading message='Aguarde enquanto os serviços agendados são carregados...' />
+                    </Animated.View>
+                }
+            </Animated.View>
+            <Toast
+                toastPosition="top"
+                toastOffset={"0%"}
+            />
         </View>
     );
 }
+
+const enhance = withObservables(['service'], ({ service }) => ({
+    service,
+    subServices: service.subServices,  // "Shortcut syntax" for `service.subServices.observe()`
+}))
+
+const EnhancedServicePreview = enhance(ServicePreview)
+
+const Title = ({ children }: { children: React.ReactNode }) => (
+    <Text className='text-xl font-titleBold text-white mb-2'>
+        {children}
+    </Text>
+)

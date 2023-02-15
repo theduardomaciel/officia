@@ -235,6 +235,7 @@ export default function Calendar({ style }: CalendarProps) {
 
                         const DATE = new Date(currentDate.getFullYear(), date.month, date.date)
                         const dateString = DATE.toISOString();
+
                         return (
                             <DayView
                                 key={`calendar_${index}`}
@@ -260,7 +261,6 @@ export default function Calendar({ style }: CalendarProps) {
 
 export function StaticCalendar({ style, selectedDate, setSelectedDate }: CalendarProps) {
     const currentDate = new Date();
-
     const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
 
     const { monthDates, firstDayOfMonth, lastDayOfMonth, remainingDaysOnLastMonth, remainingDaysOnNextMonth } = monthInfos[currentMonth];

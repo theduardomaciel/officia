@@ -2,14 +2,17 @@ import { Database } from "@nozbe/watermelondb";
 import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite";
 
 import { schemas } from "./schemas";
+
 import { ServiceModel } from "./models/serviceModel";
+import { SubServiceModel } from "./models/subServiceModel";
+import { MaterialModel } from "./models/materialModel";
+import { ClientModel } from "./models/clientModel";
 
 const adapter = new SQLiteAdapter({
-    dbName: "officia",
     schema: schemas,
 });
 
 export const database = new Database({
     adapter,
-    modelClasses: [ServiceModel],
+    modelClasses: [ServiceModel, SubServiceModel, MaterialModel, ClientModel],
 });

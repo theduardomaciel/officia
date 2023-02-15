@@ -5,6 +5,9 @@ import { ServiceModel } from "./serviceModel";
 
 export class ClientModel extends Model {
     static table = "materials";
+    static associations: Associations = {
+        services: { type: 'belongs_to', key: 'service_id' },
+    }
 
     @field("name") name!: string;
     @field("phone") phone!: string | null;
@@ -12,6 +15,7 @@ export class ClientModel extends Model {
     @field("address") address!: string | null;
     @field("email") email!: string | null;
 
-    @field("service_id") service_id!: string | null;
     @readonly @date('created_at') createdAt!: number;
+
+    @relation('services', 'service_id') service!: ServiceModel;
 }

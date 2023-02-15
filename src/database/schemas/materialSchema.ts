@@ -14,7 +14,7 @@ export const materialSchema = tableSchema({
         { name: "amount", type: "number" },
         { name: "profit_margin", type: "number", isOptional: true },
         { name: "availability", type: "boolean" },
-        { name: "service_id", type: "string" },
         { name: "created_at", type: "number" },
+        { name: 'service_id', type: 'string' },
     ],
 })

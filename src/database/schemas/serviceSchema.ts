@@ -8,9 +8,7 @@ export const serviceSchema = tableSchema({
     name: "services",
     columns: [
         { name: "name", type: "string" },
-        { name: "subServices", type: "string" },
-        { name: "materials", type: "string" },
-        { name: "date", type: "string" },
+        { name: "date", type: "number" },
         { name: "status", type: "string" },
         { name: "additionalInfo", type: "string", isOptional: true },
         // Payment
@@ -25,7 +23,6 @@ export const serviceSchema = tableSchema({
         { name: "warrantyPeriod", type: "number" },
         { name: "warrantyDetails", type: "string", isOptional: true },
         // Additional
-        { name: "client", type: "string" },
         { name: 'created_at', type: 'number' },
     ],
 })
