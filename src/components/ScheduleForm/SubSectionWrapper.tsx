@@ -69,20 +69,24 @@ export const SubSection = React.memo(({ header, children }: SubSectionWrapperPro
 
 interface NextButtonProps extends TouchableOpacityProps {
     isLastButton?: boolean;
+    style?: ViewStyle;
+    title?: string;
+    icon?: string;
 }
 
-export const NextButton = ({ isLastButton, ...rest }: NextButtonProps) => {
+export const NextButton = ({ isLastButton, title, style, icon, ...rest }: NextButtonProps) => {
     return (
         <TouchableOpacity
             activeOpacity={0.8}
             className='flex-row items-center justify-center w-full py-4 rounded'
-            style={{
+            style={[{
                 backgroundColor: isLastButton ? colors.primary.green : colors.gray[200],
-            }}
+            }]}
             {...rest}
         >
+            {icon && <MaterialIcons name={icon as unknown as any} size={22} color={colors.white} style={{ marginRight: 15 }} />}
             <Text className='font-bold text-white text-base'>
-                {isLastButton ? "Agendar" : "Próximo"}
+                {title ? title : isLastButton ? "Agendar" : "Próximo"}
             </Text>
         </TouchableOpacity>
     )

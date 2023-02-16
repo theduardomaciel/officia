@@ -92,17 +92,16 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
             types: tags,
         };
         console.log(newSubService)
-
         Toast.hide();
-        onSubmitForm && onSubmitForm(newSubService as unknown as MaterialModel);
-        /* reset(); */
+
         setTimeout(() => {
             try {
-                runOnUI(bottomSheetRef.current.close())('teste');
-            } catch {
-                console.log('error')
-            }
+                runOnUI(bottomSheetRef.current.close())();
+            } catch { }
         }, 100);
+
+        onSubmitForm && onSubmitForm(newSubService as unknown as MaterialModel);
+        reset();
     };
 
     const onChange = (arg: any) => {
@@ -230,6 +229,9 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                 <ActionButton
                     label='Adicionar serviço'
                     icon='add'
+                    style={{
+                        backgroundColor: editableData ? colors.primary.blue : colors.primary.green
+                    }}
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>

@@ -6,6 +6,9 @@ export declare global {
             };
             overview: undefined;
             business: undefined;
+            service: {
+                serviceId: string
+            };
             dayAgenda: {
                 dateString: string
             };

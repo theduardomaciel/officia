@@ -28,10 +28,16 @@ export interface BottomSheetProps {
         suppressBackdrop?: boolean;
         suppressPortal?: boolean;
     };
-    onDismiss?: () => void;
-    onDismissed?: () => void;
-    onExpand?: () => void;
-    onExpanded?: () => void;
+    onDismiss?: () => any;
+    onDismissed?: () => any;
+    onExpand?: () => any;
+    onExpanded?: () => any;
+}
+
+export interface BottomSheetActions {
+    expand: () => any;
+    close: () => any;
+    update: (updateFunction: () => any) => any;
 }
 
 const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, onExpanded, height, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues, colors }: BottomSheetProps, ref) => {
@@ -117,7 +123,9 @@ const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, on
             // Se o usuário arrastar o suficiente, o bottom sheet é fechado
             if (canDismiss && topAnimation.value > newActiveHeight + DISMISS_TOLERANCE) {
                 topAnimation.value = withSpring(screenHeight, animProps);
-                onDismiss && onDismiss();
+                if (onDismiss) {
+                    runOnJS(onDismiss)()
+                }
             } else {
                 // Volta para a posição inicial caso:
                 // 1. a opção de dismiss estiver desativada

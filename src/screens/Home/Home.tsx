@@ -43,15 +43,15 @@ export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
     </View>
 )
 
-export const isTodayOrTomorrow = (date: Date) => {
+export const isToday = (date: Date) => {
     const today = new Date()
-    return (date.getDate() === today.getDate() || date.getDate() === today.getDate() + 1) ? true : false
+    return (date.getDate() === today.getDate() /* || date.getDate() === today.getDate() + 1 */) ? true : false
 }
 
 function getWeekServices(services: ServiceModel[], week: Date) {
     const weekServices = services.filter(service => {
         const serviceDate = new Date(service.date)
-        return serviceDate.getDate() >= week.getDate() && serviceDate.getDate() <= week.getDate() + 6 && !isTodayOrTomorrow(serviceDate);
+        return serviceDate.getDate() >= week.getDate() && serviceDate.getDate() <= week.getDate() + 6 && !isToday(serviceDate);
     })
     return weekServices.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).reverse()
 }
@@ -59,7 +59,7 @@ function getWeekServices(services: ServiceModel[], week: Date) {
 function getMonthServices(services: ServiceModel[], month: Date, excludeElements: Array<ServiceModel> = []) {
     const monthServices = services.filter(service => {
         const serviceDate = new Date(service.date)
-        return serviceDate.getMonth() === month.getMonth() && serviceDate.getFullYear() === month.getFullYear() && !excludeElements.includes(service) && !isTodayOrTomorrow(serviceDate);
+        return serviceDate.getMonth() === month.getMonth() && serviceDate.getFullYear() === month.getFullYear() && !excludeElements.includes(service) && !isToday(serviceDate);
     })
     return monthServices
 }
@@ -85,7 +85,9 @@ export default function Home({ route }: any) {
         try {
             const services = await database
                 .get<ServiceModel>('services')
-                .query(Q.where('status', "scheduled")).fetch()
+                .query(Q.where('status', "scheduled"))
+                .fetch()
+
             setPendingServices(services)
         } catch (error) {
             console.log(error, "erro")
@@ -94,7 +96,7 @@ export default function Home({ route }: any) {
     }
 
     useFocusEffect(useCallback(() => {
-        if (pendingServices === undefined) {
+        if (pendingServices === undefined || pendingServices.length === 0) {
             fetchData()
         }
         if (route.createdService) {
@@ -104,7 +106,7 @@ export default function Home({ route }: any) {
         NavigationBar.setBackgroundColorAsync("transparent")
     }, []))
 
-    const isolatedServices = pendingServices?.filter(service => isTodayOrTomorrow(service.date)) ?? []
+    const isolatedServices = pendingServices?.filter(service => isToday(service.date)).reverse() ?? []
     const weekServices = getWeekServices(pendingServices || [], currentDate);
     const monthServices = getMonthServices(pendingServices || [], currentDate, weekServices)
     const otherServices = pendingServices?.filter(service => !isolatedServices.includes(service) && !weekServices.includes(service) && !monthServices.includes(service)) ?? []
@@ -136,28 +138,30 @@ export default function Home({ route }: any) {
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5 relative'>
-            <Header title='Agendado'>
-                <TouchableOpacity
-                    activeOpacity={0.7}
-                    className='flex flex-row items-center justify-center px-3 py-1 bg-gray_light-neutral bg-black dark:bg-gray-200 rounded-full'
-                    onPress={() => setIsCalendarExpanded(!isCalendarExpanded)}
-                >
-                    <MaterialIcons
-                        name="expand-more"
-                        size={16}
-                        className={"m-0"}
-                        color={colorScheme === "dark" ? colors.text[100] : colors.white}
-                        style={{
-                            transform: [
-                                { rotate: isCalendarExpanded ? '180deg' : '0deg' }
-                            ],
-                        }}
-                    />
-                    <Text className='text-sm ml-1 text-white dark:text-text-100'>
-                        {isCalendarExpanded ? 'Minimizar' : 'Expandir'}
-                    </Text>
-                </TouchableOpacity>
-            </Header>
+            <View>
+                <Header title='Agendado'>
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        className='flex flex-row items-center justify-center px-3 py-1 bg-gray_light-neutral bg-black dark:bg-gray-200 rounded-full'
+                        onPress={() => setIsCalendarExpanded(!isCalendarExpanded)}
+                    >
+                        <MaterialIcons
+                            name="expand-more"
+                            size={16}
+                            className={"m-0"}
+                            color={colorScheme === "dark" ? colors.text[100] : colors.white}
+                            style={{
+                                transform: [
+                                    { rotate: isCalendarExpanded ? '180deg' : '0deg' }
+                                ],
+                            }}
+                        />
+                        <Text className='text-sm ml-1 text-white dark:text-text-100'>
+                            {isCalendarExpanded ? 'Minimizar' : 'Expandir'}
+                        </Text>
+                    </TouchableOpacity>
+                </Header>
+            </View>
             {
                 isCalendarExpanded && (
                     <Animated.View entering={FadeInUp.duration(235)} exiting={FadeOutUp.duration(150)} className='flex-col items-center justify-center w-full'>
@@ -169,7 +173,7 @@ export default function Home({ route }: any) {
                 !isCalendarExpanded && (
                     <Animated.View entering={FadeInUp.duration(235)} exiting={FadeOutUp} className='flex-col items-center justify-start w-full'>
                         <WeekDays />
-                        <WeekView navigate={navigate} />
+                        <WeekView /* weekDaysTypes={} */ navigate={navigate} />
                     </Animated.View>
                 )
             }
@@ -186,7 +190,7 @@ export default function Home({ route }: any) {
             >
                 {
                     pendingServices && pendingServices.length === 0 ? (
-                        <Animated.View className='flex-1'>
+                        <Animated.View className='flex-1 items-center pt-24'>
                             <EmptyMessage />
                         </Animated.View>
                     ) : pendingServices && pendingServices.length > 0 ? (
@@ -201,9 +205,9 @@ export default function Home({ route }: any) {
                             )}
                             renderItem={({ item, section }) => <EnhancedServicePreview
                                 key={item.id}
+                                onPress={() => navigate("service", { serviceId: item.id })}
                                 service={item}
                                 additionalInfo={section.title === "Esta semana" || section.title === "blank" ? "day" : "date"}
-                                onPress={() => { } /* navigate("ServiceDetails", { service: item }) */}
                             />
                             }
                         />

@@ -13,7 +13,7 @@ export class MaterialModel extends Model {
     @field("name") name!: string;
     @field("description") description!: string;
     @field("image_url") image_url!: string | null;
-    @field("price") price!: string;
+    @field("price") price!: number;
     @field("amount") amount!: number;
     @field("profit_margin") profitMargin!: number | null;
     @field("availability") availability!: boolean;

@@ -2,6 +2,9 @@ import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { CardStyleInterpolators, createStackNavigator } from "@react-navigation/stack";
 
+import colors from "global/colors";
+import { MaterialIcons } from "@expo/vector-icons";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from 'nativewind';
 
@@ -12,15 +15,14 @@ import Home from "screens/Home/Home";
 import Business from "screens/Home/Business";
 import Overview from "screens/Home/Overview";
 
-import colors from "global/colors";
-import { MaterialIcons } from "@expo/vector-icons";
-import PhoneAndAddress from "screens/PhoneAndAddress";
+import Service from "screens/Service";
+import ScheduleForm from "screens/ScheduleForm";
 
+import PhoneAndAddress from "screens/PhoneAndAddress";
 import DayAgenda from "screens/DayAgenda";
 import BankAccount from "screens/BankAccount";
 import SocialMedia from "screens/SocialMedia";
 import AdditionalInfo from "screens/AdditionalInfo";
-import ScheduleForm from "screens/ScheduleForm";
 
 const FormBase = () => <View style={{ flex: 1, backgroundColor: colors.gray[300] }} />
 
@@ -154,6 +156,13 @@ export function AppRoutes() {
                 component={ScheduleForm}
                 options={{
                     cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
+                }}
+            />
+            <Stack.Screen
+                name="service"
+                component={Service}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
                 }}
             />
         </Stack.Navigator>

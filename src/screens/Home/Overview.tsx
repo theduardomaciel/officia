@@ -1,9 +1,10 @@
 import Header from 'components/Header';
 import { TagsSelector } from 'components/TagsSelector';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, Text, SectionList, TouchableOpacity } from "react-native";
 import * as NavigationBar from "expo-navigation-bar";
 import { useColorScheme } from 'nativewind';
+import { useNavigation } from '@react-navigation/native';
 
 import { FlatList, ScrollView as GestureHandlerScrollView } from 'react-native-gesture-handler'
 import { useFocusEffect } from '@react-navigation/native';
@@ -16,6 +17,9 @@ import type { ServiceModel } from 'database/models/serviceModel';
 import { ServiceWithSubServicesPreview } from 'components/ServicePreview';
 import { database } from 'database/index.native';
 import withObservables from '@nozbe/with-observables';
+import EmptyMessage from 'components/EmptyMessage';
+import { Q } from '@nozbe/watermelondb';
+import { SubServiceModel } from 'database/models/subServiceModel';
 
 interface MonthWithServices {
     month: string;
@@ -38,7 +42,7 @@ export default function Overview() {
         setServices(undefined)
         try {
             const servicesCollection = database.get<ServiceModel>('services')
-            const services = await servicesCollection.query().fetch()
+            const services = await servicesCollection.query(Q.where('status', Q.notEq('scheduled'))).fetch()
             setServices(services)
         } catch (error) {
             console.log(error, "erro")
@@ -80,7 +84,9 @@ export default function Overview() {
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-1'>
-            <Header title='Visão Geral' />
+            <View>
+                <Header title='Visão Geral' />
+            </View>
             <GestureHandlerScrollView
                 nestedScrollEnabled // Allows scrolling inside the ScrollView
                 directionalLockEnabled // Prevents scrolling horizontally
@@ -108,19 +114,29 @@ export default function Overview() {
                     </View>
                 </View>
                 <StatisticsCarousel setCanScrollVertically={setCanScrollVertically} />
-                <FlatList
-                    data={monthsWithServices}
-                    className='w-screen'
-                    contentContainerStyle={{
-                    }}
-                    renderItem={data => <MonthDates {...data.item} />}
-                />
+                {
+                    monthsWithServices.length > 0 ? (
+                        <FlatList
+                            data={monthsWithServices}
+                            className='w-screen'
+                            contentContainerStyle={{
+                            }}
+                            renderItem={data => <MonthDates {...data.item} />}
+                        />
+                    ) : (
+                        <View className='w-full flex-1 items-center justify-center pt-14 px-4'>
+                            <EmptyMessage message='Nenhum serviço foi arquivado até o momento.' />
+                        </View>
+                    )
+                }
             </GestureHandlerScrollView>
         </View>
     )
 }
 
 const MonthDates = ({ month, dates }: MonthWithServices) => {
+    const { navigate } = useNavigation();
+
     return (
         <View className='flex flex-col w-full px-6'>
             <View className='flex flex-row items-center justify-between w-full mt-4 mb-2'>
@@ -140,35 +156,55 @@ const MonthDates = ({ month, dates }: MonthWithServices) => {
             <SectionList
                 sections={dates}
                 stickySectionHeadersEnabled
-                renderSectionHeader={({ section: { title } }) => {
-                    const date = new Date(title);
-                    const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
-                    const dateMonth = date.toLocaleDateString('pt-BR', { month: 'short' });
-
-                    return (
-                        <View className='flex flex-col items-start justify-center w-full'>
-                            <View className='flex flex-row items-center justify-between w-full mt-4 mb-2'>
-                                <Text className='text-black dark:text-white font-titleRegular text-sm capitalize'>
-                                    {dayName.split("-")[0]}, {date.getDate()} {dateMonth} {date.getFullYear()}
-                                </Text>
-                                <View className='flex flex-row items-end'>
-                                    <Text className='text-text-100 font-titleSemiBold text-sm'>
-                                        R$ x,00 ganhos
-                                    </Text>
-                                </View>
-                            </View>
-                            <View className='border-b border-text-100 w-full mb-2' />
-                        </View>
-                    )
-                }}
+                renderSectionHeader={({ section: { title, data } }) => (
+                    <DateServicesList title={title} data={data} />
+                )}
                 renderItem={({ item, index }) => (
                     <EnhancedServicePreview
                         key={index.toString()}
                         service={item}
-                        onPress={() => { }}
+                        onPress={() => navigate('service', { serviceId: item.id })}
                     />
                 )}
             />
+        </View>
+    )
+}
+
+const DateServicesList = ({ title, data }: { title: string, data: ServiceModel[] }) => {
+    const date = new Date(title);
+    const dayName = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+    const dateMonth = date.toLocaleDateString('pt-BR', { month: 'short' });
+
+    const [earnings, setEarnings] = React.useState<number>(0);
+
+    async function getEarnings(servicesInDate: ServiceModel[]) {
+        const subServicesEarnings = await Promise.all(servicesInDate.map(async (service: any) => {
+            const subServices = await service.subServices.fetch()
+            const subServicesEarnings = subServices.map((subService: SubServiceModel) => subService.price)
+            return subServicesEarnings.reduce((a: number, b: number) => a + b, 0)
+        }))
+        const earnings = subServicesEarnings.reduce((a: number, b: number) => a + b, 0)
+        setEarnings(earnings)
+    }
+
+    useEffect(() => {
+        getEarnings(data)
+    }, [])
+
+    return (
+        <View className='flex flex-col items-start justify-center w-full'>
+            <View className='flex flex-row items-center justify-between w-full mt-4 mb-2'>
+                <Text className='text-black dark:text-white font-titleRegular text-sm capitalize'>
+                    {dayName.split("-")[0]}, {date.getDate()} {dateMonth} {date.getFullYear()}
+                </Text>
+                <View className='flex flex-row items-end'>
+                    <Text className='text-text-100 font-titleSemiBold text-sm'>
+                        R$ {earnings},00 ganhos
+                    </Text>
+                </View>
+            </View>
+            <View className='border-b border-text-100 w-full mb-2' />
         </View>
     )
 }

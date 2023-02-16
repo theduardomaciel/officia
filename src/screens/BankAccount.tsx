@@ -23,10 +23,10 @@ export default function BankAccount() {
                     <View>
                         <Dropdown
                             label='Banco'
-                            modalLabel='Selecione um banco'
+                            bottomSheetLabel='Selecione um banco'
                             selected={selected}
                             setSelected={setSelected}
-                            overDragAmount={65}
+                            overDragAmount={50}
                             data={[
                                 { label: "Nenhum banco", value: "unselected" },
                                 { label: "Banco do Brasil", value: "bb" },

@@ -140,6 +140,7 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
                 }))
 
                 const batchMaterials = await Promise.all(data.materials.map(async (material) => {
+                    console.log(material)
                     const newMaterial = await database.get<MaterialModel>('materials').prepareCreate((material_db: any) => {
                         material_db.service.set(newService)
                         material_db.name = material.name;

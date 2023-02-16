@@ -36,14 +36,16 @@ export default function Business() {
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
-            <Header title='Meu Negócio'>
-                {
-                    colorScheme === 'dark' ?
-                        <Feather name='moon' size={24} color={colors.text[100]} onPress={toggleColorScheme} />
-                        :
-                        <Feather name='sun' size={24} color={colors.black} onPress={toggleColorScheme} />
-                }
-            </Header>
+            <View>
+                <Header title='Meu Negócio'>
+                    {
+                        colorScheme === 'dark' ?
+                            <Feather name='moon' size={24} color={colors.text[100]} onPress={toggleColorScheme} />
+                            :
+                            <Feather name='sun' size={24} color={colors.black} onPress={toggleColorScheme} />
+                    }
+                </Header>
+            </View>
             <TouchableOpacity
                 activeOpacity={0.8}
                 className='w-full flex-col items-center justify-center px-12 py-14 gap-y-1 border rounded-lg border-dashed border-primary-green'

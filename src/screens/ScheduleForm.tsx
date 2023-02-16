@@ -9,6 +9,7 @@ import Section0 from 'components/ScheduleForm/Sections/Section0';
 import Section1 from 'components/ScheduleForm/Sections/Section1';
 import Section2 from 'components/ScheduleForm/Sections/Section2';
 import Form from 'components/ScheduleForm/Forms/Form';
+import Toast from 'components/Toast';
 
 export default function ScheduleForm() {
     const selectedSectionId = useSharedValue(0);
@@ -68,6 +69,11 @@ export default function ScheduleForm() {
                 <Section2 bottomSheetRef={section2BottomSheetRef} formRefs={{ section0Ref, section1Ref }} />
                 <Form type='material' />
                 <Form type='subService' />
+                <Toast
+                    toastPosition="top"
+                    maxDragDistance={65}
+                    toastOffset={"75%"}
+                />
             </View>
         </TouchableWithoutFeedback>
     )

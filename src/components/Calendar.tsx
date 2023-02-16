@@ -30,7 +30,16 @@ export function WeekDays({ invert }: { invert?: boolean }) {
     )
 }
 
-function DayView({ date, isToday, style, onPress, invert }: { date: Date, isToday?: boolean, style?: ViewStyle, invert?: boolean, onPress: () => void }) {
+interface DayView {
+    date: Date;
+    isToday?: boolean;
+    style?: ViewStyle;
+    status?: "busy" | "contains";
+    invert?: boolean;
+    onPress: () => void;
+}
+
+function DayView({ date, isToday, style, status, onPress, invert }: DayView) {
     return (
         <TouchableOpacity
             className={clsx('flex w-10 h-10 rounded-full items-center justify-center p-1 bg-gray_light-neutral bg-black dark:bg-gray-200 border-white', {
@@ -45,11 +54,26 @@ function DayView({ date, isToday, style, onPress, invert }: { date: Date, isToda
             })}>
                 {date.getDate()}
             </Text>
+            {
+                status && status === "busy" ? (
+                    <View className="absolute bottom-[5px] rounded-full w-[3.5px] h-[3.5px] bg-primary-yellow" />
+                ) : status && status === "contains" ? (
+                    <View className="absolute bottom-[5px] rounded-full w-[3.5px] h-[3.5px] bg-primary-green" />
+                ) : null
+            }
         </TouchableOpacity>
     )
 }
 
-export function WeekView({ startDate, navigate }: { startDate?: Date, navigate: any }) {
+type WeekDay = "busy" | "contains";
+
+interface WeekView {
+    startDate?: Date;
+    weekDaysTypes?: WeekDay[] | undefined;
+    navigate: any;
+}
+
+export function WeekView({ startDate, navigate }: WeekView) {
     const currentDate = new Date();
     const lastDayOfMonth = new Date(startDate ? startDate.getFullYear() : currentDate.getFullYear(), startDate ? startDate.getMonth() + 1 : currentDate.getMonth() + 1, 0).getDate();
 
@@ -67,6 +91,7 @@ export function WeekView({ startDate, navigate }: { startDate?: Date, navigate: 
                             key={`day_number${index}`}
                             onPress={() => navigate('dayAgenda', { dateString })}
                             date={date}
+                            status={dateString === currentDate.toISOString() ? "contains" : undefined}
                             isToday={DATE === currentDate.getDate()}
                         />
                     )

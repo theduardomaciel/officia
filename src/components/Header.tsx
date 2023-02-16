@@ -9,14 +9,17 @@ interface HeaderProps extends ViewProps {
     returnButton?: boolean | (() => void);
     cancelButton?: boolean | (() => void);
     title: string;
+    upperChildren?: React.ReactNode;
+    aboveTitle?: React.ReactNode;
+    bellowTitle?: React.ReactNode;
 }
 
-export default function Header({ title, cancelButton, returnButton, children, ...props }: HeaderProps) {
+export default function Header({ title, cancelButton, returnButton, children, upperChildren, aboveTitle, bellowTitle, ...props }: HeaderProps) {
     const { colorScheme } = useColorScheme();
     const { goBack } = useNavigation();
 
     return (
-        <View className="flex flex-col items-start justify-center w-full">
+        <View className="flex flex-col items-start justify-center w-full gap-y-1">
             {
                 (returnButton || cancelButton) && (
                     <View className="flex-row w-full items-center justify-between">
@@ -52,14 +55,19 @@ export default function Header({ title, cancelButton, returnButton, children, ..
                                 </TouchableOpacity>
                             )
                         }
+                        {upperChildren}
                     </View>
                 )
             }
-            <View className="w-full flex-row items-center justify-between" {...props}>
-                <Text className="text-text_light-neutral dark:text-white text-4xl font-titleBold">
-                    {title}
-                </Text>
-                {children}
+            <View className="flex-col w-full gap-y-1">
+                {aboveTitle}
+                <View className="w-full flex-row items-center justify-between" {...props}>
+                    <Text className="text-text_light-neutral dark:text-white text-4xl font-titleBold">
+                        {title}
+                    </Text>
+                    {children}
+                </View>
+                {bellowTitle}
             </View>
         </View>
     )

@@ -40,16 +40,18 @@ interface PreviewStatic {
     subService?: SubServiceModel;
     material?: MaterialModel;
     palette?: "light";
+    hasBorder?: boolean;
     padding?: "small";
 }
 
-export const PreviewStatic = ({ subService, material, palette, padding }: PreviewStatic) => {
+export const PreviewStatic = ({ subService, material, palette, hasBorder, padding }: PreviewStatic) => {
     if (!subService && !material) return null;
 
     return (
         <View className={clsx('flex-row items-center justify-between w-full dark:bg-gray-300 rounded-sm p-3', {
             'bg-gray-200': palette === "light",
-            'py-2': padding === "small"
+            'py-2': padding === "small",
+            'border border-gray-100': hasBorder
         })}>
             <View className='flex-1 flex-col items-start justify-center gap-y-2 mr-3'>
                 <Text className='font-bold text-[15px] leading-none text-white'>

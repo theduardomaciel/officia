@@ -91,15 +91,15 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
         };
         console.log(newMaterial)
         Toast.hide();
-        onSubmitForm && onSubmitForm(newMaterial as unknown as MaterialModel);
-        /* reset(); */
+
         setTimeout(() => {
             try {
-                runOnUI(bottomSheetRef.current.close())('teste');
-            } catch {
-                console.log('error')
-            }
+                runOnUI(bottomSheetRef.current.close())();
+            } catch { }
         }, 100);
+
+        onSubmitForm && onSubmitForm(newMaterial as unknown as MaterialModel);
+        reset();
     };
 
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
@@ -247,7 +247,9 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
                 <ActionButton
                     label={`${editableData ? "Editar" : "Adicionar"} material`}
                     icon={editableData ? "edit" : "add"}
-                    preset={editableData ? "edit" : "add"}
+                    style={{
+                        backgroundColor: editableData ? colors.primary.blue : colors.primary.green
+                    }}
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>

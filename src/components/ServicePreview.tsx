@@ -58,7 +58,7 @@ const InfoHolderLeft = ({ children, width }: { children: React.ReactNode, width?
 
 const InfoHolderRight = ({ children, onPress }: { children: React.ReactNode, onPress?: () => void }) => (
     <TouchableWithoutFeedback onPress={onPress}>
-        <View className='relative w-16 flex items-center justify-center'>
+        <View className='relative min-w-8 flex items-end justify-center'>
             {children}
         </View>
     </TouchableWithoutFeedback>
@@ -86,7 +86,7 @@ export default function ServicePreview({ service, subServices, onPress, addition
     }
 
     return (
-        <Container style={serviceDate.getDate() === currentDate.getDate() && specialStyle}>
+        <Container style={serviceDate.getDate() === currentDate.getDate() && specialStyle} onPress={onPress}>
             {
                 servicesTypes && <InfoHolderLeft>
                     <MaterialIcons name={servicesTypes.length > 1 ? "api" : servicesTypesIcon ? servicesTypesIcon as unknown as any : "hourglass-empty"} size={32} color={colors.text[100]} />
@@ -98,7 +98,7 @@ export default function ServicePreview({ service, subServices, onPress, addition
                 {/* <Text className='absolute font-black text-[42px] opacity-20 flex-nowrap whitespace-nowrap text-text_light-100 dark:text-white'>
                     R$
                 </Text> */}
-                <View className="absolute opacity-20">
+                <View className="absolute m-auto opacity-20 justify-center items-center top-0 left-0 right-0 bottom-0" >
                     <MaterialIcons
                         name={"calendar-today"}
                         size={28}
@@ -108,10 +108,6 @@ export default function ServicePreview({ service, subServices, onPress, addition
                 <Text className='font-black text-2xl text-black dark:text-white'>
                     {infoContainers[additionalInfo as keyof typeof infoContainers]}
                 </Text>
-                {/* <Text className='absolute font-black text-[42px] opacity-20 flex-nowrap whitespace-nowrap text-text_light-100 dark:text-white'>
-                    R$
-                </Text>
-                {infoContainers[additionalInfo as keyof typeof infoContainers]} */}
             </InfoHolderRight>
         </Container>
     )
@@ -129,23 +125,28 @@ export function ServiceWithSubServicesPreview({ service, subServices, onPress }:
     const earnings = subServices && subServices?.map(subService => subService.price).reduce((a, b) => a + b, 0);
 
     return (
-        <View className="flex-col  w-full items-center justify-start">
+        <View className="flex-col w-full items-center justify-between">
             <Container>
-                <InfoHolderLeft width={50}>
-                    <Text className='absolute font-black text-[42px] opacity-20 flex-nowrap whitespace-nowrap text-text_light-100 dark:text-white'>
-                        R$
-                    </Text>
-                    <Text className='font-black text-2xl flex-nowrap whitespace-nowrap text-black dark:text-white' numberOfLines={1}>
-                        {earnings}
-                    </Text>
-                </InfoHolderLeft>
-                <Line />
-                <MainInfo service={service} subServices={subServices} />
+                <TouchableOpacity activeOpacity={0.8} className="flex-row h-full flex-1 bg-gray-200 m" onPress={onPress}>
+                    <InfoHolderLeft width={50}>
+                        <Text className='absolute font-black text-[42px] opacity-20 flex-nowrap whitespace-nowrap text-text_light-100 dark:text-white'>
+                            R$
+                        </Text>
+                        <Text className='font-black text-2xl flex-nowrap whitespace-nowrap text-black dark:text-white' numberOfLines={1}>
+                            {earnings}
+                        </Text>
+                    </InfoHolderLeft>
+                    <Line />
+                    <MainInfo service={service} subServices={subServices} />
+                </TouchableOpacity>
                 {
                     subServices && subServices?.length > 0 && (
                         <InfoHolderRight onPress={() => setIsExpanded(!isExpanded)}>
                             <MaterialIcons
                                 name={"keyboard-arrow-down"}
+                                style={{
+                                    transform: isExpanded ? [{ rotate: "180deg" }] : [{ rotate: "0deg" }]
+                                }}
                                 size={16}
                                 color={colors.text[100]}
                             />
@@ -155,12 +156,13 @@ export function ServiceWithSubServicesPreview({ service, subServices, onPress }:
             </Container>
             {
                 isExpanded && subServices && subServices?.map(subService => (
-                    <PreviewStatic
-                        palette="light"
-                        padding="small"
-                        key={subService.id}
-                        subService={subService}
-                    />
+                    <View className="mb-3" key={subService.id}>
+                        <PreviewStatic
+                            palette="light"
+                            padding="small"
+                            subService={subService}
+                        />
+                    </View>
                 ))
             }
         </View>

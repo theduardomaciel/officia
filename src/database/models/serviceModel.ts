@@ -48,6 +48,7 @@ export class ServiceModel extends Model {
         const subServicesCollection: Collection<SubServiceModel> = this.collections.get('sub_services');
         const batchSubServices = data.subServices.map((subService) => {
             return subServicesCollection.prepareCreate((sub_service) => {
+                sub_service.service._setRaw('service_id', this.id)
                 sub_service.description = subService.description;
                 sub_service.details = subService.details;
                 sub_service.types = subService.types;
@@ -59,7 +60,7 @@ export class ServiceModel extends Model {
         const materialsCollection: Collection<MaterialModel> = this.collections.get('materials');
         const batchMaterials = data.materials.map((material) => {
             return materialsCollection.prepareCreate((material) => {
-                material.parent._setRaw('service_id', this.id)
+                material.service._setRaw('service_id', this.id)
                 material.name = material.name;
                 material.description = material.description;
                 material.image_url = material.image_url;
@@ -97,7 +98,7 @@ export class ServiceModel extends Model {
 
         const actualCollection: Collection<SubServiceModel> = this.collections.get('sub_services');
         return actualCollection.create((sub_service) => {
-            sub_service.parent._setRaw("service_id", this.id);
+            sub_service.service._setRaw("service_id", this.id);
             sub_service.description = description;
             sub_service.details = details;
             sub_service.types = types;
@@ -111,7 +112,7 @@ export class ServiceModel extends Model {
 
         const actualCollection: Collection<MaterialModel> = this.collections.get('materials');
         return actualCollection.create((material) => {
-            material.parent._setRaw("service_id", this.id);
+            material.service._setRaw("service_id", this.id);
             material.name = name;
             material.description = description;
             material.image_url = image_url;
