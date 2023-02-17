@@ -176,7 +176,7 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
 
             console.log(serviceOnDatabase, "Service created successfully (with subServices and materials).")
 
-            navigate("home", { createdService: true });
+            navigate("home", { service: "created" });
         }
     }, [data])
 

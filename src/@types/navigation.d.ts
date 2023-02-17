@@ -2,7 +2,7 @@ export declare global {
     namespace ReactNavigation {
         interface RootParamList {
             home: {
-                createdService: boolean
+                service: 'created' | 'deleted',
             };
             overview: undefined;
             business: undefined;

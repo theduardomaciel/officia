@@ -160,7 +160,7 @@ const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, on
 
     const close = useCallback(() => {
         'worklet';
-        onDismiss && runOnJS(onDismiss)();
+        /* onDismiss && runOnJS(onDismiss)(); */
         topAnimation.value = withSpring(screenHeight, animProps, () => {
             onDismissed && runOnJS(onDismissed)();
         })

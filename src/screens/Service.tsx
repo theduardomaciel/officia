@@ -12,26 +12,33 @@ import { Tag } from 'components/TagsSelector';
 import { PreviewStatic } from 'components/Preview';
 import { ActionButton } from 'components/ActionButton';
 import Toast from 'components/Toast';
-import ClientAdd from 'components/ClientForms/ClientAdd';
 import { BottomSheetActions } from 'components/BottomSheet';
 import Dropdown, { DropdownData } from 'components/Dropdown';
+import Loading from 'components/Loading';
+
+import ClientAdd from 'components/ClientForms/ClientAdd';
+import ClientView from 'components/ClientForms/ClientView';
 
 // Database
 import { Q } from '@nozbe/watermelondb';
 import withObservables from '@nozbe/with-observables';
 
 import { database } from 'database/index.native';
-import { ServiceModel } from 'database/models/serviceModel';
 
 // Types
+import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
 import type { MaterialModel } from 'database/models/materialModel';
+import type { ClientModel } from 'database/models/clientModel';
 import { tags } from 'global/tags';
+import Modal from 'components/Modal';
+import { useNavigation } from '@react-navigation/native';
 
 interface Props {
     service: ServiceModel;
     subServices: SubServiceModel[];
     materials: MaterialModel[];
+    client: ClientModel;
 }
 
 export default function Service({ route }: any) {
@@ -43,7 +50,9 @@ export default function Service({ route }: any) {
             .get<ServiceModel>("services")
             .find(serviceId);
 
-        setService(service);
+        setTimeout(() => {
+            setService(service);
+        }, 500);
     }
 
     useEffect(() => {
@@ -53,7 +62,11 @@ export default function Service({ route }: any) {
     return (
         service ? (
             <EnhancedScreenContent service={service} />
-        ) : <></>
+        ) : (
+            <View className='flex-1 items-center justify-center pt-24'>
+                <Loading />
+            </View>
+        )
     )
 }
 
@@ -63,15 +76,22 @@ const STATUS_DATA = [
     { label: "Arquivado", value: "archived", icon: "archive" },
 ] as DropdownData[];
 
-function ScreenContent({ service, subServices, materials }: Props) {
+function ScreenContent({ service, subServices, materials, client }: Props) {
     const insets = useSafeAreaInsets();
+    const { navigate } = useNavigation();
+
+    const [isDeleteModalVisible, setDeleteModalVisible] = React.useState(false);
     const servicesTypes = [...new Set(subServices?.map(subService => subService.types).flat())];
 
     // Bottom Sheets
     const clientAddBottomSheetRef = React.useRef<BottomSheetActions>(null);
-
     const expandClientAddBottomSheet = useCallback(() => {
         clientAddBottomSheetRef.current?.expand();
+    }, [])
+
+    const clientViewBottomSheetRef = React.useRef<BottomSheetActions>(null);
+    const expandClientViewBottomSheet = useCallback(() => {
+        clientViewBottomSheetRef.current?.expand();
     }, [])
 
     // Dropdowns
@@ -94,6 +114,19 @@ function ScreenContent({ service, subServices, materials }: Props) {
                 service.status = status;
             })
         })
+    }
+
+    async function deleteService() {
+        await database.write(async () => {
+            const queryService = await database
+                .get<ServiceModel>('services')
+                .find(service.id)
+
+            await queryService.destroyPermanently();
+        })
+
+        setDeleteModalVisible(false);
+        navigate("home", { service: "deleted" });
     }
 
     return (
@@ -124,10 +157,21 @@ function ScreenContent({ service, subServices, materials }: Props) {
                         </TouchableOpacity>
                     }
                     bellowTitle={
-                        <TouchableOpacity activeOpacity={0.8} onPress={expandClientAddBottomSheet}>
-                            <Text className='text-base underline text-text-100'>
-                                Adicionar dados do cliente
-                            </Text>
+                        <TouchableOpacity activeOpacity={0.8} onPress={client ? expandClientViewBottomSheet : expandClientAddBottomSheet}>
+                            {
+                                client ? (
+                                    <View className='flex-row items-center gap-x-2'>
+                                        <MaterialIcons name='person' size={18} color={colors.text[100]} />
+                                        <Text className='text-base underline text-text-100'>
+                                            {client.name}
+                                        </Text>
+                                    </View>
+                                ) : (
+                                    <Text className='text-base underline text-text-100'>
+                                        Adicionar dados do cliente
+                                    </Text>
+                                )
+                            }
                         </TouchableOpacity>
                     }
                 />
@@ -209,7 +253,6 @@ function ScreenContent({ service, subServices, materials }: Props) {
                                 <View className='w-full'>
                                     {
                                         materials?.map((material, index) => {
-                                            console.log(material)
                                             return (
                                                 <View className='mb-2' key={index.toString()}>
                                                     <PreviewStatic
@@ -243,7 +286,7 @@ function ScreenContent({ service, subServices, materials }: Props) {
                                     label='Excluir serviço'
                                     icon='delete'
                                     style={{ backgroundColor: colors.primary.red, paddingTop: 12, paddingBottom: 12 }}
-                                    onPress={() => { }}
+                                    onPress={() => setDeleteModalVisible(true)}
                                 />
                             </View>
                         </View>
@@ -267,7 +310,19 @@ function ScreenContent({ service, subServices, materials }: Props) {
                 maxDragDistance={25}
                 toastOffset={"75%"}
             />
-            <ClientAdd bottomSheetRef={clientAddBottomSheetRef} onSubmitForm={() => { }} />
+            {
+                client && (
+                    <ClientView
+                        bottomSheetRef={clientViewBottomSheetRef}
+                        client={client}
+                        service={service}
+                    />
+                )
+            }
+            <ClientAdd
+                bottomSheetRef={clientAddBottomSheetRef}
+                service={service}
+            />
             <Dropdown
                 ref={statusDropdownRef}
                 data={STATUS_DATA}
@@ -275,6 +330,22 @@ function ScreenContent({ service, subServices, materials }: Props) {
                 bottomSheetLabel={"Selecione o status do serviço"}
                 selected={serviceStatus}
                 setSelected={updateStatus}
+            />
+            <Modal
+                isVisible={isDeleteModalVisible}
+                setVisible={(value: boolean) => setDeleteModalVisible(value)}
+                title={"Você tem certeza?"}
+                message="É possível arquivar este serviço a qualquer momento, ao invés de deletá-lo."
+                icon="delete"
+                buttons={[
+                    {
+                        label: "Remover",
+                        onPress: deleteService,
+                        color: colors.primary.red,
+                        closeOnPress: true,
+                    }
+                ]}
+                cancelButton
             />
         </View>
     )
@@ -284,6 +355,7 @@ const enhance = withObservables(['service'], ({ service }) => ({
     service,
     subServices: service.subServices,
     materials: service.materials,
+    client: service.client,
 }))
 
 const EnhancedScreenContent = enhance(ScreenContent)

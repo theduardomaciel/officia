@@ -13,6 +13,5 @@ export const clientSchema = tableSchema({
         { name: "address", type: "string", isOptional: true },
         { name: "email", type: "string", isOptional: true },
         { name: "created_at", type: "number" },
-        { name: 'service_id', type: 'string' },
     ],
 })

@@ -5,7 +5,7 @@ import colors from "global/colors";
 import clsx from "clsx";
 
 interface Props {
-    label: string;
+    label?: string;
     icon?: string;
     onPress: () => void;
     preset?: 'dashed';
@@ -23,9 +23,11 @@ export const ActionButton = ({ onPress, label, icon, preset, style }: Props) => 
             ref={(ref) => { ref = ref }}
         >
             <MaterialIcons name={icon as unknown as any || 'add'} size={18} color={colors.white} />
-            <Text className='ml-2 font-medium text-white text-sm'>
-                {label}
-            </Text>
+            {
+                label && <Text className='ml-2 font-medium text-white text-sm'>
+                    {label}
+                </Text>
+            }
         </TouchableOpacity>
     )
 }
@@ -45,9 +47,11 @@ export const SubActionButton = ({ onPress, label, icon, style, preset, borderCol
             }]}
         >
             {icon && <MaterialIcons name={icon as unknown as any || 'add'} size={18} color={colors.white} />}
-            <Text className='ml-2 font-medium text-white text-sm'>
-                {label}
-            </Text>
+            {
+                label && <Text className='ml-2 font-medium text-white text-sm'>
+                    {label}
+                </Text>
+            }
         </TouchableOpacity>
     )
 }

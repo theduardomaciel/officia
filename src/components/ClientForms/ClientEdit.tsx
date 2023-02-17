@@ -3,11 +3,12 @@ import { Text, View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 import { runOnUI } from 'react-native-reanimated';
 
+import { MaterialIcons } from "@expo/vector-icons";
+import colors, { primary } from 'global/colors';
+
 // Form
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-import colors, { primary } from 'global/colors';
 
 // Types
 import type { ServiceModel } from 'database/models/serviceModel';
@@ -18,18 +19,21 @@ import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
 import { ActionButton, SubActionButton } from 'components/ActionButton';
 import Title from 'components/Title';
 import Toast from 'components/Toast';
-import ClientSelect from './ClientSelect';
+import ClientSelect, { ClientDeleteModal } from './ClientSelect';
 
 import { database } from 'database/index.native';
 import ClientDataForm, { ClientFormValues, clientSchema } from './ClientDataForm';
+import ClientAdd from './ClientAdd';
 
 interface Props {
     bottomSheetRef: React.RefObject<BottomSheetActions>;
-    service: ServiceModel;
-    onSubmitForm?: (data: ClientModel) => void;
+    lastBottomSheetRef: React.RefObject<BottomSheetActions>;
+    client: ClientModel;
 }
 
-export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Props) {
+export default function ClientEdit({ bottomSheetRef, lastBottomSheetRef, client }: Props) {
+    const [isDeleteModalVisible, setDeleteModalVisible] = React.useState(false);
+
     const showToast = (errorMessage?: string) => {
         Toast.show({
             preset: "error",
@@ -38,26 +42,23 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
         })
     }
 
-    // Bottom Sheets and Dropdowns
-    const clientSelectBottomSheet = useRef<BottomSheetActions>(null);
-    const clientSelectBottomSheetOpenHandler = useCallback(() => {
-        clientSelectBottomSheet.current?.expand();
-    }, [])
-
-    const clientAddBottomSheetCloseHandler = useCallback(() => {
+    const bottomSheetCloseHandler = useCallback(() => {
         bottomSheetRef.current?.close();
     }, [])
 
-    async function handleCreate(client: ClientModel) {
+    async function handleUpdate(updatedClient: ClientModel) {
         try {
             await database.write(async () => {
-                const newClient = await database.get('clients').create((newClient: any) => {
-                    newClient.name = client.name;
-                    newClient.contact = client.contact;
-                    newClient.address = client.address;
-                })
-                await service.update((service: any) => {
-                    service.client.set(newClient)
+                await client.update((clientToUpdate: any) => {
+                    if (updatedClient.name) {
+                        clientToUpdate.name = updatedClient.name;
+                    }
+                    if (updatedClient.contact) {
+                        clientToUpdate.contact = updatedClient.contact;
+                    }
+                    if (updatedClient.address) {
+                        clientToUpdate.address = updatedClient.address;
+                    }
                 })
             });
         } catch (error) {
@@ -68,33 +69,33 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
     // Form
     const { handleSubmit, control, reset, formState: { errors } } = useForm<ClientFormValues>({
         defaultValues: {
-            name: '',
-            contact: '',
-            address: '',
+            name: client.name,
+            contact: client.contact!,
+            address: client.address ?? undefined,
         },
         resolver: zodResolver(clientSchema),
         mode: 'onBlur',
     });
 
     const onSubmit: SubmitHandler<ClientFormValues> = data => {
-        const newClient = {
+        const updatedClient = {
             name: data.name,
             contact: data.contact,
             address: data.address,
         };
-        console.log(newClient)
+        console.log(updatedClient)
         Toast.hide();
 
         // Inserimos o novo cliente no banco de dados
-        handleCreate(newClient as unknown as ClientModel)
+        handleUpdate(updatedClient as unknown as ClientModel)
 
         setTimeout(() => {
             try {
                 runOnUI(bottomSheetRef.current?.close())();
+                runOnUI(lastBottomSheetRef.current?.expand())();
             } catch { }
         }, 100);
 
-        /* onSubmitForm && onSubmitForm(newClient as unknown as ClientModel); */
         reset();
     };
 
@@ -117,34 +118,43 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
                 }}
             >
                 <Title>
-                    Adicionar dados do cliente
+                    Editar cliente
                 </Title>
                 <ScrollView className='flex flex-1 relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
                     paddingBottom: 16,
                 }}>
-                    <View className='gap-y-5'>
+                    <View className='gap-y-5 w-full items-center justify-center'>
+                        <View className='rounded-full w-24 h-24 flex items-center justify-center bg-gray-100 mr-4 mb-8'>
+                            <MaterialIcons name="person" size={48} color={colors.text[100]} />
+                        </View>
+                        <ClientDataForm
+                            control={control}
+                            errors={errors}
+                        />
                         <SubActionButton
-                            label='Selecionar cliente existente'
+                            label='Remover cliente'
+                            icon='delete'
                             onPress={() => {
-                                clientSelectBottomSheetOpenHandler();
-                                clientAddBottomSheetCloseHandler();
+                                bottomSheetCloseHandler();
+                                setDeleteModalVisible(true);
                             }}
-                            borderColor={colors.primary.green}
+                            borderColor={colors.primary.red}
                             preset="dashed"
                         />
-                        <View className='w-full flex items-center justify-center mb-4'>
-                            <Text className='text-black dark:text-white text-sm'>ou</Text>
-                        </View>
-                        <ClientDataForm control={control} errors={errors} />
                     </View>
                 </ScrollView>
                 <ActionButton
-                    label='Adicionar cliente'
-                    icon='add'
+                    label='Editar cliente'
+                    style={{ backgroundColor: colors.primary.blue }}
+                    icon='edit'
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>
-            <ClientSelect bottomSheetRef={clientSelectBottomSheet} service={service} lastBottomSheetRef={bottomSheetRef} />
+            <ClientDeleteModal
+                isVisible={isDeleteModalVisible}
+                setVisible={setDeleteModalVisible}
+                client={client}
+            />
         </BottomSheet>
     )
 }

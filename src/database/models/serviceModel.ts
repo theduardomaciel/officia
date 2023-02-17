@@ -40,7 +40,8 @@ export class ServiceModel extends Model {
 
     @children("sub_services") subServices!: SubServiceModel[];
     @children("materials") materials!: MaterialModel[];
-    @relation("client", "service_id") client!: ClientModel;
+
+    @relation("clients", "client_id") client!: ClientModel;
 
     @writer async createService(data: ServiceModel) {
         const { name, date, status, additionalInfo, paymentCondition, paymentMethods, splitMethod, agreementInitialValue, installmentsAmount, warrantyPeriod, warrantyDetails } = data;

@@ -1,13 +1,8 @@
 import { Model } from "@nozbe/watermelondb";
-import { field, readonly, date, relation } from "@nozbe/watermelondb/decorators";
-import { Associations } from "@nozbe/watermelondb/Model";
-import { ServiceModel } from "./serviceModel";
+import { field, readonly, date } from "@nozbe/watermelondb/decorators";
 
 export class ClientModel extends Model {
     static table = "clients";
-    static associations: Associations = {
-        services: { type: 'belongs_to', key: 'service_id' },
-    }
 
     @field("name") name!: string;
     @field("contact") contact!: string | null;
@@ -16,6 +11,4 @@ export class ClientModel extends Model {
     @field("email") email!: string | null;
 
     @readonly @date('created_at') createdAt!: number;
-
-    @relation('services', 'service_id') service!: ServiceModel;
 }

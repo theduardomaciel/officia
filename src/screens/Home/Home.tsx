@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, Platform, UIManager, RefreshControl, Sect
 import * as NavigationBar from "expo-navigation-bar";
 import { useColorScheme } from 'nativewind/dist/use-color-scheme';
 
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import Animated, { FadeInUp, FadeOutUp, Layout } from 'react-native-reanimated';
@@ -29,9 +28,7 @@ import { Q } from '@nozbe/watermelondb';
 import withObservables from '@nozbe/with-observables'
 
 import Toast from 'components/Toast';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import Loading from 'components/Loading';
-import { FlatList } from 'react-native-gesture-handler';
 import ServicePreview from 'components/ServicePreview';
 
 export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
@@ -76,6 +73,14 @@ export default function Home({ route }: any) {
         })
     }, [])
 
+    const showDeleteServiceToast = useCallback(() => {
+        Toast.show({
+            preset: "success",
+            title: "Serviço excluído com sucesso!",
+            message: "Agora não será mais possível acessá-lo.",
+        })
+    }, [])
+
     const [pendingServices, setPendingServices] = useState<ServiceModel[] | undefined>(undefined)
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(false)
 
@@ -99,8 +104,11 @@ export default function Home({ route }: any) {
         if (pendingServices === undefined || pendingServices.length === 0) {
             fetchData()
         }
-        if (route.createdService) {
+        console.log(route.params?.service)
+        if (route.params?.service === "created") {
             showCreatedServiceToast()
+        } else if (route.params?.service === "deleted") {
+            showDeleteServiceToast
         }
         NavigationBar.setPositionAsync("absolute")
         NavigationBar.setBackgroundColorAsync("transparent")
@@ -133,8 +141,6 @@ export default function Home({ route }: any) {
     function handleTagSelection(data: Tag[]) {
         /* console.log(data) */
     }
-
-    console.log(pendingServices?.map(service => [service.name, service.date.toLocaleDateString()]))
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5 relative'>

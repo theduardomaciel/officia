@@ -50,7 +50,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
     const [date, setDate] = useState<CalendarDate | undefined>(undefined);
     const [time, setTime] = useState(currentDate)
 
-    const timeModalRef = useRef<any>(null);
+    const [isTimeModalVisible, setTimeModalVisible] = useState(false);
     const DatePickerModal = memo(function DatePickerModal() {
         const newDate = useRef(new Date());
 
@@ -59,13 +59,14 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
         }, [])
 
         const onConfirm = () => {
-            timeModalRef.current.close();
+            setTimeModalVisible(false)
             setTime(newDate.current)
         }
 
         return (
             <Modal
-                ref={timeModalRef}
+                isVisible={isTimeModalVisible}
+                setVisible={(value: boolean) => setTimeModalVisible(value)}
                 title={"Selecione o horário"}
                 icon="calendar-today"
                 buttons={[
@@ -235,7 +236,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
             </SubSectionWrapper>
 
             <Input
-                onPress={() => timeModalRef.current.open()}
+                onPress={() => setTimeModalVisible(true)}
                 label='Horário'
                 editable={false}
                 value={`${time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}

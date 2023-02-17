@@ -6,7 +6,7 @@ import { materialSchema } from "./materialSchema";
 import { clientSchema } from "./clientSchema";
 
 export const schemas = appSchema({
-    version: 14,
+    version: 15,
     tables: [
         serviceSchema,
         subServiceSchema,

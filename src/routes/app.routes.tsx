@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { CardStyleInterpolators, createStackNavigator } from "@react-navigation/stack";
+/* import { CardStyleInterpolators, createStackNavigator } from "@react-navigation/stack"; */
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
 import colors from "global/colors";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -8,7 +9,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from 'nativewind';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 import Home from "screens/Home/Home";
@@ -112,8 +113,11 @@ export function AppRoutes() {
         <Stack.Navigator
             screenOptions={{
                 headerShown: false,
-                detachPreviousScreen: false,
-                cardStyle: { backgroundColor: colorScheme === "dark" ? colors.gray[300] : colors.white }
+                contentStyle: { backgroundColor: colorScheme === "dark" ? colors.gray[400] : colors.white },
+                /* animation: 'slide_from_right', */
+                presentation: 'card',
+                /* detachPreviousScreen: false,
+                cardStyle: { backgroundColor: colorScheme === "dark" ? colors.gray[300] : colors.white } */
             }}
         >
             <Stack.Screen
@@ -123,47 +127,47 @@ export function AppRoutes() {
             />
             <Stack.Screen name="dayAgenda"
                 component={DayAgenda}
-                options={{
-                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-                }}
+            /* options={{
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            }} */
             />
             <Stack.Screen name="bankAccount"
                 component={BankAccount}
-                options={{
-                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-                }}
+            /* options={{
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            }} */
             />
             <Stack.Screen name="socialMedia"
                 component={SocialMedia}
-                options={{
-                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-                }}
+            /* options={{
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            }} */
             />
             <Stack.Screen name="additionalInfo"
                 component={AdditionalInfo}
-                options={{
-                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-                }}
+            /* options={{
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            }} */
             />
             <Stack.Screen name="phoneAndAddress"
                 component={PhoneAndAddress}
-                options={{
-                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-                }}
+            /* options={{
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            }} */
             />
             <Stack.Screen
                 name="schedule"
                 component={ScheduleForm}
-                options={{
-                    cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
-                }}
+            /* options={{
+                cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
+            }} */
             />
             <Stack.Screen
                 name="service"
                 component={Service}
-                options={{
-                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-                }}
+            /* options={{
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+            }} */
             />
         </Stack.Navigator>
     )

@@ -24,5 +24,6 @@ export const serviceSchema = tableSchema({
         { name: "warrantyDetails", type: "string", isOptional: true },
         // Additional
         { name: 'created_at', type: 'number' },
+        { name: 'client_id', type: 'string' },
     ],
 })
