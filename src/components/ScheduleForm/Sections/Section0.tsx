@@ -49,8 +49,6 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
 
     const [date, setDate] = useState<CalendarDate | undefined>(initialValue?.service?.date ? { date: initialValue.service?.date.getDate(), month: initialValue.service?.date.getMonth() } : { date: currentDate.getDate(), month: currentDate.getMonth() });
 
-    console.log(date)
-
     const [time, setTime] = useState(initialValue?.service?.date ?? currentDate)
 
     const [isTimeModalVisible, setTimeModalVisible] = useState(false);
@@ -176,7 +174,9 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                                     onEdit={() => {
                                         Form.expand({
                                             editableData: subService,
-                                            onSubmitForm: (newData: SubServiceModel) => setSubServices((prev) => prev.map((s) => s.id === newData.id ? newData : s)),
+                                            onSubmitForm: (newData: SubServiceModel) => {
+                                                setSubServices((prev) => prev.map((oldService) => oldService.id === newData.id ? newData : oldService))
+                                            },
                                             type: "subService"
                                         })
                                     }}
@@ -223,7 +223,13 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                                     onEdit={() => {
                                         Form.expand({
                                             editableData: material,
-                                            onSubmitForm: (newData: MaterialModel) => setMaterials((prev) => prev.map((m) => m.id === newData.id ? newData : m)),
+                                            onSubmitForm: (newData: MaterialModel) => {
+                                                console.log("NÃO AO JATIASD")
+                                                setMaterials((prev) => prev.map((m) => {
+                                                    console.log(m.id, newData.id)
+                                                    return m.id === newData.id ? newData : m
+                                                }))
+                                            },
                                             type: "material"
                                         })
                                     }}

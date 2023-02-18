@@ -1,6 +1,8 @@
-import React, { useRef, useCallback, Dispatch, SetStateAction, useEffect } from 'react';
-import { TouchableOpacity, View, ViewStyle, Text } from "react-native";
+import React, { useRef, useEffect } from 'react';
+import { View, ViewStyle } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
+
+import colors from 'global/colors';
 
 // Form
 import { useForm, Controller, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
@@ -8,12 +10,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 // Utils
+import { v4 as uuidv4 } from 'uuid';
 import { tags } from 'global/tags';
 
-import colors from 'global/colors';
-
 // Types
-import type { Tag } from 'components/TagsSelector';
 import { MaterialModel } from 'database/models/materialModel';
 import { SubServiceModel } from 'database/models/subServiceModel';
 
@@ -43,7 +43,7 @@ interface FormValues {
 };
 
 const schema = z.object({
-    description: z.string().min(5, { message: 'Insira uma descrição mais detalhada com no mínimo 5 caracteres.' }).max(40, { message: 'A descrição do serviço deve ter no máximo 40 caracteres.' }),
+    description: z.string().min(5, { message: 'Insira uma descrição mais detalhada com no mínimo 5 caracteres.' }).max(50, { message: 'A descrição do serviço deve ter no máximo 40 caracteres.' }),
     details: z.string(),
     price: z.string().min(1, { message: 'É necessário inserir um valor para o serviço.' }),
     amount: z.string(),
@@ -64,22 +64,23 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
         })
     }
 
-    const selectedTags = useRef<Tag[] | null>(null);
+    const selectedTags = useRef<string[]>([]);
 
     const { handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
-            description: editableData ? editableData.description : "",
-            details: editableData?.details ? editableData.details : "",
-            price: editableData ? editableData.price.toString() : "",
-            amount: editableData?.amount ? editableData.amount.toString() : "1",
+            description: "",
+            details: "",
+            price: "",
+            amount: "1",
         },
         resolver: zodResolver(schema),
     });
 
     const onSubmit: SubmitHandler<FormValues> = data => {
-        const tags = selectedTags.current?.map(tag => tag.value) ?? [];
+        const tags = selectedTags.current;
 
         const newSubService = {
+            id: editableData ? editableData.id : uuidv4(),
             description: data.description,
             details: data.details,
             price: parseFloat(data.price),
@@ -112,12 +113,8 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
 
     useEffect(() => {
         if (editableData) {
-            selectedTags.current = editableData.types.map(type => {
-                return {
-                    value: type,
-                    title: tags.find(tag => tag.value === type)?.title || type
-                }
-            })
+            console.log("Dados de edição inseridos.")
+            selectedTags.current = editableData.types;
             reset({
                 description: editableData.description,
                 details: editableData.details ?? "",
@@ -131,6 +128,18 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
         <BottomSheet
             height={"65%"}
             ref={bottomSheetRef}
+            onDismissed={() => {
+                if (editableData) {
+                    console.log("Dados de edição removidos.")
+                    reset({
+                        description: "",
+                        details: "",
+                        price: "",
+                        amount: "1",
+                    });
+                }
+                selectedTags.current = [];
+            }}
         >
             <View
                 className='flex flex-1 gap-y-5'
@@ -229,9 +238,9 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                         </Label>
                         <View className='mt-2'>
                             <TagsSelector
-                                tags={tags}
+                                tags={tags.map(tag => ({ ...tag, checked: selectedTags.current.includes(tag.value) }))}
                                 onSelectTags={(newTags) => {
-                                    selectedTags.current = newTags
+                                    selectedTags.current = newTags.map(tag => tag.value)
                                 }}
                                 pallette="dark"
                             />

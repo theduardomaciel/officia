@@ -223,7 +223,7 @@ export default function Home({ route }: any) {
             </Animated.View>
             <Toast
                 toastPosition="top"
-                toastOffset={"0%"}
+                toastOffset={"10%"}
             />
         </View>
     );

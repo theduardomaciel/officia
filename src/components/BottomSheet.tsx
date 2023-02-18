@@ -122,7 +122,11 @@ const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, on
         onEnd: (event) => {
             // Se o usuário arrastar o suficiente, o bottom sheet é fechado
             if (canDismiss && topAnimation.value > newActiveHeight + DISMISS_TOLERANCE) {
-                topAnimation.value = withSpring(screenHeight, animProps);
+                topAnimation.value = withSpring(screenHeight, animProps, () => {
+                    if (onDismissed) {
+                        runOnJS(onDismissed)()
+                    }
+                });
                 if (onDismiss) {
                     runOnJS(onDismiss)()
                 }

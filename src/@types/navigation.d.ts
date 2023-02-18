@@ -10,7 +10,8 @@ export declare global {
                 serviceId: string
             };
             service: {
-                serviceId: string
+                serviceId: string;
+                updated?: boolean
             };
             dayAgenda: {
                 dateString: string

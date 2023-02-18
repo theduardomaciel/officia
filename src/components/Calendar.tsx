@@ -240,8 +240,6 @@ export default function Calendar({ style, isStatic, selectedDate, setSelectedDat
         </Animated.Text>
     )
 
-    console.log(selectedDate, "daqui")
-
     return (
         <View className="flex-col w-full bg-black dark:bg-gray-500 rounded-xl" style={style ? style : { padding: 16 }}>
             <View className="flex-row items-center justify-around mb-2">

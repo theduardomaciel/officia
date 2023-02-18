@@ -82,6 +82,7 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
 
     const onSubmit: SubmitHandler<FormValues> = data => {
         const newMaterial = {
+            id: editableData ? editableData.id : uuidv4(),
             name: data.name,
             description: data.description,
             price: parseFloat(data.price),
@@ -120,7 +121,21 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
     }, [editableData])
 
     return (
-        <BottomSheet height={"78%"} ref={bottomSheetRef}>
+        <BottomSheet
+            height={"78%"}
+            ref={bottomSheetRef}
+            onDismissed={() => {
+                if (editableData) {
+                    reset({
+                        name: "",
+                        description: "",
+                        price: "",
+                        profitMargin: "",
+                        amount: "1",
+                    });
+                }
+            }}
+        >
             <View
                 className='flex flex-1 gap-y-5'
                 style={{

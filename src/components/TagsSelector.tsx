@@ -16,6 +16,7 @@ import colors from 'global/colors';
 export interface Tag {
     title: string;
     value: string;
+    checked?: boolean;
     icon?: string;
 }
 
@@ -72,7 +73,7 @@ export function TagsSelector({ tags, uniqueSelection, height = 35, hasClearButto
     const { colorScheme } = useColorScheme();
 
     const [sectionData, setSectionData] = useState(tags.map((tag: Tag, index: number) => {
-        return { ...tag, checked: false }
+        return { ...tag, checked: tag.checked ? tag.checked : false }
     }));
 
     function updateTagsData(updatedSectionData: TagObject[]) {

@@ -42,8 +42,16 @@ interface Props {
 }
 
 export default function Service({ route }: any) {
-    const { serviceId } = route.params;
+    const { serviceId, updated } = route.params;
     const [service, setService] = React.useState<ServiceModel | undefined>(undefined);
+
+    const showUpdatedServiceToast = useCallback(() => {
+        Toast.show({
+            preset: "success",
+            icon: "edit",
+            title: "O serviço foi atualizado com sucesso!",
+        })
+    }, [])
 
     async function fetchService() {
         const service = await database
@@ -56,17 +64,29 @@ export default function Service({ route }: any) {
     }
 
     useEffect(() => {
+        if (updated) {
+            showUpdatedServiceToast();
+        }
+
         fetchService();
     }, [])
 
     return (
-        service ? (
-            <EnhancedScreenContent service={service} />
-        ) : (
-            <View className='flex-1 items-center justify-center pt-24'>
-                <Loading />
-            </View>
-        )
+        <>
+            {
+                service ? (
+                    <EnhancedScreenContent service={service} />
+                ) : (
+                    <View className='flex-1 items-center justify-center pt-24'>
+                        <Loading />
+                    </View>
+                )
+            }
+            <Toast
+                toastPosition="top"
+                toastOffset={"10%"}
+            />
+        </>
     )
 }
 
