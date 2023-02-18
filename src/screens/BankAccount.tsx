@@ -26,7 +26,7 @@ export default function BankAccount() {
                             bottomSheetLabel='Selecione um banco'
                             selected={selected}
                             setSelected={setSelected}
-                            overDragAmount={50}
+                            overDragAmount={60}
                             data={[
                                 { label: "Nenhum banco", value: "unselected" },
                                 { label: "Banco do Brasil", value: "bb" },

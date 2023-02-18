@@ -127,7 +127,7 @@ export function ServiceWithSubServicesPreview({ service, subServices, onPress }:
     return (
         <View className="flex-col w-full items-center justify-between">
             <Container>
-                <TouchableOpacity activeOpacity={0.8} className="flex-row h-full flex-1 bg-gray-200 m" onPress={onPress}>
+                <TouchableOpacity activeOpacity={0.8} className="flex-row h-full flex-1" onPress={onPress}>
                     <InfoHolderLeft width={50}>
                         <Text className='absolute font-black text-[42px] opacity-20 flex-nowrap whitespace-nowrap text-text_light-100 dark:text-white'>
                             R$
@@ -145,7 +145,9 @@ export function ServiceWithSubServicesPreview({ service, subServices, onPress }:
                             <MaterialIcons
                                 name={"keyboard-arrow-down"}
                                 style={{
-                                    transform: isExpanded ? [{ rotate: "180deg" }] : [{ rotate: "0deg" }]
+                                    transform: isExpanded ? [{ rotate: "180deg" }] : [{ rotate: "0deg" }],
+                                    paddingLeft: isExpanded ? 0 : 15,
+                                    paddingRight: isExpanded ? 15 : 0,
                                 }}
                                 size={16}
                                 color={colors.text[100]}

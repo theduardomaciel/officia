@@ -55,26 +55,36 @@ function checkedPaymentsReducer(state: any, action: any) {
     }
 }
 
-const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) => {
+const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Section, ref) => {
     // General
-    const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>('full');
+    const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>(initialValue?.service?.paymentCondition as PaymentCondition ?? 'full');
     /* const checkedPaymentMethods = useRef<string[]>([]); */
-    const [checkedPaymentMethods, dispatch] = useReducer(checkedPaymentsReducer, [])
+    const [checkedPaymentMethods, dispatch] = useReducer(checkedPaymentsReducer, initialValue?.service?.paymentMethods ?? [])
 
     // Agreement
-    const [splitMethod, setSplitMethod] = useState<SplitMethod | null>('percentage');
-    const [agreementInitialPercentage, setAgreementInitialPercentage] = useState<string>("50");
-    const [agreementInitialValue, setAgreementInitialValue] = useState<string>("half");
-    const [remainingValue, setRemainingValue] = useState<RemainingValue>("afterCompletion");
+    const [splitMethod, setSplitMethod] = useState<SplitMethod | null>((initialValue?.service?.splitMethod as SplitMethod) ?? 'percentage');
+    const [agreementInitialPercentage, setAgreementInitialPercentage] = useState<string>((initialValue?.service?.agreementInitialValue as SplitMethod) ?? '50');
+
+    const [agreementInitialValue, setAgreementInitialValue] = useState<string>((initialValue?.service?.agreementInitialValue as SplitMethod) ?? "half");
+    const [remainingValue, setRemainingValue] = useState<RemainingValue>((initialValue?.service?.paymentCondition === "agreement" ? (initialValue?.service?.installmentsAmount ? "withInstallments" : 'afterCompletion') : 'afterCompletion') as RemainingValue);
 
     // Installments
-    const [installmentsAmount, setInstallmentsAmount] = useState<string>("2x");
+    const [installmentsAmount, setInstallmentsAmount] = useState<string>(initialValue?.service?.installmentsAmount ? (`${initialValue?.service?.installmentsAmount}x`) : "2x");
 
     // Warranty
     const [warrantyPeriodType, setWarrantyPeriodType] = useState<WarrantyPeriod>('days');
-    const [warrantyPeriod, setWarrantyPeriod] = useState<string>("90");
+    const [warrantyPeriod, setWarrantyPeriod] = useState<string | null>(initialValue?.service?.warrantyPeriod ? null : "90");
 
     const { handleSubmit, control, getValues, reset, formState: { errors } } = useForm<FormData>({
+        defaultValues: {
+            agreementInitialPercentage: initialValue?.service?.agreementInitialValue ?? "",
+            agreementInitialValue: initialValue?.service?.agreementInitialValue ?? "",
+            installmentsAmount: initialValue?.service?.installmentsAmount?.toString() ?? "",
+            warrantyDetails: initialValue?.service?.warrantyDetails ?? "",
+            warrantyPeriod_days: initialValue?.service?.warrantyPeriod?.toString() ?? "",
+            warrantyPeriod_months: initialValue?.service?.warrantyPeriod ? (initialValue?.service?.warrantyPeriod / 30).toString() : "",
+            warrantyPeriod_years: initialValue?.service?.warrantyPeriod ? (initialValue?.service?.warrantyPeriod / 365).toString() : "",
+        },
         resolver: zodResolver(schema),
     });
 
@@ -413,9 +423,11 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                 remainingValue,
             } : undefined;
 
-            const installments = paymentCondition === "installments" || paymentCondition === "agreement" && remainingValue === "withInstallments" ? installmentsAmount || (parseInt(getValues("installmentsAmount").split('x')[0]) ?? 2) : undefined;
+            const installments = paymentCondition === "installments" || paymentCondition === "agreement" && remainingValue === "withInstallments" ? parseInt(installmentsAmount)
+                || (parseInt(getValues("installmentsAmount").split('x')[0]) ?? 2)
+                : undefined;
 
-            const formDays = parseInt(warrantyPeriod) || (parseInt(getValues(`warrantyPeriod_${warrantyPeriodType}`)) ?? 90);
+            const formDays = warrantyPeriod ? (parseInt(warrantyPeriod) || (parseInt(getValues(`warrantyPeriod_${warrantyPeriodType}`)) ?? 90)) : 90;
             const warrantyDays = warrantyPeriodType === "days" ? formDays : warrantyPeriodType === "months" ? formDays * 30 : formDays * 360;
             const warrantyDetails = getValues("warrantyDetails");
 

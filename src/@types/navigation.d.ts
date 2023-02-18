@@ -6,6 +6,9 @@ export declare global {
             };
             overview: undefined;
             business: undefined;
+            schedule: {
+                serviceId: string
+            };
             service: {
                 serviceId: string
             };

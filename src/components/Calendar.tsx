@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { View, Text, TouchableOpacity, ViewStyle } from "react-native";
+import { View, Text, TouchableOpacity, ViewStyle, TouchableOpacityProps } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
 import colors from "global/colors";
@@ -30,24 +30,36 @@ export function WeekDays({ invert }: { invert?: boolean }) {
     )
 }
 
-interface DayView {
+interface DayView extends TouchableOpacityProps {
     date: Date;
-    isToday?: boolean;
+    selected?: boolean;
+    selectedPreset?: 'dashed_green';
     style?: ViewStyle;
     status?: "busy" | "contains";
     invert?: boolean;
     onPress: () => void;
 }
 
-function DayView({ date, isToday, style, status, onPress, invert }: DayView) {
+const presets = {
+    dashed_green: {
+        borderLeftColor: colors.primary.green,
+        borderRightColor: colors.primary.green,
+        borderTopColor: colors.primary.green,
+        borderBottomColor: colors.primary.green,
+        borderWidth: 2,
+    } as ViewStyle,
+}
+
+function DayView({ date, selected, selectedPreset, style, status, onPress, invert, ...rest }: DayView) {
     return (
         <TouchableOpacity
             className={clsx('flex w-10 h-10 rounded-full items-center justify-center p-1 bg-gray_light-neutral bg-black dark:bg-gray-200 border-white', {
                 'bg-white dark:bg-gray-200': invert,
             })}
-            style={{ borderWidth: isToday ? 1 : 0, ...style }}
+            style={[{ borderWidth: selected ? 1 : 0, ...style }, selectedPreset ? presets[selectedPreset] : {}]}
             activeOpacity={0.65}
             onPress={onPress}
+            {...rest}
         >
             <Text className={clsx('font-semibold text-md text-white', {
                 'text-gray-400 dark:text-text-100': invert,
@@ -92,7 +104,7 @@ export function WeekView({ startDate, navigate }: WeekView) {
                             onPress={() => navigate('dayAgenda', { dateString })}
                             date={date}
                             status={dateString === currentDate.toISOString() ? "contains" : undefined}
-                            isToday={DATE === currentDate.getDate()}
+                            selected={DATE === currentDate.getDate()}
                         />
                     )
                 })
@@ -162,15 +174,16 @@ export interface CalendarDate { date: number; month: number; }
 
 interface CalendarProps {
     style?: ViewStyle;
+    isStatic?: boolean;
     selectedDate?: CalendarDate;
     setSelectedDate?: (date: CalendarDate) => void;
 }
 
-export default function Calendar({ style }: CalendarProps) {
+export default function Calendar({ style, isStatic, selectedDate, setSelectedDate }: CalendarProps) {
     const { navigate } = useNavigation();
 
     const currentDate = new Date();
-    const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
+    const [currentMonth, setCurrentMonth] = useState(selectedDate?.month ?? currentDate.getMonth());
 
     const { monthDates, firstDayOfMonth, lastDayOfMonth, remainingDaysOnLastMonth, remainingDaysOnNextMonth } = monthInfos[currentMonth];
 
@@ -221,6 +234,14 @@ export default function Calendar({ style }: CalendarProps) {
         opacity: opacity.value
     }));
 
+    const Header = () => (
+        <Animated.Text style={animatedStyle} className="text-white w-3/4 text-center font-titleBold text-xl">
+            {MONTHS[currentMonth]}
+        </Animated.Text>
+    )
+
+    console.log(selectedDate, "daqui")
+
     return (
         <View className="flex-col w-full bg-black dark:bg-gray-500 rounded-xl" style={style ? style : { padding: 16 }}>
             <View className="flex-row items-center justify-around mb-2">
@@ -233,11 +254,13 @@ export default function Calendar({ style }: CalendarProps) {
                     color={colors.white}
                     onPress={() => currentMonth > 0 && setCurrentMonth(actualStateMonth => actualStateMonth - 1)}
                 />
-                <GestureDetector gesture={panGesture}>
-                    <Animated.Text style={animatedStyle} className="text-white w-3/4 text-center font-titleBold text-xl">
-                        {MONTHS[currentMonth]}
-                    </Animated.Text>
-                </GestureDetector>
+                {
+                    isStatic ? <Header /> : (
+                        <GestureDetector gesture={panGesture}>
+                            <Header />
+                        </GestureDetector>
+                    )
+                }
                 <MaterialIcons
                     name="chevron-right"
                     size={24}
@@ -255,19 +278,33 @@ export default function Calendar({ style }: CalendarProps) {
             <View className="flex-row items-center justify-between w-full flex-wrap">
                 {
                     monthDates.map((date, index) => {
-                        const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < remainingDaysOnLastMonth;
+                        const daysBeforeToday = currentDate.getDate() + firstDayOfMonth - 1;
+
+                        const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < (isStatic && date.month === selectedDate?.month ? daysBeforeToday : remainingDaysOnLastMonth);
                         const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
 
                         const DATE = new Date(currentDate.getFullYear(), date.month, date.date)
                         const dateString = DATE.toISOString();
 
+                        const isEqualToSelected = date.date == selectedDate?.date && date.month == selectedDate?.month;
+                        const isToday = date.date == currentDate.getDate() && date.month == currentDate.getMonth();
+
                         return (
                             <DayView
                                 key={`calendar_${index}`}
                                 date={DATE}
-                                isToday={date.date == currentDate.getDate() && index >= firstDayOfMonth && index <= lastDayOfMonth}
-                                onPress={() => navigate('dayAgenda', { dateString })}
+                                selected={selectedDate ?
+                                    (isEqualToSelected || isToday) :
+                                    isToday && index >= firstDayOfMonth && index <= lastDayOfMonth
+                                }
+                                selectedPreset={selectedDate && isEqualToSelected ? "dashed_green" : undefined}
+                                disabled={REMAINING_LAST || REMAINING_NEXT}
+                                onPress={() => isStatic ?
+                                    setSelectedDate && setSelectedDate(date) :
+                                    navigate('dayAgenda', { dateString })
+                                }
                                 invert
+                                activeOpacity={REMAINING_LAST && isStatic ? 1 : 0.5}
                                 style={{
                                     opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,
                                     marginBottom: 5,
@@ -284,7 +321,7 @@ export default function Calendar({ style }: CalendarProps) {
     )
 }
 
-export function StaticCalendar({ style, selectedDate, setSelectedDate }: CalendarProps) {
+/* export function StaticCalendar({ style, selectedDate, setSelectedDate }: CalendarProps) {
     const currentDate = new Date();
     const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
 
@@ -346,4 +383,4 @@ export function StaticCalendar({ style, selectedDate, setSelectedDate }: Calenda
             </View>
         </View>
     )
-}
+} */

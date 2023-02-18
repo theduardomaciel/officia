@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, Dispatch, SetStateAction } from 'react';
+import React, { useRef, useCallback, Dispatch, SetStateAction, useEffect } from 'react';
 import { TouchableOpacity, View, ViewStyle, Text } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -43,7 +43,7 @@ interface FormValues {
 };
 
 const schema = z.object({
-    description: z.string().min(10, { message: 'A descrição do serviço deve ter pelo menos 10 caracteres.' }).max(40, { message: 'A descrição do serviço deve ter no máximo 40 caracteres.' }),
+    description: z.string().min(5, { message: 'Insira uma descrição mais detalhada com no mínimo 5 caracteres.' }).max(40, { message: 'A descrição do serviço deve ter no máximo 40 caracteres.' }),
     details: z.string(),
     price: z.string().min(1, { message: 'É necessário inserir um valor para o serviço.' }),
     amount: z.string(),
@@ -52,7 +52,7 @@ const schema = z.object({
 interface Props {
     bottomSheetRef: React.MutableRefObject<any>;
     onSubmitForm?: (data: MaterialModel) => void;
-    editableData?: MaterialModel;
+    editableData?: SubServiceModel;
 }
 
 export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, editableData }: Props) {
@@ -66,23 +66,18 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
 
     const selectedTags = useRef<Tag[] | null>(null);
 
-    const serviceBottomSheetCloseHandler = useCallback(() => {
-        bottomSheetRef.current.close();
-    }, [])
-
-    const { register, setValue, handleSubmit, control, reset, formState: { errors } } = useForm({
+    const { handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
-            description: '',
-            details: '',
-            price: '',
-            amount: '1',
+            description: editableData ? editableData.description : "",
+            details: editableData?.details ? editableData.details : "",
+            price: editableData ? editableData.price.toString() : "",
+            amount: editableData?.amount ? editableData.amount.toString() : "1",
         },
         resolver: zodResolver(schema),
     });
 
     const onSubmit: SubmitHandler<FormValues> = data => {
         const tags = selectedTags.current?.map(tag => tag.value) ?? [];
-        console.log(tags)
 
         const newSubService = {
             description: data.description,
@@ -115,6 +110,23 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
         showToast(Object.values(errors).map(error => error.message).join('\n'))
     }
 
+    useEffect(() => {
+        if (editableData) {
+            selectedTags.current = editableData.types.map(type => {
+                return {
+                    value: type,
+                    title: tags.find(tag => tag.value === type)?.title || type
+                }
+            })
+            reset({
+                description: editableData.description,
+                details: editableData.details ?? "",
+                price: editableData.price.toString(),
+                amount: editableData.amount.toString(),
+            })
+        }
+    }, [editableData])
+
     return (
         <BottomSheet
             height={"65%"}
@@ -129,9 +141,9 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                 }}
             >
                 <Title>
-                    Adicionar serviço
+                    {editableData ? 'Editar Serviço' : 'Adicionar Serviço'}
                 </Title>
-                <ScrollView className='flex flex-1 gap-y-5 relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
+                <ScrollView className='flex flex-1  relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
                     paddingBottom: 16
                 }}>
                     <Controller
@@ -151,7 +163,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                         name="description"
                         rules={{ required: true }}
                     />
-                    <View>
+                    <View className='flex-col w-full gap-y-5 mt-5'>
                         <Controller
                             control={control}
                             render={({ field: { onChange, onBlur, value } }) => (
@@ -170,45 +182,45 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                             name="details"
                             rules={{ required: false }}
                         />
-                    </View>
-                    <View className='flex-row w-full items-center justify-between' style={{ marginBottom: MARGIN }}>
-                        <View className='flex-1 mr-3'>
-                            <Controller
-                                control={control}
-                                render={({ field: { onChange, onBlur, value } }) => (
-                                    <Input
-                                        onBlur={onBlur}
-                                        onChangeText={value => onChange(value)}
-                                        value={value}
-                                        style={!!errors.price && borderErrorStyle}
-                                        label='Preço Unitário'
-                                        placeholder='R$'
-                                        pallette='dark'
-                                        keyboardType={"number-pad"}
-                                        required
-                                    />
-                                )}
-                                name="price"
-                                rules={{ required: true }}
-                            />
-                        </View>
-                        <View className='flex-1'>
-                            <Controller
-                                control={control}
-                                render={({ field: { onChange, onBlur, value } }) => (
-                                    <Input
-                                        onBlur={onBlur}
-                                        onChangeText={value => onChange(value)}
-                                        style={!!errors.amount && borderErrorStyle}
-                                        value={value}
-                                        label='Quantidade'
-                                        pallette='dark'
-                                        keyboardType={"number-pad"}
-                                    />
-                                )}
-                                name="amount"
-                                rules={{ required: true }}
-                            />
+                        <View className='flex-row w-full items-center justify-between' style={{ marginBottom: MARGIN }}>
+                            <View className='flex-1 mr-3'>
+                                <Controller
+                                    control={control}
+                                    render={({ field: { onChange, onBlur, value } }) => (
+                                        <Input
+                                            onBlur={onBlur}
+                                            onChangeText={value => onChange(value)}
+                                            value={value}
+                                            style={!!errors.price && borderErrorStyle}
+                                            label='Preço Unitário'
+                                            placeholder='R$'
+                                            pallette='dark'
+                                            keyboardType={"number-pad"}
+                                            required
+                                        />
+                                    )}
+                                    name="price"
+                                    rules={{ required: true }}
+                                />
+                            </View>
+                            <View className='flex-1'>
+                                <Controller
+                                    control={control}
+                                    render={({ field: { onChange, onBlur, value } }) => (
+                                        <Input
+                                            onBlur={onBlur}
+                                            onChangeText={value => onChange(value)}
+                                            style={!!errors.amount && borderErrorStyle}
+                                            value={value}
+                                            label='Quantidade'
+                                            pallette='dark'
+                                            keyboardType={"number-pad"}
+                                        />
+                                    )}
+                                    name="amount"
+                                    rules={{ required: true }}
+                                />
+                            </View>
                         </View>
                     </View>
                     <View className='flex-col align-top justify-start'>
@@ -227,8 +239,8 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                     </View>
                 </ScrollView>
                 <ActionButton
-                    label='Adicionar serviço'
-                    icon='add'
+                    label={editableData ? "Editar serviço" : "Adicionar serviço"}
+                    icon={editableData ? "edit" : "add"}
                     style={{
                         backgroundColor: editableData ? colors.primary.blue : colors.primary.green
                     }}

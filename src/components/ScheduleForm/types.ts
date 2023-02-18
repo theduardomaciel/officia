@@ -29,9 +29,7 @@ export interface Section1Props {
         agreementInitialValue: string; // pode ser 'half', incluir porcentagem ou ser um número representando o valor
         remainingValue: RemainingValue;
     } | undefined;
-    installments: {
-        installmentsAmount: number;
-    } | undefined;
+    installments: number | undefined;
     warrantyDays: number;
     warrantyDetails: string;
 }

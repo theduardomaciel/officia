@@ -4,7 +4,7 @@ import { Text, View, TouchableOpacity, Linking } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors, { primary } from 'global/colors';
 
-import WhatsAppIcon from 'assets/icons/whatsapp.svg';
+import WhatsAppIcon from 'src/assets/icons/whatsapp.svg'
 
 // Types
 import type { ServiceModel } from 'database/models/serviceModel';

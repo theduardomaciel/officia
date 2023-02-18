@@ -1,14 +1,23 @@
+import React, { FC, memo, SVGProps } from "react";
 import { View, Text, TouchableOpacity, ViewStyle, TouchableOpacityProps } from "react-native";
 
-import { useColorScheme } from "nativewind";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 import Label from "components/Label";
-import React, { FC, memo, SVGProps } from "react";
+
+// Types
+import type { ServiceModel } from "database/models/serviceModel";
+import type { SubServiceModel } from "database/models/subServiceModel";
+import type { MaterialModel } from "database/models/materialModel";
 
 export interface Section {
     bottomSheetRef: React.RefObject<any>;
+    initialValue?: {
+        service: ServiceModel;
+        subServices: SubServiceModel[];
+        materials: MaterialModel[];
+    };
     updateHandler?: (id: number) => void;
 }
 

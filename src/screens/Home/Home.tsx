@@ -104,7 +104,6 @@ export default function Home({ route }: any) {
         if (pendingServices === undefined || pendingServices.length === 0) {
             fetchData()
         }
-        console.log(route.params?.service)
         if (route.params?.service === "created") {
             showCreatedServiceToast()
         } else if (route.params?.service === "deleted") {

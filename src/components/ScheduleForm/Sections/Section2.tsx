@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, ViewStyle } from "react-native";
+import { View, Text } from "react-native";
+import { useNavigation } from '@react-navigation/native';
 
-import { useColorScheme } from 'nativewind';
 import colors from 'global/colors';
 import clsx from 'clsx';
 
@@ -10,8 +10,9 @@ import WarrantyIcon from 'assets/icons/warranty.svg';
 
 // Components
 import SectionBottomSheet from '../SectionBottomSheet';
-import { MARGIN, NextButton, Section, SubSection, SubSectionWrapper, SubSectionWrapperProps } from '../SubSectionWrapper';
+import { NextButton, Section, SubSectionWrapper, SubSectionWrapperProps } from '../SubSectionWrapper';
 import Loading from 'components/Loading';
+import { PreviewStatic } from 'components/Preview';
 
 // Utils
 import { database } from 'database/index.native';
@@ -37,10 +38,8 @@ function daysToMonthsOrYears(days: number) {
 // Types
 import type { Section0Props, Section0RefProps, Section1Props, Section1RefProps } from '../types';
 import type { ServiceModel } from 'database/models/serviceModel';
-import { PreviewStatic } from 'components/Preview';
-import { useNavigation } from '@react-navigation/native';
-import { SubServiceModel } from 'database/models/subServiceModel';
-import { MaterialModel } from 'database/models/materialModel';
+import type { SubServiceModel } from 'database/models/subServiceModel';
+import type { MaterialModel } from 'database/models/materialModel';
 
 interface ReviewSectionProps {
     wrapperProps: SubSectionWrapperProps;
@@ -67,7 +66,7 @@ interface Section2Props extends Section {
     }
 }
 
-export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
+export default function Section2({ bottomSheetRef, formRefs, initialValue }: Section2Props) {
     const { navigate } = useNavigation();
     const { section0Ref, section1Ref } = formRefs;
 
@@ -94,7 +93,6 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
 
     const onSubmit = useCallback(async () => {
         const serviceDate = data?.date ? new Date(currentDate.getFullYear(), data.date.month, data.date.date, data.time.getHours(), data.time.getMinutes(), data.time.getSeconds()) : currentDate;
-        console.log(serviceDate.toISOString(), "serviceDate")
 
         if (data) {
             const formattedData = {
@@ -106,77 +104,64 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
                 paymentMethods: data.checkedPaymentMethods,
                 splitMethod: data.agreement?.splitMethod ?? null,
                 agreementInitialValue: data.agreement?.agreementInitialValue ?? null,
-                installmentsAmount: data.installments?.installmentsAmount ?? null,
+                installmentsAmount: data.installments ?? null,
                 warrantyPeriod: data.warrantyDays,
                 warrantyDetails: data.warrantyDetails,
             } as ServiceModel;
 
-            const serviceOnDatabase = await database.write(async () => {
-                const newService = await database.get<ServiceModel>('services').create((service) => {
-                    service.name = formattedData.name;
-                    service.date = formattedData.date;
-                    service.status = formattedData.status;
-                    service.additionalInfo = formattedData.additionalInfo;
-                    service.paymentCondition = formattedData.paymentCondition;
-                    service.paymentMethods = formattedData.paymentMethods;
-                    service.splitMethod = formattedData.splitMethod;
-                    service.agreementInitialValue = formattedData.agreementInitialValue;
-                    service.installmentsAmount = formattedData.installmentsAmount;
-                    service.warrantyPeriod = formattedData.warrantyPeriod;
-                    service.warrantyDetails = formattedData.warrantyDetails;
-                })
+            if (initialValue) {
 
-                const batchSubServices = await Promise.all(data.subServices.map(async (subService) => {
-                    const newSubService = await database.get<SubServiceModel>('sub_services').prepareCreate((sub_service_db: any) => {
-                        sub_service_db.service.set(newService);
-                        sub_service_db.description = subService.description;
-                        sub_service_db.details = subService.details;
-                        sub_service_db.types = subService.types;
-                        sub_service_db.price = subService.price;
-                        sub_service_db.amount = subService.amount;
+            } else {
+                const serviceOnDatabase = await database.write(async () => {
+                    const newService = await database.get<ServiceModel>('services').create((service) => {
+                        service.name = formattedData.name;
+                        service.date = formattedData.date;
+                        service.status = formattedData.status;
+                        service.additionalInfo = formattedData.additionalInfo;
+                        service.paymentCondition = formattedData.paymentCondition;
+                        service.paymentMethods = formattedData.paymentMethods;
+                        service.splitMethod = formattedData.splitMethod;
+                        service.agreementInitialValue = formattedData.agreementInitialValue;
+                        service.installmentsAmount = formattedData.installmentsAmount;
+                        service.warrantyPeriod = formattedData.warrantyPeriod;
+                        service.warrantyDetails = formattedData.warrantyDetails;
                     })
-                    console.log(newSubService, "novo SUBSERVIÇO")
-                    return newSubService
-                }))
 
-                const batchMaterials = await Promise.all(data.materials.map(async (material) => {
-                    console.log(material)
-                    const newMaterial = await database.get<MaterialModel>('materials').prepareCreate((material_db: any) => {
-                        material_db.service.set(newService)
-                        material_db.name = material.name;
-                        material_db.description = material.description;
-                        material_db.image_url = material.image_url;
-                        material_db.price = material.price;
-                        material_db.amount = material.amount;
-                        material_db.profitMargin = material.profitMargin;
-                        material_db.availability = material.availability;
-                    })
-                    return newMaterial
-                }))
+                    const batchSubServices = await Promise.all(data.subServices.map(async (subService) => {
+                        const newSubService = await database.get<SubServiceModel>('sub_services').prepareCreate((sub_service_db: any) => {
+                            sub_service_db.service.set(newService);
+                            sub_service_db.description = subService.description;
+                            sub_service_db.details = subService.details;
+                            sub_service_db.types = subService.types;
+                            sub_service_db.price = subService.price;
+                            sub_service_db.amount = subService.amount;
+                        })
+                        return newSubService
+                    }))
 
-                // Adicionamos os subserviços e os materiais ao serviço
-                await database.batch([...batchSubServices, ...batchMaterials])
+                    const batchMaterials = await Promise.all(data.materials.map(async (material) => {
+                        const newMaterial = await database.get<MaterialModel>('materials').prepareCreate((material_db: any) => {
+                            material_db.service.set(newService)
+                            material_db.name = material.name;
+                            material_db.description = material.description;
+                            material_db.image_url = material.image_url;
+                            material_db.price = material.price;
+                            material_db.amount = material.amount;
+                            material_db.profitMargin = material.profitMargin;
+                            material_db.availability = material.availability;
+                        })
+                        return newMaterial
+                    }))
 
-                /* const batchSubServices = await Promise.all(data.subServices.map(async (subService) => {
-                    const newSubService = await database.get<SubServiceModel>('sub_services').create((sub_service_db) => {
-                        sub_service_db.parent.set(newService);
-                        sub_service_db.description = subService.description;
-                        sub_service_db.details = subService.details;
-                        sub_service_db.types = subService.types;
-                        sub_service_db.price = subService.price;
-                        sub_service_db.amount = subService.amount;
-                    })
-                    console.log(newSubService, "novo SUBSERVIÇO")
-                    return newSubService
-                }))
-                console.warn(batchSubServices) */
+                    // Adicionamos os subserviços e os materiais ao serviço
+                    await database.batch([...batchSubServices, ...batchMaterials])
 
-                return newService;
-            });
+                    return newService;
+                });
 
-            console.log(serviceOnDatabase, "Service created successfully (with subServices and materials).")
-
-            navigate("home", { service: "created" });
+                console.log(serviceOnDatabase, "Service created successfully (with subServices and materials).")
+                navigate("home", { service: "created" });
+            }
         }
     }, [data])
 
@@ -309,26 +294,11 @@ export default function Section2({ bottomSheetRef, formRefs }: Section2Props) {
 
                         <NextButton
                             isLastButton
+                            title={initialValue ? "Atualizar" : "Agendar"}
                             onPress={onSubmit}
                         />
                     </>
-                ) : <Loading message='Aguarde enquanto verificamos os dados do agendamento...' /> /* : (
-                    <View className='flex-col w-full items-center justify-center'>
-                        <View className='flex-col w-full items-start justify-center mb-5'>
-                            <Text className='font-titleBold text-start text-2xl text-black dark:text-white'>
-                                Ainda há dados a serem preenchidos.
-                            </Text>
-                            <Text className='text-sm text-start mt-1 text-black dark:text-white'>
-                                Por favor, volte aos passos anteriores para corrigir.
-                            </Text>
-                        </View>
-                        <Text>
-                            <Text className='font-titleBold text-start text-2xl text-black dark:text-white'>
-                                O que falta?
-                            </Text>
-                        </Text>
-                    </View>
-                ) */
+                ) : <Loading message='Aguarde enquanto verificamos os dados do agendamento...' />
             }
         </SectionBottomSheet>
     )

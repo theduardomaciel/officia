@@ -1,5 +1,5 @@
-import React, { useRef, useCallback } from 'react';
-import { Keyboard, TouchableWithoutFeedback, View } from "react-native";
+import React, { useRef, useCallback, useState, useEffect } from 'react';
+import { BackHandler, Keyboard, TouchableWithoutFeedback, View } from "react-native";
 import { useSharedValue, withSpring } from 'react-native-reanimated';
 
 import Header from 'components/Header';
@@ -8,38 +8,100 @@ import { SectionsNavigator } from 'components/SectionsNavigator';
 import Section0 from 'components/ScheduleForm/Sections/Section0';
 import Section1 from 'components/ScheduleForm/Sections/Section1';
 import Section2 from 'components/ScheduleForm/Sections/Section2';
+
 import Form from 'components/ScheduleForm/Forms/Form';
 import Toast from 'components/Toast';
+import Loading from 'components/Loading';
 
-export default function ScheduleForm() {
+// Database
+import { database } from 'database/index.native';
+
+// Types
+import type { ServiceModel } from 'database/models/serviceModel';
+import type { BottomSheetActions } from 'components/BottomSheet';
+
+export default function ScheduleForm({ route }: any) {
     const selectedSectionId = useSharedValue(0);
 
-    const section0BottomSheetRef = useRef<any>(null);
-    const section1BottomSheetRef = useRef<any>(null);
-    const section2BottomSheetRef = useRef<any>(null);
+    const section0BottomSheetRef = useRef<BottomSheetActions>(null);
+    const section1BottomSheetRef = useRef<BottomSheetActions>(null);
+    const section2BottomSheetRef = useRef<BottomSheetActions>(null);
 
     const sections = [section0BottomSheetRef, section1BottomSheetRef, section2BottomSheetRef];
 
     const updateHandler = useCallback((id: number) => {
         if (sections[selectedSectionId.value] && sections[id]) {
-            sections[selectedSectionId.value].current.close();
+            sections[selectedSectionId.value].current?.close();
             selectedSectionId.value = withSpring(id, {
                 damping: 100,
                 stiffness: 400
             });
-            sections[id].current.expand();
+            sections[id].current?.expand();
         }
     }, [])
 
     const section0Ref = useRef<any>(null);
     const section1Ref = useRef<any>(null);
 
+    const [initialValue, setInitialValue] = useState<any | undefined>(undefined);
+
+    async function setInitialState(id: string) {
+        try {
+            const service = await database
+                .get<ServiceModel>('services')
+                .find(id) as any;
+
+            if (service) {
+                const subServices = await service.subServices.fetch();
+                const materials = await service.materials.fetch();
+
+                console.log({
+                    service,
+                    subServices,
+                    materials
+                })
+
+                if (subServices && materials) {
+                    setInitialValue({
+                        service,
+                        subServices,
+                        materials
+                    })
+                    section0BottomSheetRef.current?.expand();
+                }
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    useEffect(() => {
+        if (route.params?.serviceId) {
+            setInitialState(route.params?.serviceId)
+        }
+
+        const backAction = () => {
+            if (selectedSectionId.value !== 0) {
+                updateHandler(selectedSectionId.value - 1);
+                return true;
+            }
+            return false;
+        };
+
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            backAction,
+        );
+
+        return () => backHandler.remove();
+    }, [])
+
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
                 <View>
                     <Header
-                        title='Agendamento'
+                        title={route.params?.serviceId ? "Editar serviço" : "Agendamento"}
                         cancelButton={selectedSectionId.value === 0}
                         returnButton={selectedSectionId.value !== 0 ? () => updateHandler(selectedSectionId.value - 1) : undefined}
                     />
@@ -64,9 +126,33 @@ export default function ScheduleForm() {
                         }
                     ]}
                 />
-                <Section0 bottomSheetRef={section0BottomSheetRef} ref={section0Ref} updateHandler={updateHandler} />
-                <Section1 bottomSheetRef={section1BottomSheetRef} ref={section1Ref} updateHandler={updateHandler} />
-                <Section2 bottomSheetRef={section2BottomSheetRef} formRefs={{ section0Ref, section1Ref }} />
+
+                {
+                    (!route.params?.serviceId || route.params?.serviceId && initialValue) ? (
+                        <>
+                            <Section0
+                                bottomSheetRef={section0BottomSheetRef}
+                                initialValue={initialValue}
+                                ref={section0Ref}
+                                updateHandler={updateHandler}
+                            />
+
+                            <Section1
+                                bottomSheetRef={section1BottomSheetRef}
+                                initialValue={initialValue}
+                                ref={section1Ref}
+                                updateHandler={updateHandler}
+                            />
+
+                            <Section2
+                                bottomSheetRef={section2BottomSheetRef}
+                                initialValue={initialValue}
+                                formRefs={{ section0Ref, section1Ref }}
+                            />
+                        </>
+                    ) : <Loading />
+                }
+
                 <Form type='material' />
                 <Form type='subService' />
                 <Toast

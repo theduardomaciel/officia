@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, Dispatch, SetStateAction, useState } from 'react';
+import React, { useRef, useCallback, Dispatch, SetStateAction, useState, useEffect } from 'react';
 import { View, TouchableOpacity, Text, ViewStyle } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -74,7 +74,7 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
             name: editableData?.name ?? "",
             description: editableData?.description ?? "",
             price: editableData?.price.toString() ?? "",
-            amount: editableData?.amount.toString() ?? "",
+            amount: editableData?.amount.toString() ?? "1",
             profitMargin: editableData?.profitMargin?.toString() ?? "",
         },
         resolver: zodResolver(schema),
@@ -106,6 +106,18 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
         console.log(errors)
         showToast(Object.values(errors).map(error => error.message).join('\n'))
     }
+
+    useEffect(() => {
+        if (editableData) {
+            reset({
+                name: editableData.name,
+                description: editableData.description,
+                price: editableData.price.toString(),
+                amount: editableData.amount.toString(),
+                profitMargin: editableData.profitMargin?.toString() ?? "",
+            });
+        }
+    }, [editableData])
 
     return (
         <BottomSheet height={"78%"} ref={bottomSheetRef}>

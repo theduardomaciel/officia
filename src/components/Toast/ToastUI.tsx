@@ -73,7 +73,7 @@ const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = 
 
     const show = useCallback(() => {
         'worklet';
-        console.log("Por incrível que pareça chegou aqui!")
+        //console.log("Por incrível que pareça chegou aqui!")
         currentTimeout.current = setTimeout(() => {
             hide(toastPosition);
             clearTimeout(currentTimeout.current);

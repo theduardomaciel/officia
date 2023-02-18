@@ -39,7 +39,6 @@ export default function ClientSelect({ lastBottomSheetRef, bottomSheetRef, servi
 
     async function handleSelectClient(client: ClientModel) {
         bottomSheetCloseHandler();
-
         try {
             await database.write(async () => {
                 await service.update((service: any) => {
@@ -49,8 +48,6 @@ export default function ClientSelect({ lastBottomSheetRef, bottomSheetRef, servi
         } catch (error) {
             console.log("Não foi")
         }
-
-        console.log('foi')
         /* onSelectClient?.(client); */
     }
 

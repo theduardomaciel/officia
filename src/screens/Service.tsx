@@ -279,7 +279,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                                 label='Editar serviço'
                                 icon='edit'
                                 style={{ paddingTop: 12, paddingBottom: 12 }}
-                                onPress={() => { }}
+                                onPress={() => navigate('schedule', { serviceId: service.id })}
                             />
                             <View>
                                 <ActionButton

@@ -9,7 +9,7 @@ import colors from 'global/colors';
 import Modal from 'components/Modal';
 import Input from 'components/Input';
 import SectionBottomSheet from '../SectionBottomSheet';
-import { CalendarDate, StaticCalendar } from 'components/Calendar';
+import Calendar, { CalendarDate } from 'components/Calendar';
 import { MARGIN, NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
 import { SubActionButton } from 'components/ActionButton';
 import { Preview } from 'components/Preview';
@@ -40,18 +40,21 @@ interface FormData {
     additionalInfo: string;
 }
 
-const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) => {
+const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Section, ref) => {
     const { colorScheme } = useColorScheme();
     const currentDate = new Date();
 
-    const [subServices, setSubServices] = useState<SubServiceModel[]>([]);
-    const [materials, setMaterials] = useState<MaterialModel[]>([]);
+    const [subServices, setSubServices] = useState<SubServiceModel[]>(initialValue?.subServices ?? []);
+    const [materials, setMaterials] = useState<MaterialModel[]>(initialValue?.materials ?? []);
 
-    const [date, setDate] = useState<CalendarDate | undefined>(undefined);
-    const [time, setTime] = useState(currentDate)
+    const [date, setDate] = useState<CalendarDate | undefined>(initialValue?.service?.date ? { date: initialValue.service?.date.getDate(), month: initialValue.service?.date.getMonth() } : { date: currentDate.getDate(), month: currentDate.getMonth() });
+
+    console.log(date)
+
+    const [time, setTime] = useState(initialValue?.service?.date ?? currentDate)
 
     const [isTimeModalVisible, setTimeModalVisible] = useState(false);
-    const DatePickerModal = memo(function DatePickerModal() {
+    const TimePickerModal = () => {
         const newDate = useRef(new Date());
 
         const onDateChange = useCallback((date: Date) => {
@@ -91,11 +94,27 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                 </View>
             </Modal>
         )
-    });
+    };
 
-    const { control, getValues, formState: { errors } } = useForm<FormData>({
+    const { reset, control, getValues, formState: { errors } } = useForm<FormData>({
+        defaultValues: {
+            name: initialValue?.service?.name ?? "",
+            additionalInfo: (initialValue?.service?.additionalInfo ? initialValue?.service.additionalInfo : "") ?? "",
+        },
         resolver: zodResolver(schema),
     });
+
+    /* useEffect(() => {
+        if (initialValue) {
+            reset({
+                name: initialValue.name,
+                additionalInfo: initialValue.additionalInfo ?? "",
+            });
+            console.log(initialValue)
+            setSubServices(initialValue.subServices);
+            setMaterials(initialValue.materials);
+        }
+    }, [initialValue]); */
 
     useImperativeHandle(ref, () => ({
         getData: () => {
@@ -114,7 +133,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
     }));
 
     return (
-        <SectionBottomSheet bottomSheetRef={bottomSheetRef} expanded={true}>
+        <SectionBottomSheet bottomSheetRef={bottomSheetRef} expanded={!initialValue}>
             <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -157,7 +176,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                     onEdit={() => {
                                         Form.expand({
                                             editableData: subService,
-                                            onSubmitForm: () => { },
+                                            onSubmitForm: (newData: SubServiceModel) => setSubServices((prev) => prev.map((s) => s.id === newData.id ? newData : s)),
                                             type: "subService"
                                         })
                                     }}
@@ -204,7 +223,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
                                     onEdit={() => {
                                         Form.expand({
                                             editableData: material,
-                                            onSubmitForm: () => { },
+                                            onSubmitForm: (newData: MaterialModel) => setMaterials((prev) => prev.map((m) => m.id === newData.id ? newData : m)),
                                             type: "material"
                                         })
                                     }}
@@ -228,7 +247,8 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
             </SubSectionWrapper>
 
             <SubSectionWrapper header={{ title: "Data" }}>
-                <StaticCalendar
+                <Calendar
+                    isStatic
                     selectedDate={date}
                     setSelectedDate={setDate}
                     style={{ padding: 16, backgroundColor: colors.gray[600] }}
@@ -262,7 +282,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler }: Section, ref) =>
 
             <NextButton onPress={() => updateHandler && updateHandler(1)} />
 
-            <DatePickerModal />
+            <TimePickerModal />
         </SectionBottomSheet>
     )
 });

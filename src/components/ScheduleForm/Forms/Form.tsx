@@ -44,11 +44,13 @@ const FormRoot = React.forwardRef((props: { type: 'material' | 'subService' }, r
     return (
         props.type === 'material' ?
             <MaterialBottomSheet
+                key={config?.editableData?.id}
                 bottomSheetRef={formRef}
                 {...config}
             />
             :
             <SubServiceBottomSheet
+                key={config?.editableData?.id}
                 bottomSheetRef={formRef}
                 {...config}
             />
