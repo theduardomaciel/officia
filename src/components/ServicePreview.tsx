@@ -100,7 +100,7 @@ export default function ServicePreview({ service, subServices, onPress, addition
                 </Text> */}
                 <View className="absolute m-auto opacity-20 justify-center items-center top-0 left-0 right-0 bottom-0" >
                     <MaterialIcons
-                        name={"calendar-today"}
+                        name={additionalInfo === "time" ? "alarm" : "calendar-today"}
                         size={28}
                         color={colors.white}
                     />

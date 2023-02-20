@@ -20,7 +20,6 @@ import ClientAdd from 'components/ClientForms/ClientAdd';
 import ClientView from 'components/ClientForms/ClientView';
 
 // Database
-import { Q } from '@nozbe/watermelondb';
 import withObservables from '@nozbe/with-observables';
 
 import { database } from 'database/index.native';
@@ -32,7 +31,7 @@ import type { MaterialModel } from 'database/models/materialModel';
 import type { ClientModel } from 'database/models/clientModel';
 import { tags } from 'global/tags';
 import Modal from 'components/Modal';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 interface Props {
     service: ServiceModel;
@@ -63,13 +62,16 @@ export default function Service({ route }: any) {
         }, 500);
     }
 
-    useEffect(() => {
-        if (updated) {
-            showUpdatedServiceToast();
-        }
+    useFocusEffect(
+        React.useCallback(() => {
+            if (updated) {
+                showUpdatedServiceToast();
+            }
 
-        fetchService();
-    }, [])
+            fetchService();
+            /* return () => unsubscribe(); */
+        }, [serviceId])
+    );
 
     return (
         <>
@@ -84,7 +86,7 @@ export default function Service({ route }: any) {
             }
             <Toast
                 toastPosition="top"
-                toastOffset={"10%"}
+                toastOffset={"65%"}
             />
         </>
     )

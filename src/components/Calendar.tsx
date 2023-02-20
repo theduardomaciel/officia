@@ -77,15 +77,15 @@ function DayView({ date, selected, selectedPreset, style, status, onPress, inver
     )
 }
 
-type WeekDay = "busy" | "contains";
+type WeekDay = "busy" | "contains" | undefined;
 
 interface WeekView {
     startDate?: Date;
-    weekDaysTypes?: WeekDay[] | undefined;
+    weekDayStatusArray?: WeekDay[];
     navigate: any;
 }
 
-export function WeekView({ startDate, navigate }: WeekView) {
+export function WeekView({ startDate, weekDayStatusArray, navigate }: WeekView) {
     const currentDate = new Date();
     const lastDayOfMonth = new Date(startDate ? startDate.getFullYear() : currentDate.getFullYear(), startDate ? startDate.getMonth() + 1 : currentDate.getMonth() + 1, 0).getDate();
 
@@ -103,7 +103,7 @@ export function WeekView({ startDate, navigate }: WeekView) {
                             key={`day_number${index}`}
                             onPress={() => navigate('dayAgenda', { dateString })}
                             date={date}
-                            status={dateString === currentDate.toISOString() ? "contains" : undefined}
+                            status={weekDayStatusArray && weekDayStatusArray[index]}
                             selected={DATE === currentDate.getDate()}
                         />
                     )

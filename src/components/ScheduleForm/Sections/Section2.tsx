@@ -127,8 +127,8 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
             } as ServiceModel;
 
             if (initialValue) {
-                const updatedServiceOnDatabase = await database.write(async () => {
-                    const updatedService = await (await database.get<ServiceModel>('services').find(initialValue.service.id)).update((service) => {
+                await database.write(async () => {
+                    const updatedService = await initialValue.service.update((service) => {
                         service.name = formattedData.name;
                         service.date = formattedData.date;
                         service.status = formattedData.status;
@@ -142,29 +142,34 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                         service.warrantyDetails = formattedData.warrantyDetails;
                     })
 
-                    console.log(initialValue.subServices.map((subService) => subService.id), "database")
-                    console.log(data.subServices.map((subService) => subService.id), "new")
-
                     // Sub services
                     const subServicesToUpdate = updateFilter(initialValue.subServices, data.subServices) as SubServiceModel[];
-                    const batchSubServicesToUpdate = subServicesToUpdate.map(async (subService) => {
-                        const updatedSubService = subService.prepareUpdate((subServiceToUpdate) => {
-                            subServiceToUpdate.description = subService.description;
-                            subServiceToUpdate.details = subService.details;
-                            subServiceToUpdate.price = subService.price;
-                        })
-                        return updatedSubService;
+                    const batchSubServicesToUpdate = subServicesToUpdate.map((subService) => {
+                        const newData = data.subServices.find((newSubService) => newSubService.id === subService.id);
+                        if (newData) {
+                            const updatedSubService = subService.prepareUpdate((subServiceToUpdate) => {
+                                subServiceToUpdate.description = newData.description;
+                                subServiceToUpdate.details = newData.details;
+                                subServiceToUpdate.price = newData.price;
+                                subServiceToUpdate.types = newData.types;
+                            })
+                            return updatedSubService;
+                        }
                     })
 
+                    console.log(batchSubServicesToUpdate)
+
                     const subServicesToDelete = deleteFilter(initialValue.subServices, data.subServices);
-                    const batchSubServicesToDelete = await Promise.all(subServicesToDelete.map(async (subService) => {
+                    const batchSubServicesToDelete = subServicesToDelete.map((subService) => {
                         const deletedSubService = subService.prepareDestroyPermanently();
                         return deletedSubService;
-                    }))
+                    })
+
+                    const subServicesModel = await database.collections.get<SubServiceModel>('sub_services');
 
                     const subServicesToCreate = createFilter(initialValue.subServices, data.subServices);
-                    const batchSubServicesToCreate = await Promise.all(subServicesToCreate.map(async (subService) => {
-                        const newSubService = await database.get<SubServiceModel>('sub_services').prepareCreate((subServiceToCreate: any) => {
+                    const batchSubServicesToCreate = subServicesToCreate.map((subService) => {
+                        const newSubService = subServicesModel.prepareCreate((subServiceToCreate: any) => {
                             subServiceToCreate.service.set(updatedService);
                             subServiceToCreate.description = subService.description;
                             subServiceToCreate.details = subService.details;
@@ -173,33 +178,39 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                             subServiceToCreate.price = subService.price;
                         })
                         return newSubService;
-                    }))
+                    })
 
                     // Materials
                     const materialsToUpdate = updateFilter(initialValue.materials, data.materials) as MaterialModel[];
-                    const batchMaterialsToUpdate = materialsToUpdate.map(async (material) => {
-                        const updatedMaterial = material.prepareUpdate((materialToUpdate: any) => {
-                            materialToUpdate.name = material.name;
-                            materialToUpdate.description = material.description;
-                            materialToUpdate.image_url = material.image_url;
-                            materialToUpdate.price = material.price;
-                            materialToUpdate.amount = material.amount;
-                            materialToUpdate.profitMargin = material.profitMargin;
-                            materialToUpdate.availability = material.availability;
-                        })
-                        return updatedMaterial;
+                    const batchMaterialsToUpdate = materialsToUpdate.map((material) => {
+                        const newData = data.materials.find((newMaterial) => newMaterial.id === material.id);
+                        if (newData) {
+                            const updatedMaterial = material.prepareUpdate((materialToUpdate) => {
+                                materialToUpdate.name = newData.name;
+                                materialToUpdate.description = newData.description;
+                                materialToUpdate.image_url = newData.image_url;
+                                materialToUpdate.price = newData.price;
+                                materialToUpdate.amount = newData.amount;
+                                materialToUpdate.profitMargin = newData.profitMargin;
+                                materialToUpdate.availability = newData.availability;
+                            })
+                            return updatedMaterial;
+                        }
                     })
+                    console.log(batchMaterialsToUpdate.length, "materialsToUpdate")
 
                     const materialsToDelete = deleteFilter(initialValue.materials, data.materials);
-                    const batchMaterialsToDelete = await Promise.all(materialsToDelete.map(async (material) => {
-                        const deletedMaterial = await (await database.get<MaterialModel>('materials').find(material.id)).prepareDestroyPermanently();
+                    const batchMaterialsToDelete = materialsToDelete.map((material) => {
+                        const deletedMaterial = material.prepareDestroyPermanently();
                         return deletedMaterial;
-                    }
-                    ));
+                    })
+                    console.log(batchMaterialsToDelete.length, "batchMaterialsToDelete")
+
+                    const materialsModel = await database.collections.get<MaterialModel>('materials');
 
                     const materialsToCreate = createFilter(initialValue.materials, data.materials);
-                    const batchMaterialsToCreate = await Promise.all(materialsToCreate.map(async (material) => {
-                        const newMaterial = await database.get<MaterialModel>('materials').prepareCreate((materialToCreate: any) => {
+                    const batchMaterialsToCreate = materialsToCreate.map((material) => {
+                        const newMaterial = materialsModel.prepareCreate((materialToCreate: any) => {
                             materialToCreate.service.set(updatedService);
                             materialToCreate.name = material.name;
                             materialToCreate.description = material.description;
@@ -210,7 +221,8 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                             materialToCreate.availability = material.availability;
                         })
                         return newMaterial;
-                    }))
+                    })
+                    console.log(batchMaterialsToCreate.length, "batchMaterialsToCreate")
 
                     // Adicionamos os subserviços e os materiais ao serviço
                     await database.batch([
@@ -221,12 +233,10 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                         ...batchMaterialsToDelete,
                         ...batchMaterialsToCreate
                     ])
-
-                    return updatedService;
                 })
 
                 console.log("Service updated successfully (with subServices and materials).")
-                /* navigate("service", { serviceId: updatedServiceOnDatabase.id, updated: true }); */
+                /* navigate("service", { serviceId: initialValue.service.id, updated: true }); */
             } else {
                 const serviceOnDatabase = await database.write(async () => {
                     const newService = await database.get<ServiceModel>('services').create((service) => {

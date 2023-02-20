@@ -141,6 +141,19 @@ export default function Home({ route }: any) {
         /* console.log(data) */
     }
 
+    const weekDayStatusArray = new Array(7).fill(null).map((_, index) => {
+        const servicesCountOnDay = weekServices.filter(service => new Date(service.date).getDay() === index).length;
+        console.log(servicesCountOnDay, "count")
+        if (servicesCountOnDay === 1) {
+            return "contains"
+        } else if (servicesCountOnDay > 1) {
+            return "busy"
+        } else {
+            return undefined
+        }
+    })
+    console.log(pendingServices && pendingServices[0])
+
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5 relative'>
             <View>
@@ -178,7 +191,10 @@ export default function Home({ route }: any) {
                 !isCalendarExpanded && (
                     <Animated.View entering={FadeInUp.duration(235)} exiting={FadeOutUp} className='flex-col items-center justify-start w-full'>
                         <WeekDays />
-                        <WeekView /* weekDaysTypes={} */ navigate={navigate} />
+                        <WeekView
+                            weekDayStatusArray={weekDayStatusArray}
+                            navigate={navigate}
+                        />
                     </Animated.View>
                 )
             }
@@ -234,7 +250,7 @@ const enhance = withObservables(['service'], ({ service }) => ({
     subServices: service.subServices,  // "Shortcut syntax" for `service.subServices.observe()`
 }))
 
-const EnhancedServicePreview = enhance(ServicePreview)
+export const EnhancedServicePreview = enhance(ServicePreview)
 
 const Title = ({ children }: { children: React.ReactNode }) => (
     <Text className='text-xl font-titleBold text-white mb-2'>
