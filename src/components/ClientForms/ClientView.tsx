@@ -54,7 +54,7 @@ export default function ClientView({ bottomSheetRef, client, service }: Props) {
                 })
             })
         } catch (error) {
-            console.log("Não foi")
+            console.log(error)
         }
     }
 

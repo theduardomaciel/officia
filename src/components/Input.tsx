@@ -7,15 +7,21 @@ import clsx from "clsx";
 import Label from "./Label";
 import { forwardRef, useMemo } from "react";
 
+import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
+
 interface Props extends TextInputProps {
     label?: string;
-    icon?: any;
+    icon?: {
+        name: string;
+        family?: "MaterialIcons" | "MaterialCommunityIcons" /* | "Entypo" | "Feather" | "FontAwesome" | "Ionicons" | "FontAwesome5" | "AntDesign" | "Octicons" | "Zocial" | "SimpleLineIcons" | "Foundation" | "EvilIcons" | undefined */;
+    }
+    customIcon?: any;
     pallette?: "dark";
     required?: boolean;
     onPress?: () => void;
 }
 
-const Input = forwardRef(({ label, icon, pallette, required, multiline, onPress, ...rest }: Props, ref) => {
+const Input = forwardRef(({ label, customIcon, icon, pallette, required, multiline, onPress, ...rest }: Props, ref) => {
     const { colorScheme } = useColorScheme();
 
     const CustomInput = <TextInput
@@ -39,10 +45,30 @@ const Input = forwardRef(({ label, icon, pallette, required, multiline, onPress,
                 label && (
                     <View className="w-full flex-row items-center justify-start">
                         {
-                            icon && (
-                                <View className="mr-2">
-                                    {icon}
+                            customIcon ? (
+                                <View className="mr-3">
+                                    {customIcon}
                                 </View>
+                            ) : (
+                                icon && (
+                                    <View className="mr-3">
+                                        {
+                                            icon.family === "MaterialCommunityIcons" ? (
+                                                <MaterialCommunityIcons
+                                                    name={icon.name as unknown as any}
+                                                    size={18}
+                                                    color={colorScheme === "dark" ? colors.text[200] : colors.black}
+                                                />
+                                            ) : (
+                                                <MaterialIcons
+                                                    name={icon.name as unknown as any}
+                                                    size={18}
+                                                    color={colorScheme === "dark" ? colors.text[200] : colors.black}
+                                                />
+                                            )
+                                        }
+                                    </View>
+                                )
                             )
                         }
                         <Label>

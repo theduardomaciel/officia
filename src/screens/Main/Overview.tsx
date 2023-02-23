@@ -1,25 +1,26 @@
-import Header from 'components/Header';
-import { TagsSelector } from 'components/TagsSelector';
-import React, { useCallback, useEffect } from 'react';
-import { View, Text, SectionList, TouchableOpacity } from "react-native";
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as NavigationBar from "expo-navigation-bar";
+import React, { useCallback, useEffect, useState } from 'react';
+import { SectionList, Text, View } from "react-native";
+import { FlatList, ScrollView as GestureHandlerScrollView } from 'react-native-gesture-handler';
+
 import { useColorScheme } from 'nativewind';
-import { useNavigation } from '@react-navigation/native';
 
-import { FlatList, ScrollView as GestureHandlerScrollView } from 'react-native-gesture-handler'
-import { useFocusEffect } from '@react-navigation/native';
-
+// Components
+import EmptyMessage from 'components/EmptyMessage';
+import Header from 'components/Header';
+import { ServiceWithSubServicesPreview } from 'components/ServicePreview';
 import StatisticsCarousel from 'components/StatisticsCarousel';
+import { TagsSelector } from 'components/TagsSelector';
 import { FilterView } from './Home';
 
-// DB
-import type { ServiceModel } from 'database/models/serviceModel';
-import { ServiceWithSubServicesPreview } from 'components/ServicePreview';
-import { database } from 'database/index.native';
-import withObservables from '@nozbe/with-observables';
-import EmptyMessage from 'components/EmptyMessage';
+// Database
 import { Q } from '@nozbe/watermelondb';
-import { SubServiceModel } from 'database/models/subServiceModel';
+import { database } from 'database/index.native';
+
+// Types
+import type { ServiceModel } from 'database/models/serviceModel';
+import type { SubServiceModel } from 'database/models/subServiceModel';
 
 interface MonthWithServices {
     month: string;
@@ -160,7 +161,7 @@ const MonthDates = ({ month, dates }: MonthWithServices) => {
                     <DateServicesList title={title} data={data} />
                 )}
                 renderItem={({ item, index }) => (
-                    <EnhancedServicePreview
+                    <EnhancedServiceWithSubServicesPreview
                         key={index.toString()}
                         service={item}
                         onPress={() => navigate('service', { serviceId: item.id })}
@@ -209,9 +210,14 @@ const DateServicesList = ({ title, data }: { title: string, data: ServiceModel[]
     )
 }
 
-const enhance = withObservables(['service'], ({ service }) => ({
-    service,
-    subServices: service.subServices, // "Shortcut syntax" for `service.subServices.observe()`
-}))
+const EnhancedServiceWithSubServicesPreview = ({ service, ...rest }: any) => {
+    const [observedSubServices, setSubServices] = useState<SubServiceModel[]>(service);
 
-const EnhancedServicePreview = enhance(ServiceWithSubServicesPreview)
+    useEffect(() => {
+        service.subServices.observe().subscribe((subServices: SubServiceModel[]) => {
+            setSubServices(subServices)
+        })
+    }, [])
+
+    return <ServiceWithSubServicesPreview service={service} subServices={observedSubServices} {...rest} />
+}

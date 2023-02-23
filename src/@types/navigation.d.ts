@@ -9,6 +9,9 @@ export declare global {
             schedule: {
                 serviceId: string
             };
+            invoice: {
+                serviceId: string
+            };
             service: {
                 serviceId: string;
                 updated?: boolean

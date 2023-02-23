@@ -1,29 +1,30 @@
-import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { CardStyleInterpolators, createStackNavigator } from "@react-navigation/stack";
+import { View } from "react-native";
 /* import { createNativeStackNavigator } from '@react-navigation/native-stack' */
 
-import colors from "global/colors";
 import { MaterialIcons } from "@expo/vector-icons";
+import colors from "global/colors";
 
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from 'nativewind';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-import Home from "screens/Home/Home";
-import Business from "screens/Home/Business";
-import Overview from "screens/Home/Overview";
+import Business from "screens/Main/Business";
+import Home from "screens/Main/Home";
+import Overview from "screens/Main/Overview";
 
-import Service from "screens/Service";
+import Invoice from "screens/Invoice";
 import ScheduleForm from "screens/ScheduleForm";
+import Service from "screens/Service";
 
-import PhoneAndAddress from "screens/PhoneAndAddress";
-import DayAgenda from "screens/DayAgenda";
-import BankAccount from "screens/BankAccount";
-import SocialMedia from "screens/SocialMedia";
 import AdditionalInfo from "screens/AdditionalInfo";
+import BankAccount from "screens/BankAccount";
+import DayAgenda from "screens/DayAgenda";
+import PhoneAndAddress from "screens/PhoneAndAddress";
+import SocialMedia from "screens/SocialMedia";
 
 const FormBase = () => <View style={{ flex: 1, backgroundColor: colors.gray[300] }} />
 
@@ -168,6 +169,18 @@ export function AppRoutes() {
                     cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
                 }}
             />
+            <Stack.Screen
+                name="invoice"
+                component={Invoice}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
+                }}
+            />
+            {/* <Stack.Screen
+                name="login"
+                component={Login}
+                options={{ headerShown: false }}
+            /> */}
         </Stack.Navigator>
     )
 }

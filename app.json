@@ -54,6 +54,22 @@
             ],
             [
                 "./withAndroidSplashScreen.js"
+            ],
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "Permission to access documents to read PDF files",
+                    "cameraPermission": "Allow $(PRODUCT_NAME) to open the camera",
+                    "//": "Disables the microphone permission",
+                    "microphonePermission": false
+                }
+            ],
+            [
+                "expo-notifications",
+                {
+                    "color": "#ffffff",
+                    "mode": "production"
+                }
             ]
         ],
         "scheme": "officia",

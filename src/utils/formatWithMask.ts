@@ -31,10 +31,8 @@ export type FormatWithMaskResult = {
     obfuscated: string;
 };
 
-export default function formatWithMask(
-    props: FormatWithMaskProps
-): FormatWithMaskResult {
-    const { text, mask, obfuscationCharacter = '*', maskAutoComplete = false } = props;
+export default function formatWithMask({ text, mask, maskAutoComplete, obfuscationCharacter }: FormatWithMaskProps): FormatWithMaskResult {
+    /* const { text, mask, obfuscationCharacter = '*', maskAutoComplete = false } = props; */
 
     // make sure it'll not break with null or undefined inputs
     if (!text) return { masked: '', unmasked: '', obfuscated: '' };
@@ -120,3 +118,35 @@ export default function formatWithMask(
 
     return { masked, unmasked, obfuscated };
 }
+
+const BRL_CPF = [
+    /\d/,
+    /\d/,
+    /\d/,
+    '.',
+    /\d/,
+    /\d/,
+    /\d/,
+    '.',
+    /\d/,
+    /\d/,
+    /\d/,
+    '-',
+    /\d/,
+    /\d/,
+];
+
+const BRL_PHONE = ['(', /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/];
+
+const BRL_CNPJ = [/\d/, /\d/, ".", /\d/, /\d/, /\d/, ".", /\d/, /\d/, /\d/, "/", /\d/, /\d/, /\d/, "-", /\d/, /\d/]
+
+const ZIP_CODE = [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/];
+
+const MASKS = {
+    BRL_PHONE,
+    BRL_CPF,
+    BRL_CNPJ,
+    ZIP_CODE
+}
+
+export { MASKS };

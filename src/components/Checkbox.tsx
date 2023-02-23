@@ -7,11 +7,12 @@ import colors from "tailwindcss/colors";
 
 interface Props extends TouchableOpacityProps {
     checked?: boolean;
+    inverted?: boolean;
     title: string;
     customKey: string;
 }
 
-export function Checkbox({ title, checked = false, customKey, ...rest }: Props) {
+export function Checkbox({ title, checked = false, inverted, customKey, ...rest }: Props) {
     const entering = (targetValues: any) => {
         'worklet';
         const animations = {
@@ -35,6 +36,9 @@ export function Checkbox({ title, checked = false, customKey, ...rest }: Props) 
             key={customKey}
             activeOpacity={0.8}
             className='flex-row mb-2 items-center'
+            style={{
+                flexDirection: inverted ? 'row-reverse' : 'row',
+            }}
             {...rest}
         >
             {
@@ -49,7 +53,15 @@ export function Checkbox({ title, checked = false, customKey, ...rest }: Props) 
                     :
                     <View className='h-[30px] w-[30px] bg-gray-300 rounded-lg items-center justify-center' />
             }
-            <Text className={'text-white ml-3 flex-1 font-normal'} ellipsizeMode="tail" /* numberOfLines={1} */>
+            <Text
+                className={'text-white flex-1 font-normal'}
+                ellipsizeMode="tail"
+                style={{
+                    marginLeft: inverted ? 0 : 10,
+                    marginRight: inverted ? 10 : 0,
+                }}
+            /* numberOfLines={1} */
+            >
                 {title}
             </Text>
         </TouchableOpacity>

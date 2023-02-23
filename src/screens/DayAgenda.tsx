@@ -10,7 +10,7 @@ import colors from 'global/colors';
 import Header from 'components/Header';
 import Loading from 'components/Loading';
 import EmptyMessage from 'components/EmptyMessage';
-import { EnhancedServicePreview } from './Home/Home';
+import { EnhancedServicePreview } from './Main/Home';
 
 // Database
 import { database } from 'database/index.native';

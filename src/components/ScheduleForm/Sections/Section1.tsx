@@ -86,11 +86,11 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
             warrantyPeriod_years: initialValue?.service?.warrantyPeriod ? (initialValue?.service?.warrantyPeriod / 365).toString() : "",
         },
         resolver: zodResolver(schema),
+        resetOptions: {
+            keepDirtyValues: true, // user-interacted input will be retained
+            keepErrors: true, // input errors will be retained with value update
+        }
     });
-
-    /* const onSubmit = handleSubmit((data) => {
-        updateHandler && updateHandler(2)
-    }); */
 
     const SubSection1 = () => {
         return (

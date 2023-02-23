@@ -13,6 +13,6 @@ export const subServiceSchema = tableSchema({
         { name: "price", type: "number" },
         { name: "amount", type: "number" },
         { name: "created_at", type: "number" },
-        { name: 'service_id', type: 'string' },
+        { name: 'service_id', type: 'string', isIndexed: true },
     ],
 })

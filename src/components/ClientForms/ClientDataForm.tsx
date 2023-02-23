@@ -3,12 +3,12 @@ import { View, ViewStyle } from "react-native";
 import { Controller, Control } from 'react-hook-form';
 
 import colors from "global/colors";
-import formatWithMask from 'utils/formatWithMask';
+import formatWithMask, { MASKS } from 'utils/formatWithMask';
 
 import Input from "components/Input";
 import { z } from "zod";
 
-const borderErrorStyle = {
+export const borderErrorStyle = {
     borderColor: colors.primary.red,
     borderWidth: 1,
     borderTopColor: colors.primary.red,
@@ -32,7 +32,6 @@ interface Props {
     errors: any;
 }
 
-const PHONE_MASK = ['(', /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/];
 
 export default function ClientDataForm({ control, errors }: Props) {
     return (
@@ -63,7 +62,7 @@ export default function ClientDataForm({ control, errors }: Props) {
                             style={!!errors.contact && borderErrorStyle}
                             onBlur={onBlur}
                             onChangeText={value => {
-                                const { masked } = formatWithMask({ text: value, mask: PHONE_MASK })
+                                const { masked } = formatWithMask({ text: value, mask: MASKS.BRL_PHONE })
                                 onChange(masked)
                             }}
                             maxLength={15}

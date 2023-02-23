@@ -1,23 +1,22 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Text, View, TouchableOpacity, FlatList } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors, { primary } from 'global/colors';
 
-// Types
-import type { ClientModel } from 'database/models/clientModel';
-
 // Components
 import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
 import Title from 'components/Title';
-import { database } from 'database/index.native';
 import EmptyMessage from 'components/EmptyMessage';
-import { ServiceModel } from 'database/models/serviceModel';
 import Modal from 'components/Modal';
+
+// Database
+import { database } from 'database/index.native';
 import { Q } from '@nozbe/watermelondb';
-import withObservables from '@nozbe/with-observables';
-import { SubActionButton } from 'components/ActionButton';
-import ClientAdd from './ClientAdd';
+
+// Types
+import type { ClientModel } from 'database/models/clientModel';
+import type { ServiceModel } from 'database/models/serviceModel';
 
 interface Props {
     lastBottomSheetRef: React.RefObject<BottomSheetActions>;
@@ -46,7 +45,7 @@ export default function ClientSelect({ lastBottomSheetRef, bottomSheetRef, servi
                 })
             })
         } catch (error) {
-            console.log("Não foi")
+            console.log(error);
         }
         /* onSelectClient?.(client); */
     }
@@ -123,7 +122,6 @@ export default function ClientSelect({ lastBottomSheetRef, bottomSheetRef, servi
 }
 
 async function deleteClient(client: ClientModel) {
-    console.log("teste")
     await database.write(async () => {
         const servicesWithClient = await database
             .get<ServiceModel>("services")
@@ -195,8 +193,14 @@ const ClientPreview = ({ client, onPress }: { client: ClientModel, onPress: () =
     )
 }
 
-const enhance = withObservables(['client'], ({ client }) => ({
-    client
-}))
+const EnhancedClientPreview = ({ client, ...rest }: any) => {
+    const [observedClient, setClient] = useState<ClientModel>(client);
 
-const EnhancedClientPreview = enhance(ClientPreview)
+    useEffect(() => {
+        client.observe().subscribe((client: ClientModel) => {
+            setClient(client);
+        })
+    }, [])
+
+    return <ClientPreview client={observedClient} {...rest} />
+}

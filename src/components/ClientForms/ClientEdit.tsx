@@ -75,6 +75,10 @@ export default function ClientEdit({ bottomSheetRef, lastBottomSheetRef, client 
         },
         resolver: zodResolver(clientSchema),
         mode: 'onBlur',
+        resetOptions: {
+            keepDirtyValues: true, // user-interacted input will be retained
+            keepErrors: true, // input errors will be retained with value update
+        }
     });
 
     const onSubmit: SubmitHandler<ClientFormValues> = data => {
@@ -83,7 +87,7 @@ export default function ClientEdit({ bottomSheetRef, lastBottomSheetRef, client 
             contact: data.contact,
             address: data.address,
         };
-        console.log(updatedClient)
+        //console.log(updatedClient)
         Toast.hide();
 
         // Inserimos o novo cliente no banco de dados

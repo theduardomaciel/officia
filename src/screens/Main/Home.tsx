@@ -1,35 +1,34 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, Platform, UIManager, RefreshControl, SectionList, FlatListProps, ViewStyle } from 'react-native';
 import * as NavigationBar from "expo-navigation-bar";
-import { useColorScheme } from 'nativewind/dist/use-color-scheme';
+import React, { useCallback, useEffect, useState } from 'react';
+import { SectionList, Text, TouchableOpacity, View } from 'react-native';
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useColorScheme } from 'nativewind';
 
 import Animated, { FadeInUp, FadeOutUp, Layout } from 'react-native-reanimated';
 
-import colors from 'global/colors';
 import { MaterialIcons } from "@expo/vector-icons";
+import colors from 'global/colors';
 
-import Header from 'components/Header';
+// Components
+import Calendar, { WeekDays, WeekView } from 'components/Calendar';
 import EmptyMessage from 'components/EmptyMessage';
-import { Tag, TagsSelector } from 'components/TagsSelector';
-import Calendar, { WeekView, WeekDays } from 'components/Calendar';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-import { tags } from 'global/tags';
-
-import { database } from 'database/index.native';
-import { ServiceModel } from 'database/models/serviceModel';
-
-import { Q } from '@nozbe/watermelondb';
-import withObservables from '@nozbe/with-observables'
-
-import Toast from 'components/Toast';
+import Header from 'components/Header';
 import Loading from 'components/Loading';
 import ServicePreview from 'components/ServicePreview';
+import { Tag, TagsSelector } from 'components/TagsSelector';
+import Toast from 'components/Toast';
+
+// Utils
+import { tags } from 'global/tags';
+
+// Database
+import { Q } from '@nozbe/watermelondb';
+import { database } from 'database/index.native';
+
+// Types
+import type { ServiceModel } from 'database/models/serviceModel';
+import type { SubServiceModel } from 'database/models/subServiceModel';
 
 export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
     <View className='bg-black dark:bg-gray-200 flex-row items-center  h-full mr-3 px-3 rounded-full'>
@@ -95,7 +94,7 @@ export default function Home({ route }: any) {
 
             setPendingServices(services)
         } catch (error) {
-            console.log(error, "erro")
+            console.log(error)
             setPendingServices([])
         }
     }
@@ -142,8 +141,7 @@ export default function Home({ route }: any) {
     }
 
     const weekDayStatusArray = new Array(7).fill(null).map((_, index) => {
-        const servicesCountOnDay = weekServices.filter(service => new Date(service.date).getDay() === index).length;
-        console.log(servicesCountOnDay, "count")
+        const servicesCountOnDay = weekServices.filter(service => new Date(service.date).getDay() === index + 2).length;
         if (servicesCountOnDay === 1) {
             return "contains"
         } else if (servicesCountOnDay > 1) {
@@ -152,7 +150,6 @@ export default function Home({ route }: any) {
             return undefined
         }
     })
-    console.log(pendingServices && pendingServices[0])
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12 gap-y-5 relative'>
@@ -220,9 +217,11 @@ export default function Home({ route }: any) {
                             keyExtractor={(item, index) => index.toString()}
                             contentContainerStyle={{ flex: 1 }}
                             renderSectionHeader={({ section: { title } }) => (
-                                title !== 'blank' ? <Title>
-                                    {title}
-                                </Title> : <></>
+                                title !== 'blank' ? (
+                                    <Text className='text-xl font-titleBold text-white mb-2'>
+                                        {title}
+                                    </Text>
+                                ) : <></>
                             )}
                             renderItem={({ item, section }) => <EnhancedServicePreview
                                 key={item.id}
@@ -239,21 +238,20 @@ export default function Home({ route }: any) {
             </Animated.View>
             <Toast
                 toastPosition="top"
-                toastOffset={"10%"}
+                toastOffset={"85%"}
             />
         </View>
     );
 }
 
-const enhance = withObservables(['service'], ({ service }) => ({
-    service,
-    subServices: service.subServices,  // "Shortcut syntax" for `service.subServices.observe()`
-}))
+export const EnhancedServicePreview = ({ service, ...rest }: any) => {
+    const [observedSubServices, setSubServices] = useState<SubServiceModel[] | undefined>(undefined);
 
-export const EnhancedServicePreview = enhance(ServicePreview)
+    useEffect(() => {
+        service.subServices.observe().subscribe((subServices: SubServiceModel[]) => {
+            setSubServices(subServices)
+        })
+    }, [])
 
-const Title = ({ children }: { children: React.ReactNode }) => (
-    <Text className='text-xl font-titleBold text-white mb-2'>
-        {children}
-    </Text>
-)
+    return <ServicePreview service={service} subServices={observedSubServices} {...rest} />
+}

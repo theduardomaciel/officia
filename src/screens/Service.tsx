@@ -1,48 +1,56 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useRef } from 'react';
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import colors from 'global/colors';
 import { MaterialIcons } from "@expo/vector-icons";
+import colors from 'global/colors';
 
 // Components
-import Header from 'components/Header';
-import { NextButton, SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
-import { Tag } from 'components/TagsSelector';
-import { PreviewStatic } from 'components/Preview';
 import { ActionButton } from 'components/ActionButton';
-import Toast from 'components/Toast';
 import { BottomSheetActions } from 'components/BottomSheet';
 import Dropdown, { DropdownData } from 'components/Dropdown';
+import Header from 'components/Header';
 import Loading from 'components/Loading';
+import Modal from 'components/Modal';
+import { PreviewStatic } from 'components/Preview';
+import { NextButton, SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
+import { Tag } from 'components/TagsSelector';
+import Toast from 'components/Toast';
 
 import ClientAdd from 'components/ClientForms/ClientAdd';
 import ClientView from 'components/ClientForms/ClientView';
 
 // Database
-import withObservables from '@nozbe/with-observables';
-
 import { database } from 'database/index.native';
 
 // Types
+import type { ClientModel } from 'database/models/clientModel';
+import type { MaterialModel } from 'database/models/materialModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
-import type { MaterialModel } from 'database/models/materialModel';
-import type { ClientModel } from 'database/models/clientModel';
+
 import { tags } from 'global/tags';
-import Modal from 'components/Modal';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 interface Props {
     service: ServiceModel;
-    subServices: SubServiceModel[];
-    materials: MaterialModel[];
-    client: ClientModel;
+    subServices?: SubServiceModel[];
+    materials?: MaterialModel[];
+    client?: ClientModel;
+}
+
+interface ObservableServiceModel extends ServiceModel {
+    subServices: any;
+    materials: any;
 }
 
 export default function Service({ route }: any) {
     const { serviceId, updated } = route.params;
+
     const [service, setService] = React.useState<ServiceModel | undefined>(undefined);
+    const [subServices, setSubServices] = React.useState<SubServiceModel[] | undefined>(undefined);
+    const [materials, setMaterials] = React.useState<MaterialModel[] | undefined>(undefined);
+    const [client, setClient] = React.useState<ClientModel | undefined>(undefined);
 
     const showUpdatedServiceToast = useCallback(() => {
         Toast.show({
@@ -53,13 +61,14 @@ export default function Service({ route }: any) {
     }, [])
 
     async function fetchService() {
-        const service = await database
+        const newService = await database
             .get<ServiceModel>("services")
-            .find(serviceId);
+            .find(serviceId) as ObservableServiceModel;
 
-        setTimeout(() => {
-            setService(service);
-        }, 500);
+        setService(newService)
+        newService.subServices.observe().subscribe(setSubServices);
+        newService.materials.observe().subscribe(setMaterials);
+        newService.client.observe().subscribe(setClient);
     }
 
     useFocusEffect(
@@ -77,7 +86,12 @@ export default function Service({ route }: any) {
         <>
             {
                 service ? (
-                    <EnhancedScreenContent service={service} />
+                    <ScreenContent
+                        service={service}
+                        subServices={subServices}
+                        materials={materials}
+                        client={client}
+                    />
                 ) : (
                     <View className='flex-1 items-center justify-center pt-24'>
                         <Loading />
@@ -86,7 +100,7 @@ export default function Service({ route }: any) {
             }
             <Toast
                 toastPosition="top"
-                toastOffset={"65%"}
+                toastOffset={"90%"}
             />
         </>
     )
@@ -94,7 +108,7 @@ export default function Service({ route }: any) {
 
 const STATUS_DATA = [
     { label: "Agendado", value: "scheduled", icon: "calendar-today" },
-    { label: "Em garantia", value: "warranty", icon: "verified" },
+    /* { label: "Em garantia", value: "warranty", icon: "verified" }, */
     { label: "Arquivado", value: "archived", icon: "archive" },
 ] as DropdownData[];
 
@@ -325,6 +339,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                 <NextButton
                     icon={"attach-money"}
                     title={"Gerar orçamento"}
+                    onPress={() => navigate("invoice", { serviceId: service.id })}
                 />
             </View>
             <Toast
@@ -348,7 +363,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
             <Dropdown
                 ref={statusDropdownRef}
                 data={STATUS_DATA}
-                bottomSheetHeight={"28%"}
+                bottomSheetHeight={"23%"}
                 bottomSheetLabel={"Selecione o status do serviço"}
                 selected={serviceStatus}
                 setSelected={updateStatus}
@@ -372,12 +387,3 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
         </View>
     )
 }
-
-const enhance = withObservables(['service'], ({ service }) => ({
-    service,
-    subServices: service.subServices,
-    materials: service.materials,
-    client: service.client,
-}))
-
-const EnhancedScreenContent = enhance(ScreenContent)

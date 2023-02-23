@@ -1,7 +1,7 @@
-import { Text, View, Dimensions } from "react-native";
-import { PanGestureHandler } from "react-native-gesture-handler";
 import { Portal } from "@gorhom/portal";
-import Animated, { cancelAnimation, interpolate, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withSpring, WithSpringConfig } from "react-native-reanimated";
+import { Dimensions, Text, View } from "react-native";
+import { PanGestureHandler } from "react-native-gesture-handler";
+import Animated, { interpolate, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withSpring, WithSpringConfig } from "react-native-reanimated";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import ErrorIcon from "assets/icons/error.svg";
@@ -23,7 +23,8 @@ const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = 
 
     const contentHeight = useSharedValue(0);
 
-    const activeHeight = useSharedValue(parseFloat(toastOffset.split("%")[0]) / 100 * screenHeight);
+    const parsedHeight = parseFloat(toastOffset.split("%")[0]) / 100 * screenHeight
+    const activeHeight = useSharedValue(toastPosition === "top" ? screenHeight - parsedHeight : parsedHeight);
     const newActiveHeight = screenHeight - activeHeight.value;
 
     const topAnimation = useSharedValue(toastPosition === "top" ? -screenHeight : screenHeight);
@@ -108,18 +109,23 @@ const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = 
                 >
                     <View
                         onLayout={event => contentHeight.value = event.nativeEvent.layout.height}
-                        className="w-full flex-col items-start px-4 py-3 bg-white dark:bg-gray-200 border border-dashed border-primary-red rounded"
+                        className="w-full flex-col items-start px-4 py-3 bg-white dark:bg-gray-200 border border-dashed rounded"
+                        style={{
+                            borderColor: toastProps?.preset === "error" ? colors.primary.red : colors.primary.green
+                        }}
                     >
                         <View className="flex-col items-start">
-                            {
-                                toastProps?.preset === "error" ?
-                                    <ErrorIcon />
-                                    :
-                                    toastProps?.preset === "success" ?
-                                        <MaterialIcons name="check-circle" size={28} color={colors.white} />
+                            <View className="mb-2">
+                                {
+                                    toastProps?.preset === "error" ?
+                                        <ErrorIcon />
                                         :
-                                        <MaterialIcons name={toastProps?.icon as unknown as any} size={28} color={colors.white} />
-                            }
+                                        toastProps?.preset === "success" ?
+                                            <MaterialIcons name="check-circle" size={24} color={colors.white} />
+                                            :
+                                            <MaterialIcons name={toastProps?.icon as unknown as any} size={24} color={colors.white} />
+                                }
+                            </View>
                             <Text className="font-titleBold text-lg mb-1 text-black dark:text-white" style={{
                                 lineHeight: 20
                             }}>

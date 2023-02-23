@@ -23,7 +23,8 @@ export const serviceSchema = tableSchema({
         { name: "warrantyPeriod", type: "number" },
         { name: "warrantyDetails", type: "string", isOptional: true },
         // Additional
+        { name: "invoice_uri", type: "string", isOptional: true },
         { name: 'created_at', type: 'number' },
-        { name: 'client_id', type: 'string' },
+        { name: 'client_id', type: 'string', isIndexed: true },
     ],
 })

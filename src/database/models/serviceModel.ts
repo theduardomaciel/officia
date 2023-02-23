@@ -36,6 +36,7 @@ export class ServiceModel extends Model {
     @field("warrantyPeriod") warrantyPeriod!: number;
     @field("warrantyDetails") warrantyDetails!: string | null;
 
+    @field("invoice_uri") invoiceUri!: string | null;
     @readonly @date('created_at') createdAt!: number;
 
     @children("sub_services") subServices!: SubServiceModel[];

@@ -1,39 +1,33 @@
-import React, { useRef, useEffect } from 'react';
-import { View, ViewStyle } from "react-native";
+import React, { useEffect, useRef } from 'react';
+import { View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 
 import colors from 'global/colors';
 
 // Form
-import { useForm, Controller, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
+import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
 import * as z from 'zod';
 
 // Utils
-import { v4 as uuidv4 } from 'uuid';
 import { tags } from 'global/tags';
+import { v4 as uuidv4 } from 'uuid';
 
 // Types
 import { MaterialModel } from 'database/models/materialModel';
 import { SubServiceModel } from 'database/models/subServiceModel';
 
 // Components
+import { ActionButton } from 'components/ActionButton';
 import BottomSheet from 'components/BottomSheet';
 import Input from 'components/Input';
 import Label from 'components/Label';
-import { ActionButton } from 'components/ActionButton';
-import Title from 'components/Title';
 import { TagsSelector } from 'components/TagsSelector';
+import Title from 'components/Title';
 import Toast from 'components/Toast';
-import { MARGIN, SubSectionWrapper } from '../SubSectionWrapper';
 import { runOnUI } from 'react-native-reanimated';
-
-const borderErrorStyle = {
-    borderColor: colors.primary.red,
-    borderWidth: 1,
-    borderTopColor: colors.primary.red,
-    borderBottomColor: colors.primary.red,
-} as ViewStyle;
+import { MARGIN } from '../SubSectionWrapper';
 
 interface FormValues {
     description: string;
@@ -74,6 +68,11 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
             amount: "1",
         },
         resolver: zodResolver(schema),
+        resetOptions: {
+            keepDirtyValues: true, // user-interacted input will be retained
+            keepErrors: true, // input errors will be retained with value update
+        },
+        mode: "onBlur"
     });
 
     const onSubmit: SubmitHandler<FormValues> = data => {
@@ -87,7 +86,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
             amount: parseInt(data.amount),
             types: tags,
         };
-        console.log(newSubService)
+        //console.log(newSubService)
         Toast.hide();
 
         setTimeout(() => {
@@ -113,7 +112,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
 
     useEffect(() => {
         if (editableData) {
-            console.log("Dados de edição inseridos.")
+            //console.log("Dados de edição inseridos.")
             selectedTags.current = editableData.types;
             reset({
                 description: editableData.description,
@@ -130,7 +129,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
             ref={bottomSheetRef}
             onDismissed={() => {
                 if (editableData) {
-                    console.log("Dados de edição removidos.")
+                    //console.log("Dados de edição removidos.")
                     reset({
                         description: "",
                         details: "",

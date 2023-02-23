@@ -74,6 +74,10 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
         },
         resolver: zodResolver(clientSchema),
         mode: 'onBlur',
+        resetOptions: {
+            keepDirtyValues: true, // user-interacted input will be retained
+            keepErrors: true, // input errors will be retained with value update
+        }
     });
 
     const onSubmit: SubmitHandler<ClientFormValues> = data => {
@@ -82,7 +86,7 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
             contact: data.contact,
             address: data.address,
         };
-        console.log(newClient)
+        //console.log(newClient)
         Toast.hide();
 
         // Inserimos o novo cliente no banco de dados

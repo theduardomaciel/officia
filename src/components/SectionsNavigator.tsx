@@ -15,8 +15,8 @@ interface Props {
 const MARGIN_SIZE = 12.5;
 
 export function SectionsNavigator({ sections, selectedId }: Props) {
-    const windowWidth = Dimensions.get("window").width;
-    const lineWidth = (windowWidth / sections.length) - MARGIN_SIZE * (sections.length - 1)
+    const windowWidth = Dimensions.get("window").width - 25 * 2;
+    const lineWidth = (windowWidth / sections.length)
 
     return (
         <View className='flex-row w-full items-center justify-between mt-5'>

@@ -100,6 +100,10 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
             additionalInfo: (initialValue?.service?.additionalInfo ? initialValue?.service.additionalInfo : "") ?? "",
         },
         resolver: zodResolver(schema),
+        resetOptions: {
+            keepDirtyValues: true, // user-interacted input will be retained
+            keepErrors: true, // input errors will be retained with value update
+        }
     });
 
     /* useEffect(() => {
@@ -224,9 +228,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                                         Form.expand({
                                             editableData: material,
                                             onSubmitForm: (newData: MaterialModel) => {
-                                                console.log("NÃO AO JATIASD")
                                                 setMaterials((prev) => prev.map((m) => {
-                                                    console.log(m.id, newData.id)
                                                     return m.id === newData.id ? newData : m
                                                 }))
                                             },

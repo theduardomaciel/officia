@@ -1,5 +1,5 @@
 import React, { FC, memo, SVGProps } from "react";
-import { View, Text, TouchableOpacity, ViewStyle, TouchableOpacityProps } from "react-native";
+import { Text, TouchableOpacity, TouchableOpacityProps, View, ViewStyle } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
@@ -7,9 +7,9 @@ import colors from "global/colors";
 import Label from "components/Label";
 
 // Types
+import type { MaterialModel } from "database/models/materialModel";
 import type { ServiceModel } from "database/models/serviceModel";
 import type { SubServiceModel } from "database/models/subServiceModel";
-import type { MaterialModel } from "database/models/materialModel";
 
 export interface Section {
     bottomSheetRef: React.RefObject<any>;
@@ -37,7 +37,7 @@ export const MARGIN = 20;
 
 export const SubSectionWrapper = memo(({ header, children, style }: SubSectionWrapperProps) => {
     return (
-        <View className='w-full flex-col items-start justify-start gap-y-4' style={[{ marginBottom: MARGIN }, style]}>
+        <View className='w-full flex-col items-start justify-start' style={[{ marginBottom: MARGIN, rowGap: 15 }, style]}>
             <View className='w-full flex-row items-center justify-between'>
                 <Label
                     icon={header.icon ? { name: header.icon } : undefined}

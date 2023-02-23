@@ -55,7 +55,7 @@ export default function BankAccount() {
                         <View className='w-1/2 border border-dashed border-b-gray-100' />
                     </View>
                     <View>
-                        <Input label='Chave PIX' icon={<PixIcon />} />
+                        <Input label='Chave PIX' customIcon={<PixIcon />} />
                     </View>
                 </View>
             </ScrollView>

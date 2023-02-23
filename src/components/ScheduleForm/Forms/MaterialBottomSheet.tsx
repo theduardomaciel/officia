@@ -1,38 +1,32 @@
-import React, { useRef, useCallback, Dispatch, SetStateAction, useState, useEffect } from 'react';
-import { View, TouchableOpacity, Text, ViewStyle } from "react-native";
+import React, { useEffect, useState } from 'react';
+import { Text, TouchableOpacity, View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 
 // Form
-import { useForm, Controller, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
 import * as z from 'zod';
 
 // Utils
 import { v4 as uuidv4 } from 'uuid';
 
-import { useColorScheme } from 'nativewind';
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
+import { useColorScheme } from 'nativewind';
 
 // Components
-import BottomSheet from 'components/BottomSheet';
-import Input from 'components/Input';
-import Dropdown from 'components/Dropdown';
 import { ActionButton } from 'components/ActionButton';
+import BottomSheet from 'components/BottomSheet';
+import Dropdown from 'components/Dropdown';
+import Input from 'components/Input';
 import Title from 'components/Title';
 import Toast from 'components/Toast';
 
 // Utils
-import { MARGIN } from '../SubSectionWrapper';
+import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
 import { MaterialModel } from 'database/models/materialModel';
-import { runOnUI, useSharedValue } from 'react-native-reanimated';
-
-const borderErrorStyle = {
-    borderColor: colors.primary.red,
-    borderWidth: 1,
-    borderTopColor: colors.primary.red,
-    borderBottomColor: colors.primary.red,
-} as ViewStyle;
+import { runOnUI } from 'react-native-reanimated';
+import { MARGIN } from '../SubSectionWrapper';
 
 const schema = z.object({
     name: z.string().max(40, { message: 'O nome do material deve ter no máximo 40 caracteres.' }).min(3, { message: 'O nome do material deve ter no mínimo 3 caracteres.' }),
@@ -78,6 +72,11 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
             profitMargin: editableData?.profitMargin?.toString() ?? "",
         },
         resolver: zodResolver(schema),
+        resetOptions: {
+            keepDirtyValues: true, // user-interacted input will be retained
+            keepErrors: true, // input errors will be retained with value update
+        },
+        mode: "onBlur"
     });
 
     const onSubmit: SubmitHandler<FormValues> = data => {

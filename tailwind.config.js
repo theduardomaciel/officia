@@ -26,6 +26,7 @@ module.exports = {
                 titleRegular: ['Raleway_400Regular'],
                 titleSemiBold: ['Raleway_600SemiBold'],
                 titleBold: ['Raleway_700Bold'],
+                logoRegular: ['AbrilFatface_400Regular'],
             }
         },
     },

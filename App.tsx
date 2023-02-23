@@ -1,12 +1,18 @@
+import { useCallback } from 'react';
+import { Platform, UIManager } from "react-native";
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PortalProvider, PortalHost } from '@gorhom/portal';
+import { PortalProvider } from '@gorhom/portal';
 import { StatusBar } from 'expo-status-bar';
 
+// Customization
 import { useColorScheme } from 'nativewind';
 
-// Expo and App Loading
-import { useCallback } from 'react';
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+// App Loading (fonts, splash screen, etc.)
 
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold, Inter_900Black } from '@expo-google-fonts/inter';
 import { Raleway_400Regular, Raleway_600SemiBold, Raleway_700Bold } from "@expo-google-fonts/raleway";
@@ -14,6 +20,7 @@ import { Raleway_400Regular, Raleway_600SemiBold, Raleway_700Bold } from "@expo-
 import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync();
 
+// Routes
 import Routes from 'routes';
 
 export default function App() {

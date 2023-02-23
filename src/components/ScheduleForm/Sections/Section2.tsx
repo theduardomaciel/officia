@@ -25,7 +25,7 @@ async function getServiceNumber() {
     return count + 1;
 }
 
-function daysToMonthsOrYears(days: number) {
+export function daysToMonthsOrYears(days: number) {
     if (days < 30) {
         return `${days} dia${days > 1 ? 's' : ''}`;
     }
@@ -47,7 +47,7 @@ interface ReviewSectionProps {
     multiline?: boolean;
 }
 
-const ReviewSection = ({ wrapperProps, value, multiline }: ReviewSectionProps) => (
+export const ReviewSection = ({ wrapperProps, value, multiline }: ReviewSectionProps) => (
     <SubSectionWrapper {...wrapperProps} >
         <View className={clsx("w-full px-4 py-3 mt-2 rounded-lg border border-gray-300 bg-black dark:bg-gray-300", {
             "min-h-[100px] pt-4": multiline,
@@ -58,6 +58,26 @@ const ReviewSection = ({ wrapperProps, value, multiline }: ReviewSectionProps) =
         </View>
     </SubSectionWrapper>
 )
+
+export const PaymentMethodsReview = ({ value }: { value: string }) => (
+    <ReviewSection
+        wrapperProps={{
+            header: { title: "Métodos de Pagamento", customIcon: PaymentMethodsIcon as any },
+            style: { flex: 1 },
+        }}
+        value={value}
+    />
+);
+
+export const WarrantyReview = ({ value }: { value?: string }) => (
+    <ReviewSection
+        wrapperProps={{
+            header: { title: "Garantia", customIcon: WarrantyIcon as any },
+            style: { flex: 1 },
+        }}
+        value={value ?? "---"}
+    />
+);
 
 interface Section2Props extends Section {
     formRefs: {
@@ -157,7 +177,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                         }
                     })
 
-                    console.log(batchSubServicesToUpdate)
+                    //console.log(batchSubServicesToUpdate)
 
                     const subServicesToDelete = deleteFilter(initialValue.subServices, data.subServices);
                     const batchSubServicesToDelete = subServicesToDelete.map((subService) => {
@@ -197,14 +217,14 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                             return updatedMaterial;
                         }
                     })
-                    console.log(batchMaterialsToUpdate.length, "materialsToUpdate")
+                    //console.log(batchMaterialsToUpdate.length, "materialsToUpdate")
 
                     const materialsToDelete = deleteFilter(initialValue.materials, data.materials);
                     const batchMaterialsToDelete = materialsToDelete.map((material) => {
                         const deletedMaterial = material.prepareDestroyPermanently();
                         return deletedMaterial;
                     })
-                    console.log(batchMaterialsToDelete.length, "batchMaterialsToDelete")
+                    //console.log(batchMaterialsToDelete.length, "batchMaterialsToDelete")
 
                     const materialsModel = await database.collections.get<MaterialModel>('materials');
 
@@ -222,7 +242,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                         })
                         return newMaterial;
                     })
-                    console.log(batchMaterialsToCreate.length, "batchMaterialsToCreate")
+                    //console.log(batchMaterialsToCreate.length, "batchMaterialsToCreate")
 
                     // Adicionamos os subserviços e os materiais ao serviço
                     await database.batch([
@@ -235,7 +255,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                     ])
                 })
 
-                console.log("Service updated successfully (with subServices and materials).")
+                //console.log("Service updated successfully (with subServices and materials).")
                 /* navigate("service", { serviceId: initialValue.service.id, updated: true }); */
             } else {
                 const serviceOnDatabase = await database.write(async () => {
@@ -285,7 +305,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                     return newService;
                 });
 
-                console.log("Service created successfully (with subServices and materials).")
+                //console.log("Service created successfully (with subServices and materials).")
                 navigate("home", { service: "created" });
             }
         }
@@ -355,21 +375,9 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                             }
                         />
 
-                        <ReviewSection
-                            wrapperProps={{
-                                header: { title: "Métodos de Pagamento", customIcon: PaymentMethodsIcon as any },
-                                style: { flex: 1 },
-                            }}
-                            value={data?.checkedPaymentMethods?.length ? data?.checkedPaymentMethods.join(', ') : "---"}
-                        />
+                        <PaymentMethodsReview value={data?.checkedPaymentMethods?.length ? data?.checkedPaymentMethods.join(', ') : "---"} />
 
-                        <ReviewSection
-                            wrapperProps={{
-                                header: { title: "Garantia", customIcon: WarrantyIcon as any },
-                                style: { flex: 1 },
-                            }}
-                            value={data.warrantyDays ? daysToMonthsOrYears(data.warrantyDays) : "---"}
-                        />
+                        <WarrantyReview value={daysToMonthsOrYears(data.warrantyDays)} />
 
                         {
                             data.warrantyDetails && (

@@ -1,13 +1,13 @@
-import { useState, useRef } from "react";
-import { View, Text, TouchableOpacity, ViewStyle, TouchableOpacityProps } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useState } from "react";
+import { Text, TouchableOpacity, TouchableOpacityProps, View, ViewStyle } from "react-native";
 
 import colors from "global/colors";
 
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 import clsx from "clsx";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 const WEEK_DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
@@ -80,22 +80,18 @@ function DayView({ date, selected, selectedPreset, style, status, onPress, inver
 type WeekDay = "busy" | "contains" | undefined;
 
 interface WeekView {
-    startDate?: Date;
     weekDayStatusArray?: WeekDay[];
     navigate: any;
 }
 
-export function WeekView({ startDate, weekDayStatusArray, navigate }: WeekView) {
+export function WeekView({ weekDayStatusArray, navigate }: WeekView) {
     const currentDate = new Date();
-    const lastDayOfMonth = new Date(startDate ? startDate.getFullYear() : currentDate.getFullYear(), startDate ? startDate.getMonth() + 1 : currentDate.getMonth() + 1, 0).getDate();
-
-    let startDateDayOfMonth = startDate ? startDate.getDate() : new Date().getDate();
 
     return (
         <View className='flex flex-row items-center justify-between w-full mt-2'>
             {
                 WEEK_DAYS.map((day, index) => {
-                    const DATE = startDateDayOfMonth <= lastDayOfMonth ? startDateDayOfMonth++ : lastDayOfMonth - startDateDayOfMonth + index;
+                    const DATE = currentDate.getDate() - currentDate.getDay() + index;
                     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), DATE)
                     const dateString = date.toISOString();
                     return (

@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Keyboard, TouchableWithoutFeedback, View } from "react-native";
 import { useSharedValue, withSpring } from 'react-native-reanimated';
 
@@ -9,16 +9,16 @@ import Section0 from 'components/ScheduleForm/Sections/Section0';
 import Section1 from 'components/ScheduleForm/Sections/Section1';
 import Section2 from 'components/ScheduleForm/Sections/Section2';
 
+import Loading from 'components/Loading';
 import Form from 'components/ScheduleForm/Forms/Form';
 import Toast from 'components/Toast';
-import Loading from 'components/Loading';
 
 // Database
 import { database } from 'database/index.native';
 
 // Types
-import type { ServiceModel } from 'database/models/serviceModel';
 import type { BottomSheetActions } from 'components/BottomSheet';
+import type { ServiceModel } from 'database/models/serviceModel';
 
 export default function ScheduleForm({ route }: any) {
     const selectedSectionId = useSharedValue(0);
@@ -55,11 +55,11 @@ export default function ScheduleForm({ route }: any) {
                 const subServices = await service.subServices.fetch();
                 const materials = await service.materials.fetch();
 
-                console.log({
+                /* console.log({
                     service,
                     subServices,
                     materials
-                })
+                }) */
 
                 if (subServices && materials) {
                     setInitialValue({
@@ -158,7 +158,7 @@ export default function ScheduleForm({ route }: any) {
                 <Toast
                     toastPosition="top"
                     maxDragDistance={65}
-                    toastOffset={"75%"}
+                    toastOffset={"20%"}
                 />
             </View>
         </TouchableWithoutFeedback>
