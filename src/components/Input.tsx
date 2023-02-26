@@ -5,7 +5,7 @@ import colors from "global/colors";
 import clsx from "clsx";
 
 import Label from "./Label";
-import { forwardRef, useMemo } from "react";
+import React, { forwardRef, useMemo } from "react";
 
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -16,18 +16,20 @@ interface Props extends TextInputProps {
         family?: "MaterialIcons" | "MaterialCommunityIcons" /* | "Entypo" | "Feather" | "FontAwesome" | "Ionicons" | "FontAwesome5" | "AntDesign" | "Octicons" | "Zocial" | "SimpleLineIcons" | "Foundation" | "EvilIcons" | undefined */;
     }
     customIcon?: any;
-    pallette?: "dark";
+    pallette?: "dark" | "disabled";
     required?: boolean;
+    appendedChildren?: React.ReactNode;
     onPress?: () => void;
 }
 
-const Input = forwardRef(({ label, customIcon, icon, pallette, required, multiline, onPress, ...rest }: Props, ref) => {
+const Input = forwardRef(({ label, customIcon, icon, pallette = undefined, required, multiline, onPress, appendedChildren, ...rest }: Props, ref) => {
     const { colorScheme } = useColorScheme();
 
     const CustomInput = <TextInput
-        className={clsx("w-full px-4 py-2 rounded-lg border border-gray-300 text-white", {
-            "bg-black dark:bg-gray-200": pallette !== "dark",
+        className={clsx("flex-1 px-4 py-2 rounded-lg border border-gray-300 text-white", {
+            "bg-black dark:bg-gray-200": pallette === undefined,
             "bg-black dark:bg-gray-300": pallette === "dark",
+            "bg-black dark:bg-gray-100 border-text-200": pallette === "disabled",
             "min-h-[100px] pt-4": multiline,
         })}
         textAlignVertical={multiline ? "top" : "center"}
@@ -93,7 +95,10 @@ const Input = forwardRef(({ label, customIcon, icon, pallette, required, multili
                         {CustomInput}
                     </TouchableOpacity>
                 )
-                    : CustomInput
+                    : <View className="flex-row">
+                        {CustomInput}
+                        {appendedChildren}
+                    </View>
             }
         </View>
     )

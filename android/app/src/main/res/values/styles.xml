@@ -4,9 +4,11 @@
     <item name="android:editTextStyle">@style/ResetEditText</item>
     <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
     <item name="colorPrimary">@color/colorPrimary</item>
-    <item name="android:windowTranslucentStatus">true</item>
     <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-    <item name="android:navigationBarColor">@color/navigationBarColor</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <item name="android:windowTranslucentNavigation">true</item>
+    <item name="android:windowTranslucentStatus">true</item>
+    <item name="android:enforceNavigationBarContrast">false</item>
   </style>
   <style name="ResetEditText" parent="@android:style/Widget.EditText">
     <item name="android:padding">0dp</item>
@@ -16,4 +18,9 @@
   <style name="Theme.App.SplashScreen" parent="AppTheme">
     <item name="android:windowBackground">@drawable/splashscreen</item>
   </style>
+  <style name="DatePickerTheme" parent="DatePickerBaseTheme">
+    <item name="android:colorControlNormal">#6CBE45</item>
+    <item name="colorAccent">#6CBE45</item>
+    <item name="android:textSize">28sp</item>
+    </style>
 </resources>

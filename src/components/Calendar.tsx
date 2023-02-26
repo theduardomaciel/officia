@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Text, TouchableOpacity, TouchableOpacityProps, View, ViewStyle } from "react-native";
+import { Text, TouchableOpacity, TouchableOpacityProps, useWindowDimensions, View, ViewStyle } from "react-native";
 
 import colors from "global/colors";
 
@@ -13,7 +13,7 @@ const WEEK_DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 
 
 export function WeekDays({ invert }: { invert?: boolean }) {
     return (
-        <View className={`flex flex-row items-center justify-between w-full px-4`}>
+        <View className={`flex flex-row items-center justify-between w-full px-[17px]`}>
             {
                 WEEK_DAYS.map((day, index) => {
                     return (
@@ -51,12 +51,17 @@ const presets = {
 }
 
 function DayView({ date, selected, selectedPreset, style, status, onPress, invert, ...rest }: DayView) {
+    const { height, width } = useWindowDimensions();
+
     return (
         <TouchableOpacity
-            className={clsx('flex w-10 h-10 rounded-full items-center justify-center p-1 bg-gray_light-neutral bg-black dark:bg-gray-200 border-white', {
+            className={clsx('flex flex-1 rounded-full aspect-square items-center justify-center p-1 bg-gray_light-neutral bg-black dark:bg-gray-200 border-white', {
                 'bg-white dark:bg-gray-200': invert,
             })}
-            style={[{ borderWidth: selected ? 1 : 0, ...style }, selectedPreset ? presets[selectedPreset] : {}]}
+            style={[{ borderWidth: selected ? 1 : 0, ...style }, selectedPreset ? presets[selectedPreset] : {}, {
+                minWidth: 35,
+                minHeight: 35,
+            }]}
             activeOpacity={0.65}
             onPress={onPress}
             {...rest}
@@ -88,7 +93,7 @@ export function WeekView({ weekDayStatusArray, navigate }: WeekView) {
     const currentDate = new Date();
 
     return (
-        <View className='flex flex-row items-center justify-between w-full mt-2'>
+        <View className='flex flex-row items-center justify-between w-full mt-2' style={{ columnGap: 5 }}>
             {
                 WEEK_DAYS.map((day, index) => {
                     const DATE = currentDate.getDate() - currentDate.getDay() + index;
@@ -269,6 +274,50 @@ export default function Calendar({ style, isStatic, selectedDate, setSelectedDat
                 <WeekDays invert />
             </View>
 
+            {/* <FlatList
+                data={monthDates}
+                numColumns={7}
+                keyExtractor={(item, index) => `calendar_${index}`}
+                renderItem={({ item, index }) => {
+                    const date = item;
+                    const daysBeforeToday = currentDate.getDate() + firstDayOfMonth - 1;
+
+                    const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < (isStatic && date.month === selectedDate?.month ? daysBeforeToday : remainingDaysOnLastMonth);
+                    const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
+
+                    const DATE = new Date(currentDate.getFullYear(), date.month, date.date)
+                    const dateString = DATE.toISOString();
+
+                    const isEqualToSelected = date.date == selectedDate?.date && date.month == selectedDate?.month;
+                    const isToday = date.date == currentDate.getDate() && date.month == currentDate.getMonth();
+
+                    return (
+                        <DayView
+                            key={`calendar_${index}`}
+                            date={DATE}
+                            selected={selectedDate ?
+                                (isEqualToSelected || isToday) :
+                                isToday && index >= firstDayOfMonth && index <= lastDayOfMonth
+                            }
+                            selectedPreset={selectedDate && isEqualToSelected ? "dashed_green" : undefined}
+                            disabled={REMAINING_LAST || REMAINING_NEXT}
+                            onPress={() => isStatic ?
+                                setSelectedDate && setSelectedDate(date) :
+                                navigate('dayAgenda', { dateString })
+                            }
+                            invert
+                            activeOpacity={REMAINING_LAST && isStatic ? 1 : 0.5}
+                            style={{
+                                opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,
+                                marginBottom: 5,
+                                marginRight: 5,
+                                width: 35,
+                                height: 35,
+                            }}
+                        />
+                    )
+                }}
+            /> */}
             <View className="flex-row items-center justify-between w-full flex-wrap">
                 {
                     monthDates.map((date, index) => {
@@ -314,67 +363,3 @@ export default function Calendar({ style, isStatic, selectedDate, setSelectedDat
         </View>
     )
 }
-
-/* export function StaticCalendar({ style, selectedDate, setSelectedDate }: CalendarProps) {
-    const currentDate = new Date();
-    const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
-
-    const { monthDates, firstDayOfMonth, lastDayOfMonth, remainingDaysOnLastMonth, remainingDaysOnNextMonth } = monthInfos[currentMonth];
-
-    return (
-        <View className="flex-col w-full bg-black dark:bg-gray-500 rounded-xl" style={style ? style : { padding: 16 }}>
-            <View className="flex-row items-center justify-around mb-2">
-                <MaterialIcons
-                    name="chevron-left"
-                    size={24}
-                    className="active:scale-50"
-                    disabled={currentMonth <= 0}
-                    style={{ opacity: currentMonth <= 0 ? 0.25 : 1 }}
-                    color={colors.white}
-                    onPress={() => currentMonth > 0 && setCurrentMonth(actualStateMonth => actualStateMonth - 1)}
-                />
-                <Text className="text-white w-3/4 text-center font-titleBold text-xl">
-                    {MONTHS[currentMonth]}
-                </Text>
-                <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    disabled={currentMonth >= 11}
-                    style={{ opacity: currentMonth >= 11 ? 0.25 : 1 }}
-                    color={colors.white}
-                    onPress={() => currentMonth < 11 && setCurrentMonth(actualStateMonth => actualStateMonth + 1)}
-                />
-            </View>
-
-            <View className="flex-col items-center justify-center w-full mb-2">
-                <WeekDays invert />
-            </View>
-
-            <View className="flex-row items-center justify-between w-full flex-wrap">
-                {
-                    monthDates.map((date, index) => {
-                        const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < remainingDaysOnLastMonth;
-                        const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
-
-                        return (
-                            <DayView
-                                key={`calendar_${index}`}
-                                date={new Date(currentDate.getFullYear(), date.month, date.date)}
-                                onPress={() => setSelectedDate && setSelectedDate(date)}
-                                isToday={selectedDate ? date === selectedDate : date.date == currentDate.getDate() && index >= firstDayOfMonth && index <= lastDayOfMonth}
-                                invert
-                                style={{
-                                    opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,
-                                    marginBottom: 5,
-                                    marginRight: 5,
-                                    width: 35,
-                                    height: 35,
-                                }}
-                            />
-                        )
-                    })
-                }
-            </View>
-        </View>
-    )
-} */

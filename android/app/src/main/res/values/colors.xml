@@ -3,6 +3,4 @@
   <color name="iconBackground">#1E1E1E</color>
   <color name="colorPrimary">#1E1E1E</color>
   <color name="colorPrimaryDark">#1E1E1E</color>
-  <color name="notification_icon_color">#ffffff</color>
-  <color name="navigationBarColor">#1E1E1E</color>
 </resources>

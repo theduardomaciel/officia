@@ -4,7 +4,7 @@ export interface ToastProps {
     title?: string,
     message?: string,
     icon?: string,
-    preset?: "error" | "success";
+    preset?: "error" | "success" | "info";
 }
 
 export interface ToastConfig {

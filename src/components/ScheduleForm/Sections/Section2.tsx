@@ -1,18 +1,17 @@
-import React, { useCallback, useState } from 'react';
-import { View, Text } from "react-native";
 import { useNavigation } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
+import { Text, View } from "react-native";
 
-import colors from 'global/colors';
 import clsx from 'clsx';
 
 import PaymentMethodsIcon from 'assets/icons/currency_exchange.svg';
 import WarrantyIcon from 'assets/icons/warranty.svg';
 
 // Components
-import SectionBottomSheet from '../SectionBottomSheet';
-import { NextButton, Section, SubSectionWrapper, SubSectionWrapperProps } from '../SubSectionWrapper';
 import Loading from 'components/Loading';
 import { PreviewStatic } from 'components/Preview';
+import SectionBottomSheet from '../SectionBottomSheet';
+import { NextButton, Section, SubSectionWrapper, SubSectionWrapperProps } from '../SubSectionWrapper';
 
 // Utils
 import { database } from 'database/index.native';
@@ -36,10 +35,10 @@ export function daysToMonthsOrYears(days: number) {
 }
 
 // Types
-import type { Section0Props, Section0RefProps, Section1Props, Section1RefProps } from '../types';
+import type { MaterialModel } from 'database/models/materialModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
-import type { MaterialModel } from 'database/models/materialModel';
+import type { Section0Props, Section0RefProps, Section1Props, Section1RefProps } from '../types';
 
 interface ReviewSectionProps {
     wrapperProps: SubSectionWrapperProps;
@@ -255,8 +254,8 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                     ])
                 })
 
-                //console.log("Service updated successfully (with subServices and materials).")
-                /* navigate("service", { serviceId: initialValue.service.id, updated: true }); */
+                console.log("Service updated successfully (with subServices and materials).")
+                navigate("service", { serviceId: initialValue.service.id, updated: true });
             } else {
                 const serviceOnDatabase = await database.write(async () => {
                     const newService = await database.get<ServiceModel>('services').create((service) => {

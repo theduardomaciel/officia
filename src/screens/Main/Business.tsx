@@ -3,130 +3,134 @@ import React, { useCallback } from 'react';
 import { Text, TouchableOpacity, View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from "expo-file-system";
-import { Image } from 'expo-image';
-
+import { useColorScheme } from 'nativewind';
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
-import { useColorScheme } from 'nativewind';
 
 // Components
 import Header from 'components/Header';
-import Input from 'components/Input';
+
+// Data
+import { database } from 'database/index.native';
+import LogoPicker from 'components/LogoPicker';
 import Toast from 'components/Toast';
 
-// Form
-import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
-import { database } from 'database/index.native';
-import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
-import formatWithMask, { MASKS } from 'utils/formatWithMask';
+interface NavigationButtonProps {
+    title: string;
+    description?: string;
+    onPress: () => void;
+    colorScheme?: "dark" | "light";
+}
 
-const NavigationButton = ({ title, onPress, colorScheme }: { title: string, onPress: () => void, colorScheme: "dark" | "light" }) => {
+const NavigationButton = ({ title, description, onPress, colorScheme = "dark" }: NavigationButtonProps) => {
     return (
         <TouchableOpacity
             activeOpacity={0.6}
             onPress={onPress}
             className='w-full flex-row items-center justify-between'
         >
-            <Text className='font-semibold text-sm text-black dark:text-text-100'>
-                {title}
-            </Text>
+            <View className='flex-col items-start justify-center'>
+                <Text className='font-semibold text-sm text-black dark:text-text-100'>
+                    {title}
+                </Text>
+                {
+                    description && (
+                        <Text className='font-normal text-xs text-black dark:text-text-200'>
+                            {description}
+                        </Text>
+                    )
+                }
+            </View>
             <MaterialIcons name='chevron-right' size={18} color={colorScheme === "dark" ? colors.text[100] : colors.black} />
         </TouchableOpacity>
     )
 }
 
-interface FormScheme {
+export async function updateData(
+    dataToUpdate: Partial<BusinessData>,
+    businessData: BusinessData,
+    setBusinessData: React.Dispatch<React.SetStateAction<BusinessData>>) {
+    try {
+        const updatedData = { ...businessData, ...dataToUpdate } as BusinessData;
+
+        await database.localStorage.set('businessData', updatedData);
+        setBusinessData(updatedData);
+
+        Toast.show({
+            preset: "success",
+            title: "Tudo certo!",
+            message: "Os dados do seu negócio foram atualizados com sucesso."
+        })
+
+        //console.log("Dados do negócio atualizados com sucesso.")
+        return true;
+    } catch (error) {
+        console.log(error)
+        Toast.show({
+            preset: "error",
+            title: "Algo deu errado :(",
+            message: "Não foi possível atualizar os dados do seu negócio."
+        })
+        return false;
+    }
+}
+
+/* export interface BasicInfoScheme {
     fantasyName: string;
     juridicalPerson: string;
     socialReason: string;
 }
 
-export interface PhoneAndAddressScheme {
+export interface ContactAndAddressScheme {
     email: string;
     phone: string;
-    phone2: string;
+    phone2?: string;
     postalCode: string;
-    address: string;
-}
+    address?: string;
+} */
 
-export type BusinessData = FormScheme & PhoneAndAddressScheme & {
+// Form validation
+import { z } from 'zod';
+
+export const basicInfoScheme = z.object({
+    fantasyName: z.string().min(1, "O nome da empresa não pode ser vazio.").max(50, "O nome da empresa deve ter no máximo 50 caracteres."),
+    juridicalPerson: z.string().min(18, "O CNPJ deve ter 14 dígitos.").min(1, "O CNPJ não pode estar vazio."),
+    socialReason: z.string().min(1, "A razão social da empresa não pode ser vazia.").max(80, "A razão social deve ter no máximo 80 caracteres."),
+});
+
+export type BasicInfoSchemeType = z.infer<typeof basicInfoScheme>;
+
+export const contactAndAddressScheme = z.object({
+    email: z.string().email({ message: "O e-mail inserido não é válido." }),
+    phone: z.string({ required_error: "O telefone não pode estar vazio." }).min(15, { message: "O telefone inserido não é válido." }),
+    phone2: z.string().optional(),
+    address: z.string().optional(),
+    postalCode: z.string({ required_error: "O CEP não pode estar vazio." }).min(9, { message: "O CEP inserido não é válido." }),
+});
+
+export type ContactAndAddressSchemeType = z.infer<typeof contactAndAddressScheme>;
+
+export type BusinessData = BasicInfoSchemeType & ContactAndAddressSchemeType & {
     logo?: string;
+    geocodedAddress?: string;
 }
 
 export default function Business() {
-    const { colorScheme, toggleColorScheme } = useColorScheme();
+    const { colorScheme } = useColorScheme();
     const { navigate } = useNavigation();
 
     const [businessData, setBusinessData] = React.useState<BusinessData | undefined>(undefined);
 
-    const showToast = (errorMessage?: string) => {
-        Toast.show({
-            preset: "error",
-            title: "Eita! Algo deu errado.",
-            message: errorMessage || "Não foi possível atualizar os dados do seu negócio."
-        })
-    }
-
-    const { handleSubmit, control, reset, formState: { errors }, getValues } = useForm<FormScheme>({
-        mode: 'onBlur',
-        values: businessData ? {
-            fantasyName: businessData?.fantasyName,
-            juridicalPerson: businessData?.juridicalPerson,
-            socialReason: businessData?.socialReason,
-        } : undefined,
-        resetOptions: {
-            keepDirtyValues: true, // user-interacted input will be retained
-            keepErrors: true, // input errors will be retained with value update
-        }
-    });
-
-    const onError: SubmitErrorHandler<FormScheme> = (errors, e) => {
-        console.log(errors)
-        showToast(Object.values(errors).map(error => error.type === "maxLength" ? "Você ultrapassou o limite de caracteres. Por favor, diminua o tamanho do texto inserido." : error.type).join('\n'))
-    }
-
-    const submitData = handleSubmit(async (data) => {
-        const updatedData = { ...data, ...businessData }
-        await database.localStorage.set('businessData', updatedData);
-        console.log("Dados da empresa atualizados.")
-
-        Toast.hide();
-    }, onError);
-
     async function getBusinessData() {
         try {
             const data = await database.localStorage.get('businessData') as BusinessData;
-            if (data /* && data !== "undefined" */) {
+            if (data) {
                 console.log(data)
                 setBusinessData(data);
             }
         } catch (error) {
             console.log(error)
         }
-    }
-
-    async function getBusinessLogo() {
-        const result = await DocumentPicker.getDocumentAsync({
-            type: 'image/*',
-            copyToCacheDirectory: true,
-        });
-
-        if (result.type === 'success') {
-            const { uri } = result;
-            console.log("Nova imagem selecionada ", uri)
-            const updatedBusinessData = { ...businessData, logo: uri } as BusinessData;
-            setBusinessData(updatedBusinessData);
-            await database.localStorage.set('businessData', updatedBusinessData);
-        }
-    }
-
-    async function removeBusinessLogo() {
-        FileSystem.deleteAsync(businessData?.logo as string);
-        const updatedBusinessData = { ...businessData, logo: undefined } as BusinessData;
-        setBusinessData(updatedBusinessData);
-        await database.localStorage.set('businessData', updatedBusinessData);
     }
 
     useFocusEffect(
@@ -137,125 +141,56 @@ export default function Business() {
 
     return (
         <View className='flex-1 min-h-full px-6 pt-12' style={{ rowGap: 20 }}>
-            <Header title='Meu Negócio'>
-                {/* {
-                            colorScheme === 'dark' ?
-                                <Feather name='moon' size={24} color={colors.text[100]} onPress={toggleColorScheme} />
-                                :
-                                <Feather name='sun' size={24} color={colors.black} onPress={toggleColorScheme} />
-                        } */}
-            </Header>
+            <Header title='Meu Negócio' />
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 style={{ flex: 1 }}
                 contentContainerStyle={{ paddingBottom: 25, paddingTop: 4, rowGap: 20 }}
             >
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    className='w-full flex-col items-center justify-center px-12 gap-y-1 border rounded-lg border-dashed border-primary-green'
-                    style={{ paddingTop: businessData && businessData.logo ? 5 : 50, paddingBottom: businessData && businessData.logo ? 5 : 50 }}
-                    onPress={getBusinessLogo}
-                >
-                    {
-                        businessData && businessData.logo ? (
-                            <Image
-                                source={{ uri: businessData?.logo }}
-                                style={{ width: "100%", height: 200 }}
-                                contentFit='contain'
-                                transition={1000}
-                            />
-                        ) : (
-                            <>
-                                <MaterialIcons name='add-photo-alternate' size={32} color={colorScheme === "dark" ? colors.white : colors.black} />
-                                <Text className='font-medium text-sm text-black dark:text-white'>
-                                    Adicionar logotipo da empresa
-                                </Text>
-                            </>
-                        )
-                    }
-                </TouchableOpacity>
-                {
-                    businessData && businessData.logo && (
-                        <TouchableOpacity activeOpacity={0.7} onPress={removeBusinessLogo}>
-                            <Text className='font-medium text-sm text-primary-red'>
-                                Remover logotipo da empresa
-                            </Text>
-                        </TouchableOpacity>
-                    )
-                }
-                <View>
-                    <Controller
-                        control={control}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label='Nome da Empresa'
-                                value={value}
-                                onBlur={() => {
-                                    submitData()
-                                    onBlur()
-                                }}
-                                onChangeText={value => onChange(value)}
-                                style={!!errors.fantasyName && borderErrorStyle}
-                            />
-                        )}
-                        name="fantasyName"
-                        rules={{ maxLength: 30 }}
-                    />
-                </View>
-                <View>
-                    <NavigationButton title='Dados Bancários' onPress={() => navigate("bankAccount")} colorScheme={colorScheme} />
-                </View>
-                <View>
-                    <NavigationButton title='Contato e Endereço' onPress={() => navigate("phoneAndAddress")} colorScheme={colorScheme} />
-                </View>
-                <View>
-                    <Controller
-                        control={control}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label='CNPJ'
-                                value={value}
-                                onBlur={() => {
-                                    submitData()
-                                    onBlur()
-                                }}
-                                onChangeText={value => {
-                                    const { masked } = formatWithMask({ text: value, mask: MASKS.BRL_CNPJ });
-                                    onChange(masked)
-                                }}
-                                maxLength={17}
-                                keyboardType='numeric'
-                                style={!!errors.juridicalPerson && borderErrorStyle}
-                            />
-                        )}
-                        name="juridicalPerson"
-                    />
-                </View>
-                <View>
-                    <Controller
-                        control={control}
-                        render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label='Razão Social'
-                                value={value}
-                                onBlur={() => {
-                                    submitData()
-                                    onBlur()
-                                }}
-                                onChangeText={value => onChange(value)}
-                                style={!!errors.socialReason && borderErrorStyle}
-                            />
-                        )}
-                        name="socialReason"
-                        rules={{ maxLength: 80 }}
-                    />
-                </View>
-                <View>
-                    <NavigationButton title='Informações Adicionais' onPress={() => navigate("additionalInfo")} colorScheme={colorScheme} />
-                </View>
-                <View>
-                    <NavigationButton title='Redes Sociais' onPress={() => navigate("socialMedia")} colorScheme={colorScheme} />
-                </View>
+                <LogoPicker
+                    businessData={businessData}
+                    setBusinessData={setBusinessData}
+                    onUpdate={async (updatedBusinessData) => {
+                        await database.localStorage.set('businessData', updatedBusinessData);
+                    }}
+                    showDeleteButton
+                />
+                <NavigationButton
+                    title='Informações Básicas'
+                    description='Nome, CNPJ e Razão Social'
+                    onPress={() => navigate("basicInfo", { businessData: businessData })}
+                    colorScheme={colorScheme}
+                />
+                <NavigationButton
+                    title='Informações Adicionais'
+                    description='Descrição, horário de funcionamento e etc.'
+                    onPress={() => navigate("additionalInfo", { businessData: businessData })}
+                    colorScheme={colorScheme}
+                />
+                <NavigationButton
+                    title='Contato e Endereço'
+                    description='E-mail, telefone e endereço'
+                    onPress={() => navigate("contactAndAddress", { businessData: businessData })}
+                    colorScheme={colorScheme}
+                />
+                <NavigationButton
+                    title='Dados Bancários'
+                    description='Conta bancária e PIX'
+                    onPress={() => navigate("bankAccount", { businessData: businessData })}
+                    colorScheme={colorScheme}
+                />
+                <NavigationButton
+                    title='Redes Sociais'
+                    description='Facebook, Instagram e etc.'
+                    onPress={() => navigate("socialMedia", { businessData: businessData })}
+                    colorScheme={colorScheme}
+                />
+                <NavigationButton
+                    title='Categorias'
+                    description='Defina em que ramos o seu negócio se encaixa'
+                    onPress={() => navigate("categories", { businessData: businessData })}
+                    colorScheme={colorScheme}
+                />
             </ScrollView>
         </View>
     )

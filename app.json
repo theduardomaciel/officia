@@ -41,15 +41,13 @@
         },
         "androidStatusBar": {
             "translucent": true,
-            "barStyle": "light-content",
-            "backgroundColor": "#1E1E1E"
+            "barStyle": "light-content"
         },
         "plugins": [
             [
                 "expo-navigation-bar",
                 {
-                    "position": "absolute",
-                    "backgroundColor": "#1E1E1E"
+                    "position": "absolute"
                 }
             ],
             [
@@ -64,20 +62,13 @@
                     "microphonePermission": false
                 }
             ],
-            [
-                "expo-notifications",
-                {
-                    "color": "#ffffff",
-                    "mode": "production"
-                }
-            ]
+            "@notifee/react-native"
         ],
         "scheme": "officia",
         "jsEngine": "hermes",
         "extra": {
             "expo-navigation-bar": {
-                "position": "absolute",
-                "backgroundColor": "#1E1E1E"
+                "position": "absolute"
             },
             "eas": {
                 "projectId": "9de284c1-eab2-4ed1-89d5-6b3cdb6e7597"

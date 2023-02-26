@@ -20,10 +20,11 @@ import Invoice from "screens/Invoice";
 import ScheduleForm from "screens/ScheduleForm";
 import Service from "screens/Service";
 
+import BasicInfo from "screens/BasicInfo";
 import AdditionalInfo from "screens/AdditionalInfo";
 import BankAccount from "screens/BankAccount";
 import DayAgenda from "screens/DayAgenda";
-import PhoneAndAddress from "screens/PhoneAndAddress";
+import PhoneAndAddress from "screens/ContactAndAddress";
 import SocialMedia from "screens/SocialMedia";
 
 const FormBase = () => <View style={{ flex: 1, backgroundColor: colors.gray[300] }} />
@@ -143,13 +144,19 @@ export function AppRoutes() {
                     cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
                 }}
             />
+            <Stack.Screen name="basicInfo"
+                component={BasicInfo}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+                }}
+            />
             <Stack.Screen name="additionalInfo"
                 component={AdditionalInfo}
                 options={{
                     cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
                 }}
             />
-            <Stack.Screen name="phoneAndAddress"
+            <Stack.Screen name="contactAndAddress"
                 component={PhoneAndAddress}
                 options={{
                     cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,

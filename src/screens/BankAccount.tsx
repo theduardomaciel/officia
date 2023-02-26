@@ -10,7 +10,7 @@ import Header from 'components/Header';
 import Dropdown from 'components/Dropdown';
 import Input from 'components/Input';
 
-export default function BankAccount() {
+export default function BankAccountScreen() {
     const [selected, setSelected] = React.useState("unselected");
 
     return (

@@ -148,7 +148,7 @@ export function ClientDeleteModal({ isVisible, setVisible, client }: ConfirmDele
     return (
         <Modal
             isVisible={isVisible}
-            setVisible={(value: boolean) => setVisible(value)}
+            toggleVisibility={() => setVisible(false)}
             title={"Você tem certeza?"}
             message="Os dados do cliente não poderão ser recuperados."
             icon="delete"

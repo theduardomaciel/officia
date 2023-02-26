@@ -370,7 +370,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
             />
             <Modal
                 isVisible={isDeleteModalVisible}
-                setVisible={(value: boolean) => setDeleteModalVisible(value)}
+                toggleVisibility={() => setDeleteModalVisible(false)}
                 title={"Você tem certeza?"}
                 message="É possível arquivar este serviço a qualquer momento, ao invés de deletá-lo."
                 icon="delete"

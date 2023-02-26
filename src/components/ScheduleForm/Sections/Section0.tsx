@@ -67,7 +67,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
         return (
             <Modal
                 isVisible={isTimeModalVisible}
-                setVisible={(value: boolean) => setTimeModalVisible(value)}
+                toggleVisibility={() => setTimeModalVisible(false)}
                 title={"Selecione o horário"}
                 icon="calendar-today"
                 buttons={[

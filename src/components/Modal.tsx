@@ -14,20 +14,20 @@ const animProps = {
 interface ModalProps {
     children?: React.ReactNode;
     isVisible: boolean;
-    setVisible: (value: boolean) => void;
+    toggleVisibility: () => void;
     title?: string;
     message?: string;
     icon?: string;
     buttons?: {
         label: string;
         color?: string;
-        onPress: () => void;
+        onPress?: () => void;
         closeOnPress?: boolean;
     }[]
     cancelButton?: boolean;
 }
 
-export default function Modal({ isVisible, setVisible, title, message, icon, buttons, cancelButton, children }: ModalProps) {
+export default function Modal({ isVisible, toggleVisibility, title, message, icon, buttons, cancelButton, children }: ModalProps) {
     const { height: screenHeight } = Dimensions.get("screen");
 
     const activeHeight = useSharedValue(0.5 * screenHeight);
@@ -130,11 +130,7 @@ export default function Modal({ isVisible, setVisible, title, message, icon, but
     return (
         isVisible ? (
             <Portal>
-                <TouchableWithoutFeedback
-                    onPress={() => {
-                        setVisible(false)
-                    }}
-                >
+                <TouchableWithoutFeedback onPress={toggleVisibility}>
                     <Animated.View
                         entering={fadeInBackdrop}
                         exiting={fadeOutBackdrop}
@@ -170,9 +166,7 @@ export default function Modal({ isVisible, setVisible, title, message, icon, but
                                     cancelButton && <TouchableOpacity
                                         activeOpacity={0.8}
                                         className="flex-1 flex items-center justify-center py-3 mt-2 bg-gray-100 rounded mr-2"
-                                        onPress={() => {
-                                            setVisible(false)
-                                        }}
+                                        onPress={toggleVisibility}
                                     >
                                         <Text className="text-sm text-black dark:text-white">
                                             Cancelar
@@ -187,9 +181,9 @@ export default function Modal({ isVisible, setVisible, title, message, icon, but
                                             style={{ marginRight: index === buttons.length - 1 ? 0 : 8, backgroundColor: button.color ?? colors.primary.green }}
                                             key={index}
                                             onPress={() => {
-                                                button.onPress();
+                                                button.onPress && button.onPress();
                                                 if (button.closeOnPress) {
-                                                    setVisible(false)
+                                                    toggleVisibility();
                                                 }
                                             }}
                                         >

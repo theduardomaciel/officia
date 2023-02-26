@@ -156,7 +156,7 @@ export default function ClientEdit({ bottomSheetRef, lastBottomSheetRef, client 
             </View>
             <ClientDeleteModal
                 isVisible={isDeleteModalVisible}
-                setVisible={setDeleteModalVisible}
+                setVisible={() => setDeleteModalVisible(false)}
                 client={client}
             />
         </BottomSheet>

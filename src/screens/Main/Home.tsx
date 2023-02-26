@@ -1,4 +1,3 @@
-import * as NavigationBar from "expo-navigation-bar";
 import React, { useCallback, useEffect, useState } from 'react';
 import { SectionList, Text, TouchableOpacity, View } from 'react-native';
 
@@ -108,8 +107,6 @@ export default function Home({ route }: any) {
         } else if (route.params?.service === "deleted") {
             showDeleteServiceToast
         }
-        NavigationBar.setPositionAsync("absolute")
-        NavigationBar.setBackgroundColorAsync("transparent")
     }, []))
 
     const isolatedServices = pendingServices?.filter(service => isToday(service.date)).reverse() ?? []
@@ -141,7 +138,7 @@ export default function Home({ route }: any) {
     }
 
     const weekDayStatusArray = new Array(7).fill(null).map((_, index) => {
-        const servicesCountOnDay = weekServices.filter(service => new Date(service.date).getDay() === index + 2).length;
+        const servicesCountOnDay = weekServices.filter(service => new Date(service.date).getDay() === index).length;
         if (servicesCountOnDay === 1) {
             return "contains"
         } else if (servicesCountOnDay > 1) {

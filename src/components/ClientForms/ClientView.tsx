@@ -1,23 +1,23 @@
-import React, { useRef, useCallback } from 'react';
-import { Text, View, TouchableOpacity, Linking } from "react-native";
+import React, { useCallback, useRef } from 'react';
+import { Linking, Text, TouchableOpacity, View } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
-import colors, { primary } from 'global/colors';
+import colors from 'global/colors';
 
-import WhatsAppIcon from 'src/assets/icons/whatsapp.svg'
+import WhatsAppIcon from 'src/assets/icons/whatsapp.svg';
 
 // Types
-import type { ServiceModel } from 'database/models/serviceModel';
 import type { ClientModel } from 'database/models/clientModel';
+import type { ServiceModel } from 'database/models/serviceModel';
 
 // Components
+import { ActionButton, SubActionButton } from 'components/ActionButton';
 import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
 import Title from 'components/Title';
-import ClientSelect from './ClientSelect';
-import { ActionButton, SubActionButton } from 'components/ActionButton';
-import ClientEdit from './ClientEdit';
-import ClientAdd from './ClientAdd';
 import { database } from 'database/index.native';
+import ClientAdd from './ClientAdd';
+import ClientEdit from './ClientEdit';
+import ClientSelect from './ClientSelect';
 
 interface Props {
     bottomSheetRef: React.RefObject<BottomSheetActions>;
@@ -60,7 +60,7 @@ export default function ClientView({ bottomSheetRef, client, service }: Props) {
 
     return (
         <BottomSheet
-            height={"47%"}
+            height={client.address ? "47%" : "40%"}
             ref={bottomSheetRef}
         >
             <View
@@ -108,11 +108,15 @@ export default function ClientView({ bottomSheetRef, client, service }: Props) {
                 <View className='rounded-full w-24 h-24 flex items-center justify-center bg-gray-100 mr-4'>
                     <MaterialIcons name="person" size={48} color={colors.text[100]} />
                 </View>
-                <ActionButton
-                    icon='directions'
-                    label='Visualizar rota'
-                    onPress={() => { }}
-                />
+                {
+                    client.address && (
+                        <ActionButton
+                            icon='directions'
+                            label='Visualizar rota'
+                            onPress={() => { }}
+                        />
+                    )
+                }
                 <View className='flex-row w-full items-center justify-between'>
                     <View className='flex-1 mr-3'>
                         <SubActionButton

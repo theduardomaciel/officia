@@ -1,3 +1,9 @@
+import { BusinessData } from "screens/Main/Business";
+
+type BusinessScreen = {
+    businessData?: BusinessData;
+}
+
 export declare global {
     namespace ReactNavigation {
         interface RootParamList {
@@ -5,7 +11,6 @@ export declare global {
                 service: 'created' | 'deleted',
             };
             overview: undefined;
-            business: undefined;
             schedule: {
                 serviceId: string
             };
@@ -19,10 +24,13 @@ export declare global {
             dayAgenda: {
                 dateString: string
             };
-            bankAccount: undefined;
-            socialMedia: undefined;
-            additionalInfo: undefined;
-            phoneAndAddress: undefined;
+            business: undefined;
+            bankAccount: BusinessScreen;
+            socialMedia: BusinessScreen;
+            basicInfo: BusinessScreen;
+            categories: BusinessScreen;
+            additionalInfo: BusinessScreen;
+            contactAndAddress: BusinessScreen;
         }
     }
 }

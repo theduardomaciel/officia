@@ -12,7 +12,7 @@ interface Props {
     onExpanded?: () => void;
 }
 
-export default function ScheduleFormSection({ children, bottomSheetRef, expanded = false, onDismissed, onExpanded }: Props) {
+export default function SectionBottomSheet({ children, bottomSheetRef, expanded = false, onDismissed, onExpanded }: Props) {
     return (
         <BottomSheet
             ref={bottomSheetRef}

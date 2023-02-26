@@ -75,10 +75,12 @@ const ToastUI = forwardRef(({ toastProps = { preset: "error" }, toastPosition = 
     const show = useCallback(() => {
         'worklet';
         //console.log("Por incrível que pareça chegou aqui!")
-        currentTimeout.current = setTimeout(() => {
-            hide(toastPosition);
-            clearTimeout(currentTimeout.current);
-        }, autoDismissDelay)
+        if (autoDismissDelay && autoDismissDelay > 0) {
+            currentTimeout.current = setTimeout(() => {
+                hide(toastPosition);
+                clearTimeout(currentTimeout.current);
+            }, autoDismissDelay)
+        }
         topAnimation.value = withSpring(newActiveHeight, animProps);
     }, [])
 

@@ -7,7 +7,8 @@
             "distribution": "internal",
             "prebuildCommand": "prebuild --force",
             "android": {
-                "gradleCommand": ":app:assembleDebug"
+                "gradleCommand": ":app:assembleDebug",
+                "image": "ubuntu-22.04-jdk-11-ndk-r21e"
             },
             "ios": {
                 "buildConfiguration": "Debug",
