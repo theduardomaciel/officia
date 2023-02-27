@@ -77,6 +77,12 @@ export function BasicInfo({ control, errors }: FormProps) {
 export default function BasicInfoScreen({ route, navigation }: any) {
     const { businessData: data }: { businessData: BusinessData } = route.params;
     const [businessData, setBusinessData] = React.useState<BusinessData>(data); // é necessário em todas as telas pois o parâmetro de comparação tem que mudar após a atualização dos dados
+    const screenData = {
+        fantasyName: businessData?.fantasyName ?? "",
+        juridicalPerson: businessData?.juridicalPerson ?? "",
+        socialReason: businessData?.socialReason ?? "",
+    }
+
     const [hasDifferences, setHasDifferences] = React.useState(false);
 
     const { handleSubmit, control, formState: { errors }, getValues, watch, setFocus } = useForm<BasicInfoSchemeType>({
@@ -86,7 +92,7 @@ export default function BasicInfoScreen({ route, navigation }: any) {
             juridicalPerson: "",
             socialReason: "",
         },
-        values: businessData ? { ...businessData } : undefined,
+        values: businessData ? screenData : undefined,
         resetOptions: {
             keepDirtyValues: true, // user-interacted input will be retained
             keepErrors: true, // input errors will be retained with value update
@@ -105,9 +111,11 @@ export default function BasicInfoScreen({ route, navigation }: any) {
     }
 
     const submitData = handleSubmit(async (data) => {
-        const result = await updateData(getValues(), businessData, setBusinessData);
+        const result = await updateData(getValues(), businessData);
         if (result) {
             setHasDifferences(false)
+            console.log(hasDifferences)
+            setBusinessData(result);
         }
     }, onError);
 
@@ -115,11 +123,6 @@ export default function BasicInfoScreen({ route, navigation }: any) {
 
     React.useEffect(() => {
         const subscription = watch((value) => {
-            const screenData = {
-                fantasyName: businessData?.fantasyName ?? "",
-                juridicalPerson: businessData?.juridicalPerson ?? "",
-                socialReason: businessData?.socialReason ?? "",
-            }
             // Os valores dos inputs precisam estar vazios tanto no "screenData" como no "initialValues" para que o botão de salvar fique desabilitado.
             console.log(screenData, value)
             setHasDifferences(JSON.stringify(screenData) !== JSON.stringify(value))

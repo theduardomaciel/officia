@@ -81,7 +81,7 @@ export const NextButton = ({ isLastButton, isLoading, title, style, icon, ...res
             disabled={isLoading}
             style={[{
                 backgroundColor: isLastButton ? colors.primary.green : colors.gray[200],
-            }]}
+            }, style]}
             {...rest}
         >
             {

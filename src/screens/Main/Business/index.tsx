@@ -48,15 +48,11 @@ const NavigationButton = ({ title, description, onPress, colorScheme = "dark" }:
     )
 }
 
-export async function updateData(
-    dataToUpdate: Partial<BusinessData>,
-    businessData: BusinessData,
-    setBusinessData: React.Dispatch<React.SetStateAction<BusinessData>>) {
+export async function updateData(dataToUpdate: Partial<BusinessData>, businessData: BusinessData) {
     try {
         const updatedData = { ...businessData, ...dataToUpdate } as BusinessData;
 
         await database.localStorage.set('businessData', updatedData);
-        setBusinessData(updatedData);
 
         Toast.show({
             preset: "success",
@@ -65,7 +61,7 @@ export async function updateData(
         })
 
         //console.log("Dados do negócio atualizados com sucesso.")
-        return true;
+        return updatedData;
     } catch (error) {
         console.log(error)
         Toast.show({

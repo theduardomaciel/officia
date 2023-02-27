@@ -24,21 +24,27 @@ import { updateData } from '.';
 
 // Types
 import { BusinessData, additionalInfoScheme, AdditionalInfoSchemeType } from './@types';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function AdditionalInfoScreen({ route, navigation }: any) {
-    const { businessData: data }: { businessData: BusinessData } = route.params;
+    const { businessData: data }: { businessData: BusinessData, update: boolean } = route.params;
     const [businessData, setBusinessData] = React.useState<BusinessData>(data); // é necessário em todas as telas pois o parâmetro de comparação tem que mudar após a atualização dos dados
+    const screenData = {
+        defaultMessage: businessData.defaultMessage ?? "",
+        defaultWarrantyDetails: businessData.defaultWarrantyDetails ?? "",
+    } as AdditionalInfoSchemeType;
+
     const [hasDifferences, setHasDifferences] = React.useState(false);
 
     const { colorScheme } = useColorScheme();
 
-    const { handleSubmit, control, formState: { errors }, getValues, watch, setFocus } = useForm<AdditionalInfoSchemeType>({
+    const { handleSubmit, control, formState: { errors }, getValues, watch } = useForm<AdditionalInfoSchemeType>({
         mode: 'onSubmit',
         defaultValues: {
             defaultMessage: "",
             defaultWarrantyDetails: "",
         },
-        values: businessData ? { ...businessData } : undefined,
+        values: businessData ? screenData : undefined,
         resetOptions: {
             keepDirtyValues: true, // user-interacted input will be retained
             keepErrors: true, // input errors will be retained with value update
@@ -57,8 +63,9 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
     }
 
     const submitData = handleSubmit(async (data) => {
-        const result = await updateData(getValues(), businessData, setBusinessData);
+        const result = await updateData(getValues(), businessData);
         if (result) {
+            setBusinessData(result);
             setHasDifferences(false)
         }
     }, onError);
@@ -66,18 +73,13 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
     const [isConfirmExitModalVisible, setConfirmExitModalVisible] = React.useState(false);
 
     React.useEffect(() => {
-        if (businessData?.digitalSignatureUri) {
-            setHasDifferences(true)
-        }
-
         const subscription = watch((value) => {
-            const screenData = {
-                defaultMessage: businessData.defaultMessage || "",
-                defaultWarrantyDetails: businessData.defaultWarrantyDetails || "",
-            } as AdditionalInfoSchemeType
             // Os valores dos inputs precisam estar vazios tanto no "screenData" como no "initialValues" para que o botão de salvar fique desabilitado.
-            console.log(screenData, value)
-            setHasDifferences(JSON.stringify(screenData) !== JSON.stringify(value))
+            console.log(screenData, "data")
+            console.log(value, "value")
+            if (value) {
+                setHasDifferences(JSON.stringify(screenData) !== JSON.stringify(value))
+            }
         });
 
         const backAction = () => {
@@ -100,7 +102,11 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
     return (
         <View className='flex-1 min-h-full px-6 pt-12' style={{ rowGap: 20 }}>
             <Header title='Dados Complementares' returnButton />
-            <ScrollView className='flex-1' contentContainerStyle={{ rowGap: 20 }}>
+            <ScrollView
+                className='flex-1'
+                contentContainerStyle={{ rowGap: 20 }}
+                showsVerticalScrollIndicator={false}
+            >
                 <SubSectionWrapper
                     header={{
                         title: "Mensagens Padrão",
@@ -112,6 +118,7 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
                         render={({ field: { onChange, onBlur, value } }) => (
                             <Input
                                 label='Informações Adicionais'
+                                placeholder='[não especificado]'
                                 value={value}
                                 onBlur={onBlur}
                                 onChangeText={value => onChange(value)}
@@ -127,6 +134,7 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
                         render={({ field: { onChange, onBlur, value } }) => (
                             <Input
                                 label='Condições da Garantia'
+                                placeholder='[não especificado]'
                                 value={value}
                                 onBlur={onBlur}
                                 onChangeText={value => onChange(value)}
@@ -142,15 +150,20 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
                     <TouchableOpacity
                         activeOpacity={0.8}
                         className='w-full flex-col items-center justify-center px-12 gap-y-1 border rounded-lg border-dashed border-primary-green'
-                        style={{ paddingTop: businessData && businessData.digitalSignatureUri ? 5 : 50, paddingBottom: businessData && businessData.digitalSignatureUri ? 5 : 50 }}
-                        onPress={() => navigation.navigate('digitalSignature')}
+                        style={{
+                            paddingTop: businessData && businessData.digitalSignatureUri ? 0 : 50,
+                            paddingBottom: businessData && businessData.digitalSignatureUri ? 0 : 50,
+                            paddingLeft: businessData && businessData.digitalSignatureUri ? 5 : 50,
+                            paddingRight: businessData && businessData.digitalSignatureUri ? 5 : 50,
+                        }}
+                        onPress={() => navigation.navigate('digitalSignature', { businessData })}
                     >
                         {
                             businessData && businessData.digitalSignatureUri ? (
                                 <Image
                                     source={{ uri: businessData?.digitalSignatureUri }}
-                                    style={{ width: "100%", height: 200 }}
-                                    contentFit='contain'
+                                    style={{ width: "100%", height: 175 }}
+                                    contentFit='cover'
                                     transition={1000}
                                 />
                             ) : (

@@ -16,6 +16,13 @@ export const basicInfoScheme = z.object({
 
 export type BasicInfoSchemeType = z.infer<typeof basicInfoScheme>;
 
+export const additionalInfoScheme = z.object({
+    defaultMessage: z.string().optional(),
+    defaultWarrantyDetails: z.string().optional(),
+});
+
+export type AdditionalInfoSchemeType = z.infer<typeof additionalInfoScheme>;
+
 export const contactAndAddressScheme = z.object({
     email: z.string().email({ message: "O e-mail inserido não é válido." }),
     phone: z.string({ required_error: "O telefone não pode estar vazio." }).min(15, { message: "O telefone inserido não é válido." }),
@@ -26,15 +33,24 @@ export const contactAndAddressScheme = z.object({
 
 export type ContactAndAddressSchemeType = z.infer<typeof contactAndAddressScheme>;
 
-export const additionalInfoScheme = z.object({
-    defaultMessage: z.string().optional(),
-    defaultWarrantyDetails: z.string().optional(),
+export const bankAccountScheme = z.object({
+    agency: z.string().optional(),
+    account: z.string().optional(),
+    accountHolder: z.string().optional(),
+    pixKey: z.string().optional(),
 });
 
-export type AdditionalInfoSchemeType = z.infer<typeof additionalInfoScheme>;
+export type BankAccountSchemeType = z.infer<typeof bankAccountScheme>;
 
-export type BusinessData = BasicInfoSchemeType & AdditionalInfoSchemeType & ContactAndAddressSchemeType & {
-    logo?: string;
-    geocodedAddress?: string;
-    digitalSignatureUri?: string;
-}
+export type BusinessData = BasicInfoSchemeType
+    & AdditionalInfoSchemeType
+    & ContactAndAddressSchemeType
+    & BankAccountSchemeType
+    & {
+        logo?: string;
+        geocodedAddress?: string;
+        digitalSignatureUri?: string;
+        bank?: string;
+        bankPixType?: string;
+        bankAccountType?: string;
+    }

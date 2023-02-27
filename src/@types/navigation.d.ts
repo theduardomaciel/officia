@@ -32,7 +32,7 @@ export declare global {
             additionalInfo: BusinessScreen;
             contactAndAddress: BusinessScreen;
             settings: BusinessScreen;
-            digitalSignature: undefined;
+            digitalSignature: BusinessScreen;
         }
     }
 }

@@ -1,6 +1,6 @@
 import { database } from 'database/index.native';
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import type { BusinessData } from 'screens/Main/Business';
+import type { BusinessData } from 'screens/Main/Business/@types';
 
 // Original code by: https://github.com/LucasGarcez/react-native-auth-flow
 

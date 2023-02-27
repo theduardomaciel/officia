@@ -251,6 +251,14 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
 export default function ContactAndAddressScreen({ route }: any) {
     const { businessData: data }: { businessData: BusinessData } = route.params;
     const [businessData, setBusinessData] = React.useState<BusinessData>(data);
+    const currentData = {
+        email: data?.email ?? "",
+        phone: data?.phone ?? "",
+        phone2: data?.phone2 ?? "",
+        postalCode: data?.postalCode ?? "",
+        address: data?.address ?? "",
+        geocodedAddress: data.geocodedAddress ?? ""
+    } as ContactAndAddressSchemeType;
 
     const [hasDifferences, setHasDifferences] = React.useState(false);
 
@@ -288,8 +296,9 @@ export default function ContactAndAddressScreen({ route }: any) {
 
     const submitData = handleSubmit(async (data) => {
         // Por algum motivo (talvez por conta da renderização condicional dos inputs de "address"?), o valor do campo "address" não é enviado junto com os outros dados do formulário no (data), portanto, teremos que usar o método "getValues".
-        const result = await updateData(getValues(), businessData, setBusinessData);
+        const result = await updateData(getValues(), businessData);
         if (result) {
+            setBusinessData(result);
             setHasDifferences(false)
         }
     }, onError);
@@ -300,14 +309,6 @@ export default function ContactAndAddressScreen({ route }: any) {
         }
 
         const subscription = watch((value) => {
-            const currentData = {
-                email: data?.email ?? "",
-                phone: data?.phone ?? "",
-                phone2: data?.phone2 ?? "",
-                postalCode: data?.postalCode ?? "",
-                address: data?.address ?? "",
-                geocodedAddress: data.geocodedAddress ?? ""
-            } as Partial<BusinessData>;
             setHasDifferences(JSON.stringify(value) !== JSON.stringify(currentData))
         });
         return () => subscription.unsubscribe();

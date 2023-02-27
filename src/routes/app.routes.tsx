@@ -29,6 +29,7 @@ import PhoneAndAddress from "screens/Main/Business/ContactAndAddress";
 import SocialMedia from "screens/Main/Business/SocialMedia";
 
 import Settings from "screens/Main/Business/Settings";
+import DigitalSignature from "screens/Main/Business/DigitalSignature";
 
 const FormBase = () => <View style={{ flex: 1, backgroundColor: colors.gray[300] }} />
 
@@ -186,6 +187,13 @@ export function AppStack() {
             <Stack.Screen
                 name="settings"
                 component={Settings}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+                }}
+            />
+            <Stack.Screen
+                name="digitalSignature"
+                component={DigitalSignature}
                 options={{
                     cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
                 }}
