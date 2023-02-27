@@ -37,7 +37,8 @@ export default function SectionBottomSheet({ children, bottomSheetRef, expanded 
                     paddingTop: 24,
                     paddingLeft: 24,
                     paddingRight: 24,
-                    paddingBottom: 12
+                    paddingBottom: 12,
+                    rowGap: 25
                 }}
             >
                 {children}

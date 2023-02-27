@@ -1,31 +1,34 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { CardStyleInterpolators, createStackNavigator } from "@react-navigation/stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { View } from "react-native";
-/* import { createNativeStackNavigator } from '@react-navigation/native-stack' */
 
+import { useColorScheme } from 'nativewind';
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
-import { useColorScheme } from 'nativewind';
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-import Business from "screens/Main/Business";
+// Screens
+import Business from "screens/Main/Business/index";
 import Home from "screens/Main/Home";
 import Overview from "screens/Main/Overview";
 
 import Invoice from "screens/Invoice";
 import ScheduleForm from "screens/ScheduleForm";
 import Service from "screens/Service";
-
-import BasicInfo from "screens/BasicInfo";
-import AdditionalInfo from "screens/AdditionalInfo";
-import BankAccount from "screens/BankAccount";
 import DayAgenda from "screens/DayAgenda";
-import PhoneAndAddress from "screens/ContactAndAddress";
-import SocialMedia from "screens/SocialMedia";
+
+// Business
+import BasicInfo from "screens/Main/Business/BasicInfo";
+import AdditionalInfo from "screens/Main/Business/AdditionalInfo";
+import BankAccount from "screens/Main/Business/BankAccount";
+import PhoneAndAddress from "screens/Main/Business/ContactAndAddress";
+import SocialMedia from "screens/Main/Business/SocialMedia";
+
+import Settings from "screens/Main/Business/Settings";
 
 const FormBase = () => <View style={{ flex: 1, backgroundColor: colors.gray[300] }} />
 
@@ -74,7 +77,11 @@ function HomeStack() {
                 component={Business}
                 options={{
                     tabBarIcon: ({ color, size, focused }) => (
-                        <MaterialIcons name="work" size={size} color={color} />
+                        focused ? (
+                            <MaterialIcons name="work" size={size} color={color} />
+                        ) : (
+                            <MaterialIcons name="work-outline" size={size} color={color} />
+                        )
                     )
                 }}
             />
@@ -108,7 +115,7 @@ function HomeStack() {
     );
 }
 
-export function AppRoutes() {
+export function AppStack() {
     const { colorScheme } = useColorScheme();
 
     return (
@@ -177,17 +184,19 @@ export function AppRoutes() {
                 }}
             />
             <Stack.Screen
+                name="settings"
+                component={Settings}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+                }}
+            />
+            <Stack.Screen
                 name="invoice"
                 component={Invoice}
                 options={{
                     cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
                 }}
             />
-            {/* <Stack.Screen
-                name="login"
-                component={Login}
-                options={{ headerShown: false }}
-            /> */}
         </Stack.Navigator>
     )
 }

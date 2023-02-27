@@ -10,10 +10,7 @@ import { useColorScheme } from "nativewind";
 import colors from "global/colors";
 
 // Types
-import type { BusinessData } from "screens/Main/Business";
-
-// Data
-import { database } from 'database/index.native';
+import type { BusinessData } from "screens/Main/Business/@types";
 
 interface Props {
     businessData: BusinessData | undefined;

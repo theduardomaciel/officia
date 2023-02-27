@@ -1,10 +1,11 @@
-import React, { FC, memo, SVGProps } from "react";
+import React, { FC, SVGProps } from "react";
 import { Text, TouchableOpacity, TouchableOpacityProps, View, ViewStyle } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 import Label from "components/Label";
+import ButtonLoadingIndicator from "components/ButtonLoadingIndicator";
 
 // Types
 import type { MaterialModel } from "database/models/materialModel";
@@ -24,50 +25,38 @@ export interface Section {
 export interface SubSectionWrapperProps {
     header: {
         title: string;
+        description?: string;
         icon?: string;
         customIcon?: FC<SVGProps<SVGSVGElement>>;
         children?: React.ReactNode;
     },
+    preset?: "smallMargin" | "subSection";
     style?: ViewStyle;
     children?: React.ReactNode
 }
 
-
-export const MARGIN = 20;
-
-export const SubSectionWrapper = memo(({ header, children, style }: SubSectionWrapperProps) => {
+export const SubSectionWrapper = React.memo(({ header, children, style, preset }: SubSectionWrapperProps) => {
     return (
-        <View className='w-full flex-col items-start justify-start' style={[{ marginBottom: MARGIN, rowGap: 15 }, style]}>
-            <View className='w-full flex-row items-center justify-between'>
-                <Label
-                    icon={header.icon ? { name: header.icon } : undefined}
-                    CustomIcon={header.customIcon}
-                    style={{ marginRight: 10 }}
-                >
-                    {header.title}
-                </Label>
-                {header.children}
-            </View>
-            {children}
-        </View>
-    )
-})
-
-export const SubSection = React.memo(({ header, children }: SubSectionWrapperProps) => {
-    return (
-        <View className='w-full flex-col items-start justify-start gap-y-2' style={{ marginBottom: MARGIN }}>
-            <View className='w-full flex-row items-center justify-between'>
-                <View className='flex-row items-center justify-start'>
+        <View className='w-full flex-col items-start justify-start' style={[{ rowGap: 10 }, style]}>
+            <View className='flex-1 flex-row items-center justify-between' style={{ marginBottom: preset === "smallMargin" ? 0 : 10 }}>
+                <View className="flex-1 flex-col items-start justify-start">
                     <Label
                         icon={header.icon ? {
                             name: header.icon,
-                            size: 14,
+                            size: preset === "subSection" ? 14 : 18
                         } : undefined}
                         CustomIcon={header.customIcon}
-                        style={{ marginRight: 10, fontSize: 14, fontWeight: "400" }}
+                        style={[{ marginRight: 10 }, preset === "subSection" && { fontSize: 14, fontWeight: "400" }]}
                     >
                         {header.title}
                     </Label>
+                    {
+                        header.description && (
+                            <Text className="text-sm leading-4 text-text-200">
+                                {header.description}
+                            </Text>
+                        )
+                    }
                 </View>
                 {header.children}
             </View>
@@ -78,25 +67,35 @@ export const SubSection = React.memo(({ header, children }: SubSectionWrapperPro
 
 interface NextButtonProps extends TouchableOpacityProps {
     isLastButton?: boolean;
+    isLoading?: boolean;
     style?: ViewStyle;
     title?: string;
     icon?: string;
 }
 
-export const NextButton = ({ isLastButton, title, style, icon, ...rest }: NextButtonProps) => {
+export const NextButton = ({ isLastButton, isLoading, title, style, icon, ...rest }: NextButtonProps) => {
     return (
         <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={isLoading ? 1 : 0.8}
             className='flex-row items-center justify-center w-full py-4 rounded'
+            disabled={isLoading}
             style={[{
                 backgroundColor: isLastButton ? colors.primary.green : colors.gray[200],
             }]}
             {...rest}
         >
-            {icon && <MaterialIcons name={icon as unknown as any} size={22} color={colors.white} style={{ marginRight: 15 }} />}
-            <Text className='font-bold text-white text-base'>
-                {title ? title : isLastButton ? "Agendar" : "Próximo"}
-            </Text>
+            {
+                isLoading ? (
+                    <ButtonLoadingIndicator />
+                ) : (
+                    <>
+                        {icon && <MaterialIcons name={icon as unknown as any} size={22} color={colors.white} style={{ marginRight: 15 }} />}
+                        <Text className='font-bold text-white text-base'>
+                            {title ? title : isLastButton ? "Agendar" : "Próximo"}
+                        </Text>
+                    </>
+                )
+            }
         </TouchableOpacity>
     )
 }

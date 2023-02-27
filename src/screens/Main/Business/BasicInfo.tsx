@@ -1,35 +1,33 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { BackHandler, ScrollView, View } from "react-native";
 
 // Components
 import Header from 'components/Header';
-import Toast, { ToastProps } from 'components/Toast';
+import Toast from 'components/Toast';
 import Input from 'components/Input';
+
+import SaveButton from 'components/Business/SaveButton';
+import ConfirmExitModal from 'components/Business/ConfirmExitModal';
 
 // Form
 import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
-import { database } from 'database/index.native';
-
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
 import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
+import { updateData } from '.';
 
 // Type
-import { basicInfoScheme, BasicInfoSchemeType, BusinessData, updateData } from './Main/Business';
-import { FormProps } from 'components/BusinessForms/@types';
-import SaveButton from 'components/BusinessForms/SaveButton';
-import ConfirmExitModal from 'components/BusinessForms/ConfirmExitModal';
+import { basicInfoScheme, BasicInfoSchemeType, BusinessData, FormProps } from './@types';
 
 export function BasicInfo({ control, errors }: FormProps) {
     return (
-        <ScrollView className='flex-1' contentContainerStyle={{ rowGap: 15 }}>
+        <ScrollView className='flex-1' contentContainerStyle={{ rowGap: 20 }}>
             <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
                     <Input
-                        label='Nome da Empresa'
+                        label='Nome Fantasia'
                         value={value}
                         onBlur={onBlur}
                         onChangeText={value => onChange(value)}
@@ -38,6 +36,21 @@ export function BasicInfo({ control, errors }: FormProps) {
                 )}
                 name="fantasyName"
                 rules={{ maxLength: 50 }}
+            />
+            <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                        label='Razão Social'
+                        infoMessage={`termo registrado sob o qual uma pessoa jurídica (PJ) se individualiza e exerce suas atividades\nExemplo: Coca Cola Indústrias Ltda.`}
+                        value={value}
+                        onBlur={onBlur}
+                        onChangeText={value => onChange(value)}
+                        style={!!errors.socialReason && borderErrorStyle}
+                    />
+                )}
+                name="socialReason"
+                rules={{ maxLength: 80 }}
             />
             <Controller
                 control={control}
@@ -56,20 +69,6 @@ export function BasicInfo({ control, errors }: FormProps) {
                     />
                 )}
                 name="juridicalPerson"
-            />
-            <Controller
-                control={control}
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                        label='Razão Social'
-                        value={value}
-                        onBlur={onBlur}
-                        onChangeText={value => onChange(value)}
-                        style={!!errors.socialReason && borderErrorStyle}
-                    />
-                )}
-                name="socialReason"
-                rules={{ maxLength: 80 }}
             />
         </ScrollView>
     )

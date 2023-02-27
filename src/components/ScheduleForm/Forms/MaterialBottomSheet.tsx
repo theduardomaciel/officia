@@ -26,7 +26,6 @@ import Toast from 'components/Toast';
 import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
 import { MaterialModel } from 'database/models/materialModel';
 import { runOnUI } from 'react-native-reanimated';
-import { MARGIN } from '../SubSectionWrapper';
 
 const schema = z.object({
     name: z.string().max(40, { message: 'O nome do material deve ter no máximo 40 caracteres.' }).min(3, { message: 'O nome do material deve ter no mínimo 3 caracteres.' }),
@@ -146,14 +145,19 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
                 <Title>
                     {editableData ? "Editar" : "Adicionar"} material
                 </Title>
-                <ScrollView className='flex flex-1 flex-col relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
-                    paddingBottom: 16,
-                }}>
+                <ScrollView
+                    className='flex flex-1 flex-col relative'
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{
+                        paddingBottom: 16,
+                        rowGap: 20
+                    }}
+                >
                     <View>
                         <TouchableOpacity
                             activeOpacity={0.8}
                             className='w-full flex-col items-center justify-center px-12 py-14 border rounded-lg border-dashed border-primary-green'
-                            style={{ marginBottom: MARGIN }}
+                            style={{ marginBottom: 20 }}
                         >
                             <MaterialIcons name='add-photo-alternate' size={32} color={colorScheme === "dark" ? colors.white : colors.black} />
                             <Text className='font-medium text-sm text-black dark:text-white mt-1'>
@@ -169,7 +173,7 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
                                 onBlur={onBlur}
                                 onChangeText={value => onChange(value)}
                                 value={value}
-                                style={[!!errors.name && borderErrorStyle, { marginBottom: MARGIN }]}
+                                style={[!!errors.name && borderErrorStyle]}
                                 placeholder='Painel LED de sobreposição, etc...'
                                 pallette='dark'
                                 required
@@ -186,7 +190,7 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
                                 onBlur={onBlur}
                                 onChangeText={value => onChange(value)}
                                 value={value}
-                                style={[!!errors.description && borderErrorStyle, { marginBottom: MARGIN }]}
+                                style={[!!errors.description && borderErrorStyle]}
                                 placeholder='Marca Tigre, 12mm, etc...'
                                 pallette='dark'
                             />
@@ -194,7 +198,7 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
                         name="description"
                         rules={{ required: false }}
                     />
-                    <View className='flex-row w-full items-center justify-between' style={{ marginBottom: MARGIN }}>
+                    <View className='flex-row w-full items-center justify-between'>
                         <View className='flex-1 mr-3'>
                             <Controller
                                 control={control}

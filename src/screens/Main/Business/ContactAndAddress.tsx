@@ -1,5 +1,4 @@
-import { useFocusEffect } from '@react-navigation/native';
-import React, { Dispatch, useCallback } from 'react';
+import React from "react";
 import { ScrollView, TouchableOpacity, View } from "react-native";
 import * as Location from "expo-location"
 
@@ -11,21 +10,19 @@ import Header from 'components/Header';
 import Input from 'components/Input';
 import Toast, { ToastProps } from 'components/Toast';
 import { SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
-import SaveButton from 'components/BusinessForms/SaveButton';
+import SaveButton from 'components/Business/SaveButton';
 import ButtonLoadingIndicator from 'components/ButtonLoadingIndicator';
 
 // Form
 import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
-
-import { database } from 'database/index.native';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
-import { BusinessData, contactAndAddressScheme, ContactAndAddressSchemeType, updateData } from './Main/Business';
 import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
+import { updateData } from '.';
 
 // Types
-import type { FormProps } from 'components/BusinessForms/@types';
+import { BusinessData, contactAndAddressScheme, ContactAndAddressSchemeType, FormProps } from './@types';
 
 interface ContactAndAddressProps {
     businessData: BusinessData;
@@ -193,6 +190,7 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <Input
                                         label='Informações Adicionais'
+                                        infoMessage={`informações que não podem ser obtidas automaticamente, como número, complemento, etc.`}
                                         value={value}
                                         onBlur={onBlur}
                                         onChangeText={value => onChange(value)}

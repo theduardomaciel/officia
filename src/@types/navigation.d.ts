@@ -31,6 +31,8 @@ export declare global {
             categories: BusinessScreen;
             additionalInfo: BusinessScreen;
             contactAndAddress: BusinessScreen;
+            settings: BusinessScreen;
+            digitalSignature: undefined;
         }
     }
 }

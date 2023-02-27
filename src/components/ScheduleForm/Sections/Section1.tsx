@@ -11,7 +11,7 @@ import WarrantyIcon from 'src/assets/icons/warranty.svg';
 
 // Components
 import SectionBottomSheet from '../SectionBottomSheet';
-import { NextButton, Section, SubSection, SubSectionWrapper } from '../SubSectionWrapper';
+import { NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
 import ToggleGroup, { ToggleGroupWithManualValue } from 'components/ToggleGroup';
 import CheckboxesGroups from 'components/CheckboxesGroup';
 
@@ -95,7 +95,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
     const SubSection1 = () => {
         return (
             <SubSectionWrapper header={{ title: "Condições de Pagamento", icon: "credit-card" }}>
-                <View className='flex-col w-full gap-y-2'>
+                <View className='flex-col w-full' style={{ rowGap: 10 }}>
                     <View>
                         <ToggleGroup
                             data={[
@@ -141,7 +141,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                     {
                         paymentCondition === "agreement" && (
                             splitMethod === "percentage" ? (
-                                <SubSection header={{ title: `Qual o percentual do acordo?` }}>
+                                <SubSectionWrapper header={{ title: `Qual o percentual do acordo?` }} preset="subSection">
                                     <View>
                                         <ToggleGroupWithManualValue
                                             key={"agreementInitialPercentage"}
@@ -172,8 +172,8 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                                             name="agreementInitialPercentage"
                                         />
                                     </View>
-                                </SubSection>
-                            ) : <SubSection header={{ title: `Qual o valor inicial a ser pago com o acordo?` }}>
+                                </SubSectionWrapper>
+                            ) : <SubSectionWrapper header={{ title: `Qual o valor inicial a ser pago com o acordo?` }} preset="subSection">
                                 <View>
                                     <ToggleGroupWithManualValue
                                         key={"agreementInitialValue"}
@@ -199,13 +199,13 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                                         name="agreementInitialValue"
                                     />
                                 </View>
-                            </SubSection>
+                            </SubSectionWrapper>
                         )
                     }
                 </View>
                 {
                     paymentCondition === "agreement" && (
-                        <SubSection header={{ title: "Como o valor restante será pago?" }}>
+                        <SubSectionWrapper header={{ title: "Como o valor restante será pago?" }} preset="subSection">
                             <View>
                                 <ToggleGroup
                                     data={[
@@ -222,12 +222,12 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                                     updateState={setRemainingValue}
                                 />
                             </View>
-                        </SubSection>
+                        </SubSectionWrapper>
                     )
                 }
                 {
                     (paymentCondition === "installments" || paymentCondition === "agreement" && remainingValue === "withInstallments") && (
-                        <SubSection header={{ title: "Em quantas parcelas o valor será dividido?" }}>
+                        <SubSectionWrapper header={{ title: "Em quantas parcelas o valor será dividido?" }} preset="subSection">
                             <View>
                                 <ToggleGroupWithManualValue
                                     key={"installmentsAmount"}
@@ -257,7 +257,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                                     name="installmentsAmount"
                                 />
                             </View>
-                        </SubSection>
+                        </SubSectionWrapper>
                     )
                 }
             </SubSectionWrapper>
@@ -272,7 +272,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                     customIcon: WarrantyIcon as any,
                 }}
             >
-                <View className='flex-col w-full gap-y-2'>
+                <View className='flex-col w-full' style={{ rowGap: 10 }}>
                     <View>
                         <ToggleGroup
                             data={[
@@ -386,12 +386,12 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                         )
                     }
                 </View>
-                <Text className='text-center text-gray-100 text-sm w-full'>
+                <Text className='text-center text-gray-100 text-sm w-full mb-4'>
                     O prazo de garantia legal para serviços e produtos duráveis estabelecido por lei é de <Text className='font-bold'>90 dias</Text>.
                 </Text>
 
                 <View className='w-full'>
-                    <SubSection header={{ title: "Condições da Garantia" }}>
+                    <SubSectionWrapper header={{ title: "Condições da Garantia" }} preset="subSection">
                         <View className='w-full'>
                             <Controller
                                 control={control}
@@ -409,7 +409,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                                 rules={{ required: true }}
                             />
                         </View>
-                    </SubSection>
+                    </SubSectionWrapper>
                 </View>
             </SubSectionWrapper>
         )

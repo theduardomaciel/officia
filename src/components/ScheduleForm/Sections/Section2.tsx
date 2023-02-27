@@ -47,8 +47,8 @@ interface ReviewSectionProps {
 }
 
 export const ReviewSection = ({ wrapperProps, value, multiline }: ReviewSectionProps) => (
-    <SubSectionWrapper {...wrapperProps} >
-        <View className={clsx("w-full px-4 py-3 mt-2 rounded-lg border border-gray-300 bg-black dark:bg-gray-300", {
+    <SubSectionWrapper {...wrapperProps} preset="smallMargin" >
+        <View className={clsx("w-full px-4 py-3 rounded-lg border border-gray-300 bg-black dark:bg-gray-300", {
             "min-h-[100px] pt-4": multiline,
         })}>
             <Text className='text-text-100'>
@@ -97,17 +97,13 @@ const createFilter = (databaseArray: Array<any>, newArray: Array<any>) => {
     return newArray.filter((newItem) => !databaseArray.some((databaseItem) => databaseItem.id === newItem.id));
 }
 
-/* const updateFilter = (databaseArray: Array<any>, newArray: Array<any>) => {
-    const databaseIds = databaseArray.map((item) => item.id);
-    return newArray.filter((newItem) => databaseIds.includes(newItem.id));
-} */
-
 export default function Section2({ bottomSheetRef, formRefs, initialValue }: Section2Props) {
     const { navigate } = useNavigation();
     const { section0Ref, section1Ref } = formRefs;
 
     const currentDate = new Date();
     const [data, setData] = useState<Section0Props & Section1Props & { serviceId: number } | undefined | null>(undefined);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const onExpanded = async () => {
         if (formRefs) {
@@ -131,6 +127,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
         const serviceDate = data?.date ? new Date(currentDate.getFullYear(), data.date.month, data.date.date, data.time.getHours(), data.time.getMinutes(), data.time.getSeconds()) : currentDate;
 
         if (data) {
+            setIsUpdating(true)
             const formattedData = {
                 name: data.name || `Serviço n.0${data.serviceId}-${currentDate.getFullYear()}`,
                 date: serviceDate,
@@ -254,6 +251,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                     ])
                 })
 
+                setIsUpdating(false)
                 console.log("Service updated successfully (with subServices and materials).")
                 navigate("service", { serviceId: initialValue.service.id, updated: true });
             } else {
@@ -319,7 +317,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
             {
                 data ? (
                     <>
-                        <View className='flex-col w-full items-start justify-center mb-5'>
+                        <View className='flex-col w-full items-start justify-center'>
                             <Text className='font-titleBold text-start text-2xl text-black dark:text-white'>
                                 Confira se as informações abaixo estão corretas.
                             </Text>
@@ -427,6 +425,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
 
                         <NextButton
                             isLastButton
+                            isLoading={isUpdating}
                             title={initialValue ? "Atualizar" : "Agendar"}
                             onPress={onSubmit}
                         />

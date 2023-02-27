@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
+import { runOnUI } from 'react-native-reanimated';
 
 import colors from 'global/colors';
 
@@ -14,10 +15,6 @@ import * as z from 'zod';
 import { tags } from 'global/tags';
 import { v4 as uuidv4 } from 'uuid';
 
-// Types
-import { MaterialModel } from 'database/models/materialModel';
-import { SubServiceModel } from 'database/models/subServiceModel';
-
 // Components
 import { ActionButton } from 'components/ActionButton';
 import BottomSheet from 'components/BottomSheet';
@@ -26,8 +23,10 @@ import Label from 'components/Label';
 import { TagsSelector } from 'components/TagsSelector';
 import Title from 'components/Title';
 import Toast from 'components/Toast';
-import { runOnUI } from 'react-native-reanimated';
-import { MARGIN } from '../SubSectionWrapper';
+
+// Types
+import { MaterialModel } from 'database/models/materialModel';
+import { SubServiceModel } from 'database/models/subServiceModel';
 
 interface FormValues {
     description: string;
@@ -151,9 +150,14 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                 <Title>
                     {editableData ? 'Editar Serviço' : 'Adicionar Serviço'}
                 </Title>
-                <ScrollView className='flex flex-1  relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
-                    paddingBottom: 16
-                }}>
+                <ScrollView
+                    className='flex flex-1 relative'
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{
+                        paddingBottom: 16,
+                        rowGap: 20
+                    }}
+                >
                     <Controller
                         control={control}
                         render={({ field: { onChange, onBlur, value } }) => (
@@ -171,7 +175,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                         name="description"
                         rules={{ required: true }}
                     />
-                    <View className='flex-col w-full gap-y-5 mt-5'>
+                    <View className='flex-col w-full' style={{ rowGap: 20 }}>
                         <Controller
                             control={control}
                             render={({ field: { onChange, onBlur, value } }) => (
@@ -190,7 +194,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                             name="details"
                             rules={{ required: false }}
                         />
-                        <View className='flex-row w-full items-center justify-between' style={{ marginBottom: MARGIN }}>
+                        <View className='flex-row w-full items-center justify-between'>
                             <View className='flex-1 mr-3'>
                                 <Controller
                                     control={control}

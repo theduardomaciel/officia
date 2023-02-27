@@ -10,7 +10,7 @@ import Modal from 'components/Modal';
 import Input from 'components/Input';
 import SectionBottomSheet from '../SectionBottomSheet';
 import Calendar, { CalendarDate } from 'components/Calendar';
-import { MARGIN, NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
+import { NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
 import { SubActionButton } from 'components/ActionButton';
 import { Preview } from 'components/Preview';
 
@@ -144,7 +144,6 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
-                        style={{ marginBottom: MARGIN }}
                         placeholder={`Serviço ${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`}
                     />
                 )}
@@ -268,7 +267,6 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                 label='Horário'
                 editable={false}
                 value={`${time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}
-                style={{ marginBottom: MARGIN }}
             />
 
             <Controller
@@ -279,7 +277,6 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
-                        style={{ marginBottom: MARGIN }}
                         placeholder='Ex: O serviço deve ser realizado na sala 2, no 2º andar.'
                         textAlignVertical='top'
                         multiline

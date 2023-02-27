@@ -17,9 +17,11 @@ SplashScreen.preventAutoHideAsync();
 
 // Routes
 import Routes from 'routes';
+import { AuthProvider, useAuth } from 'context/AuthContext';
 
 export default function App() {
     const { colorScheme } = useColorScheme()
+    const { loading } = useAuth();
 
     let [fontsLoaded] = useFonts({
         Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold, Inter_900Black,
@@ -32,18 +34,20 @@ export default function App() {
         }
     }, [fontsLoaded]);
 
-    if (!fontsLoaded) {
+    if (loading || !fontsLoaded) {
         return null;
     }
 
     return (
-        <GestureHandlerRootView style={{ flex: 1 }} className={"bg-white dark:bg-gray-300"} onLayout={onLayoutRootView}>
-            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-                <PortalProvider>
-                    <Routes />
-                    <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-                </PortalProvider>
-            </SafeAreaProvider>
-        </GestureHandlerRootView>
+        <AuthProvider>
+            <GestureHandlerRootView style={{ flex: 1 }} className={"bg-white dark:bg-gray-300"} onLayout={onLayoutRootView}>
+                <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+                    <PortalProvider>
+                        <Routes />
+                        <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+                    </PortalProvider>
+                </SafeAreaProvider>
+            </GestureHandlerRootView>
+        </AuthProvider>
     );
 }

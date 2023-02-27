@@ -16,7 +16,7 @@ import { database } from 'database/index.native';
 // Types
 import type { BottomSheetActions } from 'components/BottomSheet';
 
-export default function ScheduleForm() {
+export default function Register() {
     const selectedSectionId = useSharedValue(0);
 
     const section0BottomSheetRef = useRef<BottomSheetActions>(null);
