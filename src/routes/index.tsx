@@ -8,7 +8,6 @@ import { AuthStack } from "./auth.routes";
 
 export default function Routes() {
     const { authData } = useAuth();
-    console.log(authData)
 
     return (
         <NavigationContainer>

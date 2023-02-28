@@ -5,12 +5,14 @@ import { useSharedValue, withSpring } from 'react-native-reanimated';
 import colors from 'global/colors';
 
 // Components
-import { Checkbox } from 'components/Checkbox';
+import Container from 'components/Container';
 import Header from 'components/Header';
-import Loading from 'components/Loading';
 import Modal from 'components/Modal';
-import { PreviewStatic } from 'components/Preview';
 import SectionBottomSheet from 'components/ScheduleForm/SectionBottomSheet';
+
+import { Loading } from 'components/StatusMessage';
+import { Checkbox } from 'components/Checkbox';
+import { PreviewStatic } from 'components/Preview';
 import { daysToMonthsOrYears, PaymentMethodsReview, ReviewSection, WarrantyReview } from 'components/ScheduleForm/Sections/Section2';
 import { NextButton, SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
 import { SectionsNavigator } from 'components/SectionsNavigator';
@@ -25,7 +27,7 @@ import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
 
 import type { BottomSheetActions } from 'components/BottomSheet';
-import type { BusinessData } from './Main/Business';
+import type { BusinessData } from './Main/Business/@types';
 
 // PDF
 import FileViewer from 'react-native-file-viewer';
@@ -202,7 +204,7 @@ export default function Invoice({ route }: any) {
     return (
         <>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
+                <Container>
                     <View>
                         <Header
                             title={"Orçamento"}
@@ -447,7 +449,7 @@ export default function Invoice({ route }: any) {
                             </>
                         ) : <Loading />
                     }
-                </View>
+                </Container>
             </TouchableWithoutFeedback>
             <Modal
                 isVisible={modalProps.status === "success"}

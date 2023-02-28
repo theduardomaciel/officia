@@ -7,9 +7,10 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
 // Components
+import Container from 'components/Container';
 import Header from 'components/Header';
-import Loading from 'components/Loading';
-import EmptyMessage from 'components/EmptyMessage';
+
+import { Empty, Loading } from 'components/StatusMessage';
 import { EnhancedServicePreview } from './Main/Home';
 
 // Database
@@ -49,7 +50,7 @@ export default function DayAgenda({ route, navigation }: any) {
     );
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
+        <Container>
             <View>
                 <Header
                     title='Serviços agendados'
@@ -75,13 +76,13 @@ export default function DayAgenda({ route, navigation }: any) {
                             />
                         )}
                         ListEmptyComponent={() => (
-                            <EmptyMessage style={{ paddingTop: 100 }} />
+                            <Empty style={{ paddingTop: 100 }} />
                         )}
                     />
                 ) : (
                     <Loading />
                 )
             }
-        </View>
+        </Container>
     )
 }

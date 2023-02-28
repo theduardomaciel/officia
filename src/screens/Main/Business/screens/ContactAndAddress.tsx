@@ -1,17 +1,17 @@
 import React from "react";
-import { ScrollView, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, TouchableOpacity, View } from "react-native";
 import * as Location from "expo-location"
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
 // Components
+import Container, { BusinessScrollView } from 'components/Container';
 import Header from 'components/Header';
 import Input from 'components/Input';
-import Toast, { ToastProps } from 'components/Toast';
+import Toast from 'components/Toast';
 import { SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
 import SaveButton from 'components/Business/SaveButton';
-import ButtonLoadingIndicator from 'components/ButtonLoadingIndicator';
 
 // Form
 import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
@@ -19,13 +19,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
 import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
-import { updateData } from '.';
+import { updateData } from 'screens/Main/Business';
 
 // Types
-import { BusinessData, contactAndAddressScheme, ContactAndAddressSchemeType, FormProps } from './@types';
+import { BusinessData, contactAndAddressScheme, ContactAndAddressSchemeType, FormProps } from 'screens/Main/Business/@types';
 
 interface ContactAndAddressProps {
-    businessData: BusinessData;
+    businessData: BusinessData | Partial<BusinessData>;
     onAddressFetch: (addressText: string | undefined) => void;
 }
 
@@ -76,11 +76,7 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
     const decodedGeocodedAddress = businessData?.geocodedAddress ? businessData.geocodedAddress.split(", ").map(geo => geo) : undefined;
 
     return (
-        <ScrollView
-            showsVerticalScrollIndicator={false}
-            style={{ flex: 1 }}
-            contentContainerStyle={{ rowGap: 20 }}
-        >
+        <BusinessScrollView>
             <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -165,7 +161,7 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
                                     >
                                         {
                                             isFetchingLocation ? (
-                                                <ButtonLoadingIndicator />
+                                                <ActivityIndicator size={"small"} color={colors.white} />
                                             ) : (
                                                 <MaterialCommunityIcons name={businessData?.geocodedAddress ? "close" : 'map'} size={18} color={businessData?.geocodedAddress || !value || value.length < 9 ? colors.text[200] : colors.white} />
                                             )
@@ -244,7 +240,7 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
                     )
                 }
             </SubSectionWrapper>
-        </ScrollView>
+        </BusinessScrollView>
     )
 }
 
@@ -304,10 +300,6 @@ export default function ContactAndAddressScreen({ route }: any) {
     }, onError);
 
     React.useEffect(() => {
-        if (businessData?.geocodedAddress) {
-            setHasDifferences(true)
-        }
-
         const subscription = watch((value) => {
             setHasDifferences(JSON.stringify(value) !== JSON.stringify(currentData))
         });
@@ -315,7 +307,7 @@ export default function ContactAndAddressScreen({ route }: any) {
     }, [watch, businessData]);
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12' style={{ rowGap: 20 }}>
+        <Container>
             <Header title='Contato e Endereço' returnButton />
             <ContactAndAddress
                 businessData={businessData}
@@ -323,6 +315,7 @@ export default function ContactAndAddressScreen({ route }: any) {
                 errors={errors}
                 onAddressFetch={(addressText) => {
                     setValue("address", "")
+                    setHasDifferences(true)
                     setBusinessData({ ...businessData, geocodedAddress: addressText })
                     /* updateData({ geocodedAddress: addressText }, businessData, setBusinessData); */
                 }}
@@ -332,6 +325,6 @@ export default function ContactAndAddressScreen({ route }: any) {
                 toastPosition='top'
                 toastOffset='14%'
             />
-        </View>
+        </Container>
     )
 }

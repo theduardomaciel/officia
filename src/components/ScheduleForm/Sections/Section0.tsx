@@ -11,7 +11,7 @@ import Input from 'components/Input';
 import SectionBottomSheet from '../SectionBottomSheet';
 import Calendar, { CalendarDate } from 'components/Calendar';
 import { NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
-import { SubActionButton } from 'components/ActionButton';
+import { SubActionButton } from 'components/Button';
 import { Preview } from 'components/Preview';
 
 // Types

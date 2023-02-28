@@ -1,4 +1,4 @@
-import { createStackNavigator } from "@react-navigation/stack";
+import { CardStyleInterpolators, createStackNavigator } from "@react-navigation/stack";
 
 import { useColorScheme } from 'nativewind';
 import colors from "global/colors";
@@ -28,7 +28,11 @@ export function AuthStack() {
             <Stack.Screen
                 name="register"
                 component={Register}
-                options={{ headerShown: false }}
+                options={{
+                    headerShown: false, cardStyleInterpolator:
+                        CardStyleInterpolators.forFadeFromBottomAndroid
+                }}
+
             />
         </Stack.Navigator>
     )

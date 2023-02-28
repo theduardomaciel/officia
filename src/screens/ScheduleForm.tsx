@@ -9,9 +9,11 @@ import Section0 from 'components/ScheduleForm/Sections/Section0';
 import Section1 from 'components/ScheduleForm/Sections/Section1';
 import Section2 from 'components/ScheduleForm/Sections/Section2';
 
-import Loading from 'components/Loading';
+// Components
+import Container from 'components/Container';
 import Form from 'components/ScheduleForm/Forms/Form';
 import Toast from 'components/Toast';
+import { Loading } from 'components/StatusMessage';
 
 // Database
 import { database } from 'database/index.native';
@@ -98,7 +100,7 @@ export default function ScheduleForm({ route }: any) {
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
+            <Container>
                 <View>
                     <Header
                         title={route.params?.serviceId ? "Editar serviço" : "Agendamento"}
@@ -160,7 +162,7 @@ export default function ScheduleForm({ route }: any) {
                     maxDragDistance={65}
                     toastOffset={"20%"}
                 />
-            </View>
+            </Container>
         </TouchableWithoutFeedback>
     )
 }

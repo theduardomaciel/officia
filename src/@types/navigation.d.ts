@@ -33,6 +33,9 @@ export declare global {
             contactAndAddress: BusinessScreen;
             settings: BusinessScreen;
             digitalSignature: BusinessScreen;
+            register: {
+                email: string;
+            }
         }
     }
 }

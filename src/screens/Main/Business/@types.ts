@@ -9,9 +9,9 @@ export interface FormProps {
 /* ============ Form Validation */
 
 export const basicInfoScheme = z.object({
-    fantasyName: z.string().min(1, "O nome da empresa não pode ser vazio.").max(50, "O nome da empresa deve ter no máximo 50 caracteres."),
-    juridicalPerson: z.string().min(18, "O CNPJ deve ter 14 dígitos.").min(1, "O CNPJ não pode estar vazio."),
-    socialReason: z.string().min(1, "A razão social da empresa não pode ser vazia.").max(80, "A razão social deve ter no máximo 80 caracteres."),
+    fantasyName: z.string({ required_error: "O nome da empresa deve ser informado." }).max(50, "O nome da empresa deve ter no máximo 50 caracteres."),
+    juridicalPerson: z.string({ required_error: "O CNPJ deve ter 14 dígitos." }).min(18, "O CNPJ deve ter 14 dígitos."),
+    socialReason: z.string({ required_error: "A razão social da empresa deve ser informada." }).max(80, "A razão social deve ter no máximo 80 caracteres."),
 });
 
 export type BasicInfoSchemeType = z.infer<typeof basicInfoScheme>;
@@ -24,7 +24,7 @@ export const additionalInfoScheme = z.object({
 export type AdditionalInfoSchemeType = z.infer<typeof additionalInfoScheme>;
 
 export const contactAndAddressScheme = z.object({
-    email: z.string().email({ message: "O e-mail inserido não é válido." }),
+    email: z.string({ required_error: "O e-mail inserido não é válido." }).email({ message: "O e-mail inserido não é válido." }),
     phone: z.string({ required_error: "O telefone não pode estar vazio." }).min(15, { message: "O telefone inserido não é válido." }),
     phone2: z.string().optional(),
     address: z.string().optional(),

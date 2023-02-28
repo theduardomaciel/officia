@@ -1,13 +1,15 @@
+import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
 import { Portal } from "@gorhom/portal";
 import { Dimensions, Text, View } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import Animated, { interpolate, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withSpring, WithSpringConfig } from "react-native-reanimated";
 
 import { MaterialIcons } from "@expo/vector-icons";
-import ErrorIcon from "assets/icons/error.svg";
 import colors from "global/colors";
-import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
-import { ToastConfig } from ".";
+
+import ErrorIcon from "assets/icons/error.svg";
+
+import type { ToastConfig } from ".";
 
 const ERROR_TITLE = "Opa! Parece que algo deu errado!";
 const SUCCESS_TITLE = "Sucesso!";

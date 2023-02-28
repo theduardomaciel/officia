@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, TouchableOpacity } from "react-native";
 
-// Assets
+// Visuals
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
@@ -21,7 +21,15 @@ const QUOTES = [
     }
 ]
 
-export default function Login() {
+const validateEmail = (email: string) => {
+    return String(email)
+        .toLowerCase()
+        .match(
+            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        );
+};
+
+export default function Login({ navigation }: any) {
     const inserts = useSafeAreaInsets();
     const RANDOM_QUOTE_INDEX = Math.floor(Math.random() * QUOTES.length)
 
@@ -36,8 +44,17 @@ export default function Login() {
         }
     })
 
+    const inputRef = React.useRef("");
+
+    const [isInvalid, setIsInvalid] = React.useState(false);
     const handleLogin = useCallback(() => {
-        console.log('Login')
+        const validateEmailResult = validateEmail(inputRef.current);
+        if (validateEmailResult) {
+            setIsInvalid(false)
+            navigation.navigate("register", { email: inputRef.current })
+        } else {
+            setIsInvalid(true)
+        }
     }, [])
 
     return (
@@ -58,17 +75,28 @@ export default function Login() {
                 <View className='flex flex-col items-center justify-center w-full'>
                     <View className='w-full'>
                         <Input
+                            autoCapitalize='none'
+                            keyboardType='email-address'
                             placeholder='Comece inserindo o e-mail do seu negócio'
+                            onChangeText={(text: string) => inputRef.current = text}
                         />
                     </View>
                     <TouchableOpacity
                         className='rounded w-full py-4 items-center justify-center bg-gray-200 mt-4'
                         activeOpacity={0.8}
+                        onPress={handleLogin}
                     >
                         <Text className='text-center font-semibold text-white'>
                             Continuar
                         </Text>
                     </TouchableOpacity>
+                    {
+                        isInvalid && (
+                            <Text className='absolute -bottom-8 left-0 w-full text-center text-primary-red'>
+                                O e-mail inserido é inválido.
+                            </Text>
+                        )
+                    }
                 </View>
             </Animated.View>
             <View

@@ -7,10 +7,12 @@ import { FlatList, ScrollView as GestureHandlerScrollView } from 'react-native-g
 import { useColorScheme } from 'nativewind';
 
 // Components
-import EmptyMessage from 'components/EmptyMessage';
+import Container from 'components/Container';
 import Header from 'components/Header';
+import StatisticsCarousel from 'components/Statistics/Carousel';
+
+import { Empty } from 'components/StatusMessage';
 import { ServiceWithSubServicesPreview } from 'components/ServicePreview';
-import StatisticsCarousel from 'components/StatisticsCarousel';
 import { TagsSelector } from 'components/TagsSelector';
 import { FilterView } from './Home';
 
@@ -84,10 +86,8 @@ export default function Overview() {
     }, [services]);
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12 gap-y-1'>
-            <View>
-                <Header title='Visão Geral' />
-            </View>
+        <Container>
+            <Header title='Visão Geral' />
             <GestureHandlerScrollView
                 nestedScrollEnabled // Allows scrolling inside the ScrollView
                 directionalLockEnabled // Prevents scrolling horizontally
@@ -126,12 +126,12 @@ export default function Overview() {
                         />
                     ) : (
                         <View className='w-full flex-1 items-center justify-center pt-14 px-4'>
-                            <EmptyMessage message='Nenhum serviço foi arquivado até o momento.' />
+                            <Empty message='Nenhum serviço foi arquivado até o momento.' />
                         </View>
                     )
                 }
             </GestureHandlerScrollView>
-        </View>
+        </Container>
     )
 }
 

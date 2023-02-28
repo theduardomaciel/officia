@@ -8,7 +8,7 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 import Carousel from "react-native-reanimated-carousel";
-import { StatisticsCard } from "./StatisticsCard";
+import { StatisticsCard } from "./Card";
 
 const PAGE_WIDTH = Dimensions.get("window").width;
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { BackHandler, ScrollView, View } from "react-native";
 
 // Components
+import Container, { BusinessScrollView } from 'components/Container';
 import Header from 'components/Header';
 import Toast from 'components/Toast';
 import Input from 'components/Input';
@@ -15,14 +16,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
 import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
-import { updateData } from '.';
+import { updateData } from 'screens/Main/Business';
 
 // Type
-import { basicInfoScheme, BasicInfoSchemeType, BusinessData, FormProps } from './@types';
+import { basicInfoScheme, BasicInfoSchemeType, BusinessData, FormProps } from 'screens/Main/Business/@types';
 
 export function BasicInfo({ control, errors }: FormProps) {
     return (
-        <ScrollView className='flex-1' contentContainerStyle={{ rowGap: 20 }}>
+        <BusinessScrollView>
             <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -70,7 +71,7 @@ export function BasicInfo({ control, errors }: FormProps) {
                 )}
                 name="juridicalPerson"
             />
-        </ScrollView>
+        </BusinessScrollView>
     )
 }
 
@@ -146,7 +147,7 @@ export default function BasicInfoScreen({ route, navigation }: any) {
     }, [watch, businessData]);
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12' style={{ rowGap: 20 }}>
+        <Container>
             <Header title='Informações Básicas' returnButton />
             <BasicInfo control={control} errors={errors} />
             <SaveButton hasDifferences={hasDifferences} submitData={submitData} />
@@ -161,6 +162,6 @@ export default function BasicInfoScreen({ route, navigation }: any) {
                     navigation.goBack();
                 }}
             />
-        </View>
+        </Container>
     )
 }

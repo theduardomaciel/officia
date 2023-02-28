@@ -1,4 +1,5 @@
 import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import BottomSheet from 'components/BottomSheet';
 
@@ -10,9 +11,12 @@ interface Props {
     expanded?: boolean;
     onDismissed?: () => void;
     onExpanded?: () => void;
+    bottomSheetHeight?: string;
 }
 
-export default function SectionBottomSheet({ children, bottomSheetRef, expanded = false, onDismissed, onExpanded }: Props) {
+export default function SectionBottomSheet({ children, bottomSheetRef, expanded = false, onDismissed, onExpanded, bottomSheetHeight }: Props) {
+    const insets = useSafeAreaInsets();
+
     return (
         <BottomSheet
             ref={bottomSheetRef}
@@ -22,7 +26,7 @@ export default function SectionBottomSheet({ children, bottomSheetRef, expanded 
                 suppressHandle: true,
                 suppressPortal: true
             }}
-            height={"76%"}
+            height={bottomSheetHeight ?? "76%"}
             canDismiss={false}
             heightLimitBehaviour="contentHeight"
             colors={{
@@ -37,7 +41,7 @@ export default function SectionBottomSheet({ children, bottomSheetRef, expanded 
                     paddingTop: 24,
                     paddingLeft: 24,
                     paddingRight: 24,
-                    paddingBottom: 12,
+                    paddingBottom: 12 + insets.bottom + 10,
                     rowGap: 25
                 }}
             >

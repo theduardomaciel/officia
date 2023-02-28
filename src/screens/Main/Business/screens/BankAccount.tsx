@@ -1,10 +1,12 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, BackHandler } from "react-native";
 
+// Visuals
 import colors from 'global/colors';
-
 import PixIcon from "assets/icons/pix.svg";
 
+// Components
+import Container, { BusinessScrollView } from 'components/Container';
 import Header from 'components/Header';
 import Dropdown from 'components/Dropdown';
 import Input from 'components/Input';
@@ -19,10 +21,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
 import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
-import { updateData } from '.';
+import { updateData } from 'screens/Main/Business';
 
 // Type
-import { bankAccountScheme, BankAccountSchemeType, BusinessData, FormProps } from './@types';
+import { bankAccountScheme, BankAccountSchemeType, BusinessData, FormProps } from 'screens/Main/Business/@types';
 import { SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
 
 type PIX_TYPE = 'unselected' | 'juridicalPerson' | 'email' | 'phone' | 'random';
@@ -103,13 +105,9 @@ export default function BankAccountScreen({ route, navigation }: any) {
     }, [watch, businessData]);
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12' style={{ rowGap: 20 }}>
+        <Container>
             <Header title='Dados Bancários' returnButton />
-            <ScrollView
-                className='flex-1'
-                contentContainerStyle={{ rowGap: 20 }}
-                showsVerticalScrollIndicator={false}
-            >
+            <BusinessScrollView>
                 <Dropdown
                     label='Banco'
                     bottomSheetLabel='Selecione um banco'
@@ -261,7 +259,7 @@ export default function BankAccountScreen({ route, navigation }: any) {
                         )
                     }
                 </SubSectionWrapper>
-            </ScrollView>
+            </BusinessScrollView>
             <SaveButton hasDifferences={hasDifferences} submitData={submitData} />
             <Toast
                 toastPosition='top'
@@ -274,6 +272,6 @@ export default function BankAccountScreen({ route, navigation }: any) {
                     navigation.goBack();
                 }}
             />
-        </View>
+        </Container>
     )
 }

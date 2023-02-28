@@ -8,7 +8,7 @@ import PaymentMethodsIcon from 'assets/icons/currency_exchange.svg';
 import WarrantyIcon from 'assets/icons/warranty.svg';
 
 // Components
-import Loading from 'components/Loading';
+import { Loading } from 'components/StatusMessage';
 import { PreviewStatic } from 'components/Preview';
 import SectionBottomSheet from '../SectionBottomSheet';
 import { NextButton, Section, SubSectionWrapper, SubSectionWrapperProps } from '../SubSectionWrapper';

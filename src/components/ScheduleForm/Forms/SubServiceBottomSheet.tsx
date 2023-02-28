@@ -16,12 +16,11 @@ import { tags } from 'global/tags';
 import { v4 as uuidv4 } from 'uuid';
 
 // Components
-import { ActionButton } from 'components/ActionButton';
-import BottomSheet from 'components/BottomSheet';
+import { ActionButton } from 'components/Button';
+import BottomSheet, { Title } from 'components/BottomSheet';
 import Input from 'components/Input';
 import Label from 'components/Label';
 import { TagsSelector } from 'components/TagsSelector';
-import Title from 'components/Title';
 import Toast from 'components/Toast';
 
 // Types

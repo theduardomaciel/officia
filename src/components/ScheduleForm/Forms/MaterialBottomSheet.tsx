@@ -15,11 +15,10 @@ import colors from 'global/colors';
 import { useColorScheme } from 'nativewind';
 
 // Components
-import { ActionButton } from 'components/ActionButton';
-import BottomSheet from 'components/BottomSheet';
+import { ActionButton } from 'components/Button';
+import BottomSheet, { Title } from 'components/BottomSheet';
 import Dropdown from 'components/Dropdown';
 import Input from 'components/Input';
-import Title from 'components/Title';
 import Toast from 'components/Toast';
 
 // Utils

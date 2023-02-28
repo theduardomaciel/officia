@@ -9,6 +9,7 @@ import { useColorScheme } from 'nativewind';
 
 // App Loading (fonts, splash screen, etc.)
 
+import { AbrilFatface_400Regular } from "@expo-google-fonts/abril-fatface"
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold, Inter_900Black, useFonts } from '@expo-google-fonts/inter';
 import { Raleway_400Regular, Raleway_600SemiBold, Raleway_700Bold } from "@expo-google-fonts/raleway";
 
@@ -26,6 +27,7 @@ export default function App() {
     let [fontsLoaded] = useFonts({
         Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold, Inter_900Black,
         Raleway_400Regular, Raleway_600SemiBold, Raleway_700Bold,
+        AbrilFatface_400Regular
     });
 
     const onLayoutRootView = useCallback(async () => {

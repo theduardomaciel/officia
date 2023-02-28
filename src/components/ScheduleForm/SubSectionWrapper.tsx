@@ -1,11 +1,10 @@
 import React, { FC, SVGProps } from "react";
-import { Text, TouchableOpacity, TouchableOpacityProps, View, ViewStyle } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, TouchableOpacityProps, View, ViewStyle } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 import Label from "components/Label";
-import ButtonLoadingIndicator from "components/ButtonLoadingIndicator";
 
 // Types
 import type { MaterialModel } from "database/models/materialModel";
@@ -86,7 +85,7 @@ export const NextButton = ({ isLastButton, isLoading, title, style, icon, ...res
         >
             {
                 isLoading ? (
-                    <ButtonLoadingIndicator />
+                    <ActivityIndicator size={"small"} color={colors.white} />
                 ) : (
                     <>
                         {icon && <MaterialIcons name={icon as unknown as any} size={22} color={colors.white} style={{ marginRight: 15 }} />}

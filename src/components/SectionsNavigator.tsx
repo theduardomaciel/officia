@@ -12,10 +12,10 @@ interface Props {
     selectedId: SharedValue<number>;
 }
 
-const MARGIN_SIZE = 12.5;
+const MARGIN_SIZE = 15;
 
 export function SectionsNavigator({ sections, selectedId }: Props) {
-    const windowWidth = Dimensions.get("window").width - 25 * 2;
+    const windowWidth = Dimensions.get("window").width - (MARGIN_SIZE * 2) * 2;
     const lineWidth = (windowWidth / sections.length)
 
     return (

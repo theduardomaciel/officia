@@ -7,6 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
 // Components
+import Container, { BusinessScrollView } from 'components/Container';
 import Header from 'components/Header';
 import Toast from 'components/Toast';
 import Input from 'components/Input';
@@ -20,11 +21,10 @@ import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
-import { updateData } from '.';
+import { updateData } from 'screens/Main/Business';
 
 // Types
-import { BusinessData, additionalInfoScheme, AdditionalInfoSchemeType } from './@types';
-import { useFocusEffect } from '@react-navigation/native';
+import { BusinessData, additionalInfoScheme, AdditionalInfoSchemeType } from '../@types';
 
 export default function AdditionalInfoScreen({ route, navigation }: any) {
     const { businessData: data }: { businessData: BusinessData, update: boolean } = route.params;
@@ -100,13 +100,9 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
     }, [watch, businessData]);
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12' style={{ rowGap: 20 }}>
+        <Container>
             <Header title='Dados Complementares' returnButton />
-            <ScrollView
-                className='flex-1'
-                contentContainerStyle={{ rowGap: 20 }}
-                showsVerticalScrollIndicator={false}
-            >
+            <BusinessScrollView>
                 <SubSectionWrapper
                     header={{
                         title: "Mensagens Padrão",
@@ -181,7 +177,7 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
                         }
                     </TouchableOpacity>
                 </SubSectionWrapper>
-            </ScrollView>
+            </BusinessScrollView>
             <SaveButton hasDifferences={hasDifferences} submitData={submitData} />
             <Toast
                 toastPosition='top'
@@ -194,6 +190,6 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
                     navigation.goBack();
                 }}
             />
-        </View>
+        </Container>
     )
 }

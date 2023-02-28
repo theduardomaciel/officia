@@ -1,5 +1,5 @@
 import React, { useCallback, forwardRef, useImperativeHandle } from 'react';
-import { View, Dimensions, TouchableWithoutFeedback, ViewStyle } from "react-native";
+import { View, Dimensions, TouchableWithoutFeedback, ViewStyle, TextProps, Text } from "react-native";
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Portal } from "@gorhom/portal";
 
@@ -253,3 +253,13 @@ const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, on
 });
 
 export default BottomSheet;
+
+export function Title({ children, ...rest }: TextProps) {
+    return (
+        <View className="w-full items-center justify-center ">
+            <Text className="font-titleBold text-2xl text-black text-center dark:text-white" {...rest}>
+                {children}
+            </Text>
+        </View>
+    )
+}

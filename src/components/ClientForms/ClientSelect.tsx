@@ -5,10 +5,9 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors, { primary } from 'global/colors';
 
 // Components
-import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
-import Title from 'components/Title';
-import EmptyMessage from 'components/EmptyMessage';
 import Modal from 'components/Modal';
+import BottomSheet, { BottomSheetActions, Title } from 'components/BottomSheet';
+import { EmptyMessage } from 'components/StatusMessage';
 
 // Database
 import { database } from 'database/index.native';

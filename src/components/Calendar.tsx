@@ -1,13 +1,13 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Text, TouchableOpacity, TouchableOpacityProps, useWindowDimensions, View, ViewStyle } from "react-native";
-
-import colors from "global/colors";
-
 import { useNavigation } from "@react-navigation/native";
-import clsx from "clsx";
+
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+
+import colors from "global/colors";
+import clsx from "clsx";
 
 const WEEK_DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 

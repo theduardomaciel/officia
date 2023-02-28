@@ -36,6 +36,7 @@ const Input = forwardRef(({ label, customIcon, icon, pallette = undefined, requi
         })}
         textAlignVertical={multiline ? "top" : "center"}
         multiline={multiline}
+        editable={pallette !== "disabled"}
         placeholderTextColor={colorScheme === "dark" ? colors.text[200] : colors.white}
         cursorColor={colorScheme === "dark" ? colors.text[200] : colors.white}
         selectionColor={colorScheme === "dark" ? colors.text[200] : colors.white}
@@ -44,7 +45,7 @@ const Input = forwardRef(({ label, customIcon, icon, pallette = undefined, requi
     />
 
     return (
-        <View className="flex-col align-top justify-start gap-y-2">
+        <View className="flex-col align-top justify-start" style={{ rowGap: 8 }}>
             {
                 label && (
                     <View className="flex-row w-full items-start justify-between">

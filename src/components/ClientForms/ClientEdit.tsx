@@ -1,29 +1,26 @@
-import React, { useRef, useCallback } from 'react';
-import { Text, View } from "react-native";
+import React, { useCallback } from 'react';
+import { View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 import { runOnUI } from 'react-native-reanimated';
 
 import { MaterialIcons } from "@expo/vector-icons";
-import colors, { primary } from 'global/colors';
+import colors from 'global/colors';
 
 // Form
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 // Types
-import type { ServiceModel } from 'database/models/serviceModel';
 import type { ClientModel } from 'database/models/clientModel';
 
 // Components
-import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
-import { ActionButton, SubActionButton } from 'components/ActionButton';
-import Title from 'components/Title';
+import BottomSheet, { BottomSheetActions, Title } from 'components/BottomSheet';
+import { ActionButton, SubActionButton } from 'components/Button';
 import Toast from 'components/Toast';
-import ClientSelect, { ClientDeleteModal } from './ClientSelect';
+import { ClientDeleteModal } from './ClientSelect';
 
 import { database } from 'database/index.native';
 import ClientDataForm, { ClientFormValues, clientSchema } from './ClientDataForm';
-import ClientAdd from './ClientAdd';
 
 interface Props {
     bottomSheetRef: React.RefObject<BottomSheetActions>;

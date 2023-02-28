@@ -22,14 +22,14 @@ import Service from "screens/Service";
 import DayAgenda from "screens/DayAgenda";
 
 // Business
-import BasicInfo from "screens/Main/Business/BasicInfo";
-import AdditionalInfo from "screens/Main/Business/AdditionalInfo";
-import BankAccount from "screens/Main/Business/BankAccount";
-import PhoneAndAddress from "screens/Main/Business/ContactAndAddress";
-import SocialMedia from "screens/Main/Business/SocialMedia";
+import BasicInfo from "screens/Main/Business/screens/BasicInfo";
+import AdditionalInfo from "screens/Main/Business/screens/AdditionalInfo";
+import BankAccount from "screens/Main/Business/screens/BankAccount";
+import PhoneAndAddress from "screens/Main/Business/screens/ContactAndAddress";
+import SocialMedia from "screens/Main/Business/screens/SocialMedia";
 
-import Settings from "screens/Main/Business/Settings";
-import DigitalSignature from "screens/Main/Business/DigitalSignature";
+import Settings from "screens/Main/Business/screens/Settings";
+import DigitalSignature from "screens/Main/Business/screens/DigitalSignature";
 
 const FormBase = () => <View style={{ flex: 1, backgroundColor: colors.gray[300] }} />
 

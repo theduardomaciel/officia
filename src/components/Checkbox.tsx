@@ -1,6 +1,6 @@
+import { memo } from 'react';
 import { Text, TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
 import Animated, { withSpring, withTiming, ZoomOut } from 'react-native-reanimated';
-import clsx from 'clsx';
 
 import { Feather } from "@expo/vector-icons";
 import colors from "tailwindcss/colors";
@@ -67,3 +67,38 @@ export function Checkbox({ title, checked = false, inverted, customKey, ...rest 
         </TouchableOpacity>
     );
 }
+
+interface GroupProps {
+    data: string[];
+    checked: string[];
+    dispatch: (action: { type: "add" | "remove", payload: string }) => void;
+}
+
+export const CheckboxesGroup = memo(({ data, checked, dispatch }: GroupProps, ref) => {
+    return (
+        <View className='flex-row flex-wrap items-center justify-between'>
+            {
+                data.map((tag, index) => (
+                    <View key={index} className='w-1/2'>
+                        <Checkbox
+                            customKey={`${tag}-${index}`}
+                            title={tag}
+                            checked={checked.includes(tag)}
+                            onPress={() => {
+                                if (checked.includes(tag)) {
+                                    /* setChecked(checked.filter(item => item !== tag)) */
+                                    /* updateTags(tag, "remove") */
+                                    dispatch({ type: "remove", payload: tag });
+                                } else {
+                                    /* setChecked([...checked, tag]) */
+                                    /* updateTags(tag, "add") */
+                                    dispatch({ type: "add", payload: tag });
+                                }
+                            }}
+                        />
+                    </View>
+                ))
+            }
+        </View>
+    )
+});

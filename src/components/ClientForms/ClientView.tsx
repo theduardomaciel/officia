@@ -11,13 +11,13 @@ import type { ClientModel } from 'database/models/clientModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 
 // Components
-import { ActionButton, SubActionButton } from 'components/ActionButton';
-import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
-import Title from 'components/Title';
-import { database } from 'database/index.native';
+import { ActionButton, SubActionButton, } from 'components/Button';
+import BottomSheet, { BottomSheetActions, Title } from 'components/BottomSheet';
 import ClientAdd from './ClientAdd';
 import ClientEdit from './ClientEdit';
 import ClientSelect from './ClientSelect';
+
+import { database } from 'database/index.native';
 
 interface Props {
     bottomSheetRef: React.RefObject<BottomSheetActions>;

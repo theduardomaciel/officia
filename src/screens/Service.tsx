@@ -7,16 +7,18 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
 // Components
-import { ActionButton } from 'components/ActionButton';
-import { BottomSheetActions } from 'components/BottomSheet';
-import Dropdown, { DropdownData } from 'components/Dropdown';
+import Container from 'components/Container';
 import Header from 'components/Header';
-import Loading from 'components/Loading';
 import Modal from 'components/Modal';
+import Toast from 'components/Toast';
+import Dropdown, { DropdownData } from 'components/Dropdown';
+
+import { ActionButton } from 'components/Button';
+import { BottomSheetActions } from 'components/BottomSheet';
+import { Loading } from 'components/StatusMessage';
 import { PreviewStatic } from 'components/Preview';
 import { NextButton, SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
 import { Tag } from 'components/TagsSelector';
-import Toast from 'components/Toast';
 
 import ClientAdd from 'components/ClientForms/ClientAdd';
 import ClientView from 'components/ClientForms/ClientView';
@@ -166,7 +168,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
     }
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12 gap-y-5'>
+        <Container>
             <View>
                 <Header
                     title={service?.name ?? "teste"}
@@ -384,6 +386,6 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                 ]}
                 cancelButton
             />
-        </View>
+        </Container>
     )
 }

@@ -4,6 +4,8 @@ import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
+// Components
+import Container, { BusinessScrollView } from 'components/Container';
 import Header from 'components/Header';
 
 import { useAuth } from 'context/AuthContext';
@@ -12,9 +14,9 @@ export default function Settings() {
     const { signOut } = useAuth();
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12' style={{ rowGap: 20 }}>
+        <Container>
             <Header title='Configurações' returnButton />
-            <ScrollView className='flex-1' contentContainerStyle={{ rowGap: 15 }}>
+            <BusinessScrollView>
                 <TouchableOpacity
                     activeOpacity={0.7}
                     className='w-full flex-row items-center justify-start bg-gray-200 p-3 rounded'
@@ -23,10 +25,10 @@ export default function Settings() {
                 >
                     <MaterialIcons name='exit-to-app' size={16} color={colors.primary.red} />
                     <Text className='text-sm text-primary-red'>
-                        Sair da conta
+                        Excluir conta e sair
                     </Text>
                 </TouchableOpacity>
-            </ScrollView>
-        </View>
+            </BusinessScrollView>
+        </Container>
     )
 }

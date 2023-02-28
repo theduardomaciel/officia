@@ -13,13 +13,12 @@ import colors from "global/colors";
 import type { BusinessData } from "screens/Main/Business/@types";
 
 interface Props {
-    businessData: BusinessData | undefined;
-    setBusinessData: React.Dispatch<React.SetStateAction<BusinessData | undefined>>;
-    onUpdate: (updatedData: BusinessData) => void;
+    businessData: BusinessData | Partial<BusinessData> | undefined;
+    onUpdate: (updatedData: Partial<BusinessData>) => void;
     showDeleteButton?: boolean;
 }
 
-export default function LogoPicker({ businessData, setBusinessData, onUpdate, showDeleteButton }: Props) {
+export default function LogoPicker({ businessData, onUpdate, showDeleteButton }: Props) {
     const { colorScheme } = useColorScheme();
 
     async function getBusinessLogo() {
@@ -31,25 +30,30 @@ export default function LogoPicker({ businessData, setBusinessData, onUpdate, sh
         if (result.type === 'success') {
             const { uri } = result;
             console.log("Nova imagem selecionada ", uri)
-            const updatedBusinessData = { ...businessData, logo: uri } as BusinessData;
-            setBusinessData(updatedBusinessData);
-            onUpdate(updatedBusinessData);
+            onUpdate({ logo: uri })
         }
     }
 
     async function removeBusinessLogo() {
-        FileSystem.deleteAsync(businessData?.logo as string);
-        const updatedBusinessData = { ...businessData, logo: undefined } as BusinessData;
-        setBusinessData(updatedBusinessData);
-        onUpdate(updatedBusinessData)
+        if (businessData) {
+            FileSystem.deleteAsync(businessData?.logo as string, { idempotent: true });
+            onUpdate({ logo: undefined })
+        }
     }
 
     return (
-        <View>
+        <View className="flex-col items-start justify-center" style={{ rowGap: 10 }}>
             <TouchableOpacity
                 activeOpacity={0.8}
-                className='w-full flex-col items-center justify-center px-12 gap-y-1 border rounded-lg border-dashed border-primary-green'
-                style={{ paddingTop: businessData && businessData.logo ? 5 : 50, paddingBottom: businessData && businessData.logo ? 5 : 50 }}
+                className='w-full flex-col items-center justify-center px-12 border'
+                style={{
+                    paddingTop: businessData && businessData.logo ? 5 : 50,
+                    paddingBottom: businessData && businessData.logo ? 5 : 50,
+                    borderRadius: 8,
+                    borderColor: colors.primary.green,
+                    borderWidth: 1,
+                    borderStyle: "dashed",
+                }}
                 onPress={getBusinessLogo}
             >
                 {

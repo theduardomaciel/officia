@@ -13,7 +13,7 @@ import WarrantyIcon from 'src/assets/icons/warranty.svg';
 import SectionBottomSheet from '../SectionBottomSheet';
 import { NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
 import ToggleGroup, { ToggleGroupWithManualValue } from 'components/ToggleGroup';
-import CheckboxesGroups from 'components/CheckboxesGroup';
+import { CheckboxesGroup } from 'components/Checkbox';
 
 // Forms
 import Input from 'components/Input';
@@ -453,9 +453,8 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                 }}
             >
                 <View>
-                    <CheckboxesGroups
+                    <CheckboxesGroup
                         data={paymentMethods}
-                        /* ref={checkedPaymentMethods} */
                         checked={checkedPaymentMethods}
                         dispatch={dispatch}
                     />

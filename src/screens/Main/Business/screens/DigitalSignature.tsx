@@ -10,14 +10,15 @@ import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 import colors from 'global/colors';
 
+// Components
+import Container from 'components/Container';
 import Header from 'components/Header';
 import { NextButton } from 'components/ScheduleForm/SubSectionWrapper';
 
 // Types
-import type { BusinessData } from './@types';
-import { SubActionButton } from 'components/ActionButton';
-import { updateData } from '.';
-import { Image } from 'react-native';
+import type { BusinessData } from 'screens/Main/Business/@types';
+import { SubActionButton } from 'components/Button';
+import { updateData } from 'screens/Main/Business';
 
 const style = `
     body {
@@ -126,7 +127,7 @@ export default function DigitalSignature({ route, navigation }: any) {
     };
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12' style={{ rowGap: 20 }}>
+        <Container>
             <Header title='Assinatura Digital' returnButton />
             <View
                 className='flex-1 p-1'
@@ -166,6 +167,6 @@ export default function DigitalSignature({ route, navigation }: any) {
                     />
                 </View>
             </View>
-        </View>
+        </Container>
     )
 }

@@ -16,6 +16,7 @@ import LogoPicker from 'components/LogoPicker';
 import Toast from 'components/Toast';
 
 import type { BusinessData } from './@types';
+import Container, { BusinessScrollView } from 'components/Container';
 
 interface NavigationButtonProps {
     title: string;
@@ -48,7 +49,7 @@ const NavigationButton = ({ title, description, onPress, colorScheme = "dark" }:
     )
 }
 
-export async function updateData(dataToUpdate: Partial<BusinessData>, businessData: BusinessData) {
+export async function updateData(dataToUpdate: Partial<BusinessData>, businessData: BusinessData | Partial<BusinessData>) {
     try {
         const updatedData = { ...businessData, ...dataToUpdate } as BusinessData;
 
@@ -98,18 +99,17 @@ export default function Business() {
     )
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12' style={{ rowGap: 20 }}>
+        <Container>
             <Header title='Meu Negócio' />
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={{ flex: 1 }}
-                contentContainerStyle={{ paddingBottom: 25, paddingTop: 4, rowGap: 20 }}
-            >
+            <BusinessScrollView style={{ paddingBottom: 25, paddingTop: 4, rowGap: 20 }}>
                 <LogoPicker
                     businessData={businessData}
-                    setBusinessData={setBusinessData}
-                    onUpdate={async (updatedBusinessData) => {
-                        await database.localStorage.set('businessData', updatedBusinessData);
+                    onUpdate={async (dataToUpdate) => {
+                        if (!businessData) return;
+                        const updatedData = await updateData(dataToUpdate, businessData);
+                        if (updatedData) {
+                            setBusinessData(updatedData);
+                        }
                     }}
                     showDeleteButton
                 />
@@ -154,7 +154,7 @@ export default function Business() {
                     description='Gerencie sua conta e personalize suas preferências'
                     onPress={() => navigate("settings", { businessData: businessData })}
                 />
-            </ScrollView>
-        </View>
+            </BusinessScrollView>
+        </Container>
     )
 }

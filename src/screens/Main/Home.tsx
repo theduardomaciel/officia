@@ -10,13 +10,14 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
 // Components
-import Calendar, { WeekDays, WeekView } from 'components/Calendar';
-import EmptyMessage from 'components/EmptyMessage';
+import Container from 'components/Container';
 import Header from 'components/Header';
-import Loading from 'components/Loading';
-import ServicePreview from 'components/ServicePreview';
-import { Tag, TagsSelector } from 'components/TagsSelector';
 import Toast from 'components/Toast';
+import ServicePreview from 'components/ServicePreview';
+
+import Calendar, { WeekDays, WeekView } from 'components/Calendar';
+import { Empty, Loading } from 'components/StatusMessage';
+import { Tag, TagsSelector } from 'components/TagsSelector';
 
 // Utils
 import { tags } from 'global/tags';
@@ -149,31 +150,29 @@ export default function Home({ route }: any) {
     })
 
     return (
-        <View className='flex-1 min-h-full px-6 pt-12 gap-y-5 relative'>
-            <View>
-                <Header title='Agendado'>
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        className='flex flex-row items-center justify-center px-3 py-1 bg-gray_light-neutral bg-black dark:bg-gray-200 rounded-full'
-                        onPress={() => setIsCalendarExpanded(!isCalendarExpanded)}
-                    >
-                        <MaterialIcons
-                            name="expand-more"
-                            size={16}
-                            className={"m-0"}
-                            color={colorScheme === "dark" ? colors.text[100] : colors.white}
-                            style={{
-                                transform: [
-                                    { rotate: isCalendarExpanded ? '180deg' : '0deg' }
-                                ],
-                            }}
-                        />
-                        <Text className='text-sm ml-1 text-white dark:text-text-100'>
-                            {isCalendarExpanded ? 'Minimizar' : 'Expandir'}
-                        </Text>
-                    </TouchableOpacity>
-                </Header>
-            </View>
+        <Container>
+            <Header title='Agendado'>
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    className='flex flex-row items-center justify-center px-3 py-1 bg-gray_light-neutral bg-black dark:bg-gray-200 rounded-full'
+                    onPress={() => setIsCalendarExpanded(!isCalendarExpanded)}
+                >
+                    <MaterialIcons
+                        name="expand-more"
+                        size={16}
+                        className={"m-0"}
+                        color={colorScheme === "dark" ? colors.text[100] : colors.white}
+                        style={{
+                            transform: [
+                                { rotate: isCalendarExpanded ? '180deg' : '0deg' }
+                            ],
+                        }}
+                    />
+                    <Text className='text-sm ml-1 text-white dark:text-text-100'>
+                        {isCalendarExpanded ? 'Minimizar' : 'Expandir'}
+                    </Text>
+                </TouchableOpacity>
+            </Header>
             {
                 isCalendarExpanded && (
                     <Animated.View entering={FadeInUp.duration(235)} exiting={FadeOutUp.duration(150)} className='flex-col items-center justify-center w-full'>
@@ -206,7 +205,7 @@ export default function Home({ route }: any) {
                 {
                     pendingServices && pendingServices.length === 0 ? (
                         <Animated.View className='flex-1 items-center pt-24'>
-                            <EmptyMessage />
+                            <Empty />
                         </Animated.View>
                     ) : pendingServices && pendingServices.length > 0 ? (
                         <SectionList
@@ -237,7 +236,7 @@ export default function Home({ route }: any) {
                 toastPosition="top"
                 toastOffset={"85%"}
             />
-        </View>
+        </Container>
     );
 }
 
