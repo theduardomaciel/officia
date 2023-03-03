@@ -13,7 +13,7 @@ export function Empty({ message, style }: EmptyMessageProps) {
     const { colorScheme } = useColorScheme();
 
     return (
-        <View className='items-center justify-center px-4' style={style}>
+        <View className='items-center justify-center flex-1 px-4' style={style}>
             <MaterialIcons
                 name='search'
                 size={56}

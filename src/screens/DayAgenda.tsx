@@ -77,7 +77,7 @@ export default function DayAgenda({ route, navigation }: any) {
                             />
                         )}
                         ListEmptyComponent={() => (
-                            <Empty style={{ paddingTop: 100 }} />
+                            <Empty style={{ paddingBottom: 150 }} />
                         )}
                     />
                 ) : (

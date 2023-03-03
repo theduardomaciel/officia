@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import clsx from 'clsx';
 
-import { Text, TouchableOpacity, FlatList, LayoutAnimation, TouchableOpacityProps, Platform, UIManager, View } from 'react-native';
+import { Text, TouchableOpacity, FlatList, LayoutAnimation, TouchableOpacityProps, View } from 'react-native';
 
 import { useColorScheme } from 'nativewind';
 import { MaterialIcons } from "@expo/vector-icons"
@@ -32,10 +32,6 @@ interface TagProps extends TagObject {
     children?: React.ReactNode;
     pallette?: TagSectionProps['pallette'];
     onPress?: TouchableOpacityProps['onPress'];
-}
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 export const Tag = ({ onPress, children, pallette, checked, icon, name, color }: TagProps) => {

@@ -3,7 +3,6 @@ import { SectionList, Text, TouchableOpacity, View } from 'react-native';
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useColorScheme } from 'nativewind';
-import * as NavigationBar from "expo-navigation-bar";
 
 import Animated, { FadeInUp, FadeOutUp, Layout } from 'react-native-reanimated';
 
@@ -69,7 +68,7 @@ const daysOnMonth = (month: number, year: number) => {
     return new Date(year, month, 0).getDate();
 }
 
-export default function Home({ route }: any) {
+export default function Home({ route, navigation }: any) {
     const { navigate } = useNavigation()
     const { colorScheme } = useColorScheme();
 
@@ -114,16 +113,28 @@ export default function Home({ route }: any) {
         }
     }
 
-    useFocusEffect(useCallback(() => {
-        if (pendingServices === undefined || pendingServices.length === 0) {
-            fetchData()
-        }
-        if (route.params?.service === "created") {
-            showCreatedServiceToast()
-        } else if (route.params?.service === "deleted") {
-            showDeleteServiceToast
-        }
-    }, []))
+    useFocusEffect(
+        useCallback(() => {
+            console.log(route?.params?.service)
+            if (route?.params?.service === "created") {
+                showCreatedServiceToast()
+            } else if (route?.params?.service === "deleted") {
+                showDeleteServiceToast();
+            }
+        }, [route.params])
+    )
+
+    useEffect(() => {
+        fetchData()
+    }, [])
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('tabPress', (event: any) => {
+            navigation.setParams({ service: undefined })
+        });
+
+        return unsubscribe;
+    }, [navigation]);
 
     const [currentFilteredTags, setCurrentFilteredTags] = useState<TagObject[]>([])
 
@@ -259,13 +270,13 @@ export default function Home({ route }: any) {
                             }
                         />
                     ) : <Animated.View className='flex-1'>
-                        <Loading message='Aguarde enquanto os serviços agendados são carregados...' />
+                        <Loading />
                     </Animated.View>
                 }
             </Animated.View>
             <Toast
                 toastPosition="top"
-                toastOffset={"85%"}
+                toastOffset={"17.5%"}
             />
         </Container>
     );

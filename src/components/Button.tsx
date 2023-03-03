@@ -14,21 +14,22 @@ const Label = ({ children }: { children: React.ReactNode }) => (
 interface Props {
     label?: string;
     icon?: string;
+    disabled?: boolean;
     onPress: () => void;
     isLoading?: boolean;
     preset?: "next" | "dashed";
     style?: ViewStyle;
 }
 
-export const ActionButton = ({ onPress, label, icon, isLoading, style, preset }: Props) => {
+export const ActionButton = ({ onPress, label, icon, isLoading, disabled, style, preset }: Props) => {
     return (
         <TouchableOpacity
             activeOpacity={isLoading ? 1 : 0.8}
-            disabled={isLoading}
+            disabled={isLoading || disabled}
             className={clsx('flex-row items-center justify-center w-full py-4 rounded bg-primary-green', {
                 'bg-gray-200': isLoading || preset === "next",
             })}
-            style={[style, { columnGap: 10 }]}
+            style={[style, { columnGap: 10, opacity: disabled ? 0.5 : 1 }]}
             onPress={onPress}
         >
             {

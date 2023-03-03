@@ -1,12 +1,13 @@
+import { useEffect } from "react";
+import { View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { CardStyleInterpolators, createStackNavigator } from "@react-navigation/stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 import { useColorScheme } from 'nativewind';
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
-
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -117,8 +118,25 @@ function HomeStack() {
     );
 }
 
+// Notifications
+import notifee, { EventType } from "@notifee/react-native";
+import { createChannelId } from "utils/notificationHandler";
+
 export function AppStack() {
     const { colorScheme } = useColorScheme();
+    const { navigate } = useNavigation();
+
+    useEffect(() => {
+        createChannelId();
+        return notifee.onBackgroundEvent(async ({ type, detail }) => {
+            if (type === EventType.PRESS) {
+                const { notification } = detail;
+                if (notification && detail.pressAction?.id) {
+                    navigate('service', { serviceId: detail.pressAction?.id })
+                }
+            }
+        });
+    }, []);
 
     return (
         <Stack.Navigator

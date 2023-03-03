@@ -38,7 +38,7 @@ interface FormData {
 };
 
 // Types
-type PaymentCondition = 'full' | 'installments' | 'agreement';
+type PaymentCondition = 'cash' | 'installments' | 'agreement';
 type SplitMethod = 'percentage' | 'money';
 type RemainingValue = 'afterCompletion' | 'withInstallments'
 type WarrantyPeriod = 'days' | 'months' | 'years';
@@ -58,7 +58,7 @@ function checkedPaymentsReducer(state: any, action: any) {
 
 const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Section, ref) => {
     // General
-    const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>(initialValue?.service?.paymentCondition as PaymentCondition ?? 'full');
+    const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>(initialValue?.service?.paymentCondition as PaymentCondition ?? 'cash');
     /* const checkedPaymentMethods = useRef<string[]>([]); */
     const [checkedPaymentMethods, dispatch] = useReducer(checkedPaymentsReducer, initialValue?.service?.paymentMethods ?? [])
 
@@ -97,167 +97,153 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
         return (
             <SubSectionWrapper header={{ title: "Condições de Pagamento", icon: "credit-card" }}>
                 <View className='flex-col w-full' style={{ rowGap: 10 }}>
-                    <View>
-                        <ToggleGroup
-                            data={[
-                                {
-                                    label: 'à vista',
-                                    value: 'full',
-                                },
-                                {
-                                    label: 'parcelado',
-                                    value: 'installments',
-                                },
-                                {
-                                    label: "acordo",
-                                    value: 'agreement',
-                                }
-                            ]}
-                            selected={paymentCondition}
-                            updateState={setPaymentCondition}
-                        />
-                    </View>
+                    <ToggleGroup
+                        data={[
+                            {
+                                label: 'à vista',
+                                value: 'cash',
+                            },
+                            {
+                                label: 'parcelado',
+                                value: 'installments',
+                            },
+                            {
+                                label: "acordo",
+                                value: 'agreement',
+                            }
+                        ]}
+                        selected={paymentCondition}
+                        updateState={setPaymentCondition}
+                    />
                     {
                         paymentCondition === "agreement" && (
-                            <View>
-                                <ToggleGroup
-                                    data={[
-                                        {
-                                            label: '%',
-                                            value: 'percentage',
-                                        },
-                                        {
-                                            label: 'R$',
-                                            value: 'money',
-                                        },
-                                    ]}
-                                    selected={splitMethod}
-                                    updateState={setSplitMethod}
-                                />
-                            </View>
-                        )
-                    }
-                </View>
-                <View>
-                    {
-                        paymentCondition === "agreement" && (
-                            splitMethod === "percentage" ? (
-                                <SubSectionWrapper header={{ title: `Qual o percentual do acordo?` }} preset="subSection">
-                                    <View>
-                                        <ToggleGroupWithManualValue
-                                            key={"agreementInitialPercentage"}
-                                            data={[
-                                                {
-                                                    label: '30%',
-                                                    value: '30%',
-                                                },
-                                                {
-                                                    label: '50%',
-                                                    value: '50%',
-                                                },
-                                            ]}
-                                            manualValue={{
-                                                inputProps: {
-                                                    placeholder: "Outro (%)",
-                                                    keyboardType: "number-pad"
-                                                },
-                                                maxValue: 100,
-                                                unit: {
-                                                    label: '%',
-                                                    position: "end"
-                                                }
-                                            }}
-                                            selected={agreementInitialPercentage}
-                                            setSelected={setAgreementInitialPercentage}
-                                            control={control}
-                                            name="agreementInitialPercentage"
-                                        />
-                                    </View>
-                                </SubSectionWrapper>
-                            ) : <SubSectionWrapper header={{ title: `Qual o valor inicial a ser pago com o acordo?` }} preset="subSection">
-                                <View>
-                                    <ToggleGroupWithManualValue
-                                        key={"agreementInitialValue"}
-                                        data={[
-                                            {
-                                                label: 'metade',
-                                                value: 'half',
-                                            },
-                                        ]}
-                                        manualValue={{
-                                            inputProps: {
-                                                placeholder: "Outro (R$)",
-                                                keyboardType: "number-pad",
-                                            },
-                                            unit: {
-                                                label: 'R$ ',
-                                                position: "start"
-                                            }
-                                        }}
-                                        selected={agreementInitialValue}
-                                        setSelected={setAgreementInitialValue}
-                                        control={control}
-                                        name="agreementInitialValue"
-                                    />
-                                </View>
-                            </SubSectionWrapper>
+                            <ToggleGroup
+                                data={[
+                                    {
+                                        label: '%',
+                                        value: 'percentage',
+                                    },
+                                    {
+                                        label: 'R$',
+                                        value: 'money',
+                                    },
+                                ]}
+                                selected={splitMethod}
+                                updateState={setSplitMethod}
+                            />
                         )
                     }
                 </View>
                 {
                     paymentCondition === "agreement" && (
-                        <SubSectionWrapper header={{ title: "Como o valor restante será pago?" }} preset="subSection">
-                            <View>
-                                <ToggleGroup
+                        splitMethod === "percentage" ? (
+                            <SubSectionWrapper header={{ title: `Qual o percentual do acordo?` }} preset="subSection">
+                                <ToggleGroupWithManualValue
+                                    key={"agreementInitialPercentage"}
                                     data={[
                                         {
-                                            label: 'após a conclusão',
-                                            value: 'afterCompletion',
+                                            label: '30%',
+                                            value: '30%',
                                         },
                                         {
-                                            label: 'em parcelas',
-                                            value: 'withInstallments',
+                                            label: '50%',
+                                            value: '50%',
                                         },
                                     ]}
-                                    selected={remainingValue}
-                                    updateState={setRemainingValue}
+                                    manualValue={{
+                                        inputProps: {
+                                            placeholder: "Outro (%)",
+                                            keyboardType: "number-pad"
+                                        },
+                                        maxValue: 100,
+                                        unit: {
+                                            label: '%',
+                                            position: "end"
+                                        }
+                                    }}
+                                    selected={agreementInitialPercentage}
+                                    setSelected={setAgreementInitialPercentage}
+                                    control={control}
+                                    name="agreementInitialPercentage"
                                 />
-                            </View>
+                            </SubSectionWrapper>
+                        ) : <SubSectionWrapper header={{ title: `Qual o valor inicial a ser pago com o acordo?` }} preset="subSection">
+                            <ToggleGroupWithManualValue
+                                key={"agreementInitialValue"}
+                                data={[
+                                    {
+                                        label: 'metade',
+                                        value: 'half',
+                                    },
+                                ]}
+                                manualValue={{
+                                    inputProps: {
+                                        placeholder: "Outro (R$)",
+                                        keyboardType: "number-pad",
+                                    },
+                                    unit: {
+                                        label: 'R$ ',
+                                        position: "start"
+                                    }
+                                }}
+                                selected={agreementInitialValue}
+                                setSelected={setAgreementInitialValue}
+                                control={control}
+                                name="agreementInitialValue"
+                            />
+                        </SubSectionWrapper>
+                    )
+                }
+                {
+                    paymentCondition === "agreement" && (
+                        <SubSectionWrapper header={{ title: "Como o valor restante será pago?" }} preset="subSection">
+                            <ToggleGroup
+                                data={[
+                                    {
+                                        label: 'após a conclusão',
+                                        value: 'afterCompletion',
+                                    },
+                                    {
+                                        label: 'em parcelas',
+                                        value: 'withInstallments',
+                                    },
+                                ]}
+                                selected={remainingValue}
+                                updateState={setRemainingValue}
+                            />
                         </SubSectionWrapper>
                     )
                 }
                 {
                     (paymentCondition === "installments" || paymentCondition === "agreement" && remainingValue === "withInstallments") && (
                         <SubSectionWrapper header={{ title: "Em quantas parcelas o valor será dividido?" }} preset="subSection">
-                            <View>
-                                <ToggleGroupWithManualValue
-                                    key={"installmentsAmount"}
-                                    data={[
-                                        {
-                                            label: '2x',
-                                            value: '2x',
-                                        },
-                                        {
-                                            label: '3x',
-                                            value: '3x',
-                                        },
-                                    ]}
-                                    manualValue={{
-                                        inputProps: {
-                                            placeholder: "Outro (parcelas)",
-                                            keyboardType: "number-pad"
-                                        },
-                                        unit: {
-                                            label: 'x',
-                                            position: "end"
-                                        }
-                                    }}
-                                    selected={installmentsAmount}
-                                    setSelected={setInstallmentsAmount}
-                                    control={control}
-                                    name="installmentsAmount"
-                                />
-                            </View>
+                            <ToggleGroupWithManualValue
+                                key={"installmentsAmount"}
+                                data={[
+                                    {
+                                        label: '2x',
+                                        value: '2x',
+                                    },
+                                    {
+                                        label: '3x',
+                                        value: '3x',
+                                    },
+                                ]}
+                                manualValue={{
+                                    inputProps: {
+                                        placeholder: "Outro (parcelas)",
+                                        keyboardType: "number-pad"
+                                    },
+                                    unit: {
+                                        label: 'x',
+                                        position: "end"
+                                    }
+                                }}
+                                selected={installmentsAmount}
+                                setSelected={setInstallmentsAmount}
+                                control={control}
+                                name="installmentsAmount"
+                            />
                         </SubSectionWrapper>
                     )
                 }

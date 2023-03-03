@@ -31,6 +31,7 @@ import type { ClientModel } from 'database/models/clientModel';
 import type { MaterialModel } from 'database/models/materialModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
+import { removeNotification, scheduleServiceNotification } from 'utils/notificationHandler';
 
 interface Props {
     service: ServiceModel;
@@ -57,6 +58,7 @@ export default function Service({ route }: any) {
             preset: "success",
             icon: "edit",
             title: "O serviço foi atualizado com sucesso!",
+            message: "As alterações foram salvas."
         })
     }, [])
 
@@ -68,18 +70,22 @@ export default function Service({ route }: any) {
         setService(newService)
         newService.subServices.observe().subscribe(setSubServices);
         newService.materials.observe().subscribe(setMaterials);
-        newService.client.observe().subscribe(setClient);
+        newService.client.observe().subscribe(client => {
+            setClient(client);
+            scheduleServiceNotification(newService, subServices?.length ?? 0, client?.name)
+        });
     }
 
     useFocusEffect(
         React.useCallback(() => {
             if (updated) {
+                console.log("atualizou")
                 showUpdatedServiceToast();
             }
 
             fetchService();
             /* return () => unsubscribe(); */
-        }, [serviceId])
+        }, [serviceId, updated])
     );
 
     return (
@@ -150,6 +156,12 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                 service.status = status;
             })
         })
+
+        if (status === "archived") {
+            await removeNotification(service.id)
+        } else if (status === "scheduled") {
+            await scheduleServiceNotification(service, subServices?.length ?? 0, client?.name)
+        }
     }
 
     async function deleteService() {
@@ -160,6 +172,8 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 
             await queryService.destroyPermanently();
         })
+
+        await removeNotification(service.id)
 
         setDeleteModalVisible(false);
         navigate("home", { service: "deleted" });
@@ -331,13 +345,14 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                     preset='next'
                     icon={"attach-money"}
                     label={"Gerar orçamento"}
+                    disabled={subServices && subServices?.length === 0}
                     onPress={() => navigate("invoice", { serviceId: service.id })}
                 />
             </View>
             <Toast
                 toastPosition="top"
                 maxDragDistance={25}
-                toastOffset={"75%"}
+                toastOffset={"20%"}
             />
             {
                 client && (

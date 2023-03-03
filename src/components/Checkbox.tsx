@@ -45,7 +45,7 @@ export function Checkbox({ title, checked = false, inverted, customKey, ...rest 
                 checked ?
                     <Animated.View
                         className='h-[30px] w-[30px] bg-primary-green rounded-[9px] items-center justify-center'
-                        entering={entering}
+                    /* entering={entering} */
                     /* exiting={ZoomOut.duration(100)} */
                     >
                         <Feather name='check' size={20} color={colors.white} />

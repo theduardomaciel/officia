@@ -21,6 +21,7 @@ import ClientSelect from './ClientSelect';
 
 import { database } from 'database/index.native';
 import ClientDataForm, { ClientFormValues, clientSchema } from './ClientDataForm';
+import { scheduleServiceNotification } from 'utils/notificationHandler';
 
 interface Props {
     bottomSheetRef: React.RefObject<BottomSheetActions>;
@@ -59,6 +60,9 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
                     service.client.set(newClient)
                 })
             });
+
+            /* const subServicesAmount = await service.subServices.fetchCount();
+            await scheduleServiceNotification() */
         } catch (error) {
             console.log(error)
         }

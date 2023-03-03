@@ -147,16 +147,19 @@ export default function Invoice({ route, navigation }: any) {
         }
     }
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const [selectedOptions, setSelectedOptions] = useState<Config>({
         showLogo: true,
         showInvoiceName: true,
         showDigitalSignature: true,
-        showSubtotals: false,
-        showSubServicesDetails: false,
-        showMaterialsDetails: false,
+        showSubtotals: true,
+        showSubServicesDetails: true,
+        showMaterialsDetails: true,
     })
 
     async function createPDF() {
+        setIsLoading(true);
         const data = await database.localStorage.get('businessData') as BusinessData;
 
         if (!data) {
@@ -192,6 +195,7 @@ export default function Invoice({ route, navigation }: any) {
         };
 
         const file = await RNHTMLtoPDF.convert(options)
+        setIsLoading(false);
         setModalProps({
             status: "success",
             data: file.filePath
@@ -483,6 +487,7 @@ export default function Invoice({ route, navigation }: any) {
                                         preset='next'
                                         style={{ backgroundColor: colors.primary.green }}
                                         label={"Gerar documento"}
+                                        isLoading={isLoading}
                                         onPress={onSubmit}
                                     />
                                 </SectionBottomSheet>
@@ -495,7 +500,7 @@ export default function Invoice({ route, navigation }: any) {
                 isVisible={modalProps.status === "success"}
                 toggleVisibility={() => setModalProps({ status: false })}
                 title={"O orçamento foi criado com sucesso."}
-                message={`O arquivo foi salvo em ${modalProps.data}`}
+                message={`Compartilhe-o com seu cliente clicando no botão Visualizar.`}
                 icon="article"
                 buttons={[
                     {

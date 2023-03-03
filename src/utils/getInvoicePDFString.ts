@@ -143,10 +143,7 @@ export async function getPDFString(
                 justify-content: space-between;
                 gap: 1rem;
                 width: 100%;
-            }
-
-            header .logo_mark img {
-                height: 6rem;
+                height: fit-content;
             }
 
             .full {
@@ -459,10 +456,12 @@ export async function getPDFString(
                 justify-content: center;
             }
 
-            .signature div:nth-child(1) {
-                width: 100%;
+            .signature div .line{
+                width: 150%;
                 min-width: 20rem;
                 height: 1px;
+                margin-top: -2rem;
+                z-index: 10;
                 background-color: black;
             }
 
@@ -499,6 +498,7 @@ export async function getPDFString(
             <div class="logo_mark">
                 ${data.logo && config.showLogo ? `
                     <img
+                        style="max-height: 125; object-fit: contain;"
                         src="data:image/jpeg;base64,${image!.base64}"
                     />
                 ` : ""}
@@ -764,10 +764,11 @@ export async function getPDFString(
             <div class="signature">
                 ${data.digitalSignatureUri && config.showDigitalSignature ? `
                     <img
-                        src="data:image/jpeg;base64,${digitalSignature!.base64}"
+                        style="width: 100%; height: 50; object-fit: contain; filter: invert(); z-index: -1; margin-bottom: -2rem;"
+                        src="data:image/png;base64,${digitalSignature!.base64}"
                     />
                 ` : ""}
-                <div></div>
+                <div class="line"></div>
                 <div class="info">
                     <p>${data.fantasyName}</p>
                     <p>${data.socialReason}</p>
@@ -789,10 +790,10 @@ export async function getPDFString(
             })}</p>
                     </div>
 
-                    <div class="column" style="min-width: 25%;">
+                    ${servicesTypes.length > 0 ? `<div class="column" style="min-width: 25%;">
                         <p class="section_title">Categorias</p>
                         <p class="section_description">${servicesTypes?.map(type => type.name).join(", ")}</p>
-                    </div>
+                    </div>` : ""}
                 </div>
 
                 <div class="full" style="display: flex; height: 1px; background-color: var(--text-100);">

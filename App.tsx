@@ -7,6 +7,11 @@ import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-c
 // Customization
 import { useColorScheme } from 'nativewind';
 
+import { Platform, UIManager } from 'react-native';
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 // App Loading (fonts, splash screen, etc.)
 
 import { AbrilFatface_400Regular } from "@expo-google-fonts/abril-fatface"

@@ -41,6 +41,9 @@ import type { MaterialModel } from 'database/models/materialModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
 import type { Section0Props, Section0RefProps, Section1Props, Section1RefProps } from '../types';
+import { Q } from '@nozbe/watermelondb';
+import { ClientModel } from 'database/models/clientModel';
+import { scheduleServiceNotification } from 'utils/notificationHandler';
 
 interface ReviewSectionProps {
     wrapperProps: SubSectionWrapperProps;
@@ -105,7 +108,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
 
     const currentDate = new Date();
     const [data, setData] = useState<Section0Props & Section1Props & { serviceId: number } | undefined | null>(undefined);
-    const [isUpdating, setIsUpdating] = useState(false);
+    const [isLoading, setLoading] = useState(false);
 
     const onExpanded = async () => {
         if (formRefs) {
@@ -129,7 +132,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
         const serviceDate = data?.date ? new Date(currentDate.getFullYear(), data.date.month, data.date.date, data.time.getHours(), data.time.getMinutes(), data.time.getSeconds()) : currentDate;
 
         if (data) {
-            setIsUpdating(true)
+            setLoading(true)
             const formattedData = {
                 name: data.name || `Serviço n.0${data.serviceId}-${currentDate.getFullYear()}`,
                 date: serviceDate,
@@ -145,7 +148,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
             } as ServiceModel;
 
             if (initialValue) {
-                await database.write(async () => {
+                const { service, subServicesAmount, client } = await database.write(async () => {
                     const updatedService = await initialValue.service.update((service) => {
                         service.name = formattedData.name;
                         service.date = formattedData.date;
@@ -251,9 +254,17 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                         ...batchMaterialsToDelete,
                         ...batchMaterialsToCreate
                     ])
+
+                    const subServicesAmount = await database.get<SubServiceModel>(`sub_services`).query(Q.where('service_id', updatedService.id)).fetchCount();
+                    const typedUpdateService = updatedService as any;
+                    const client = await typedUpdateService.client.fetch();
+
+                    return { service: updatedService, subServicesAmount, client }
                 })
 
-                setIsUpdating(false)
+                await scheduleServiceNotification(service, subServicesAmount, client?.name)
+
+                setLoading(false)
                 console.log("Service updated successfully (with subServices and materials).")
                 navigate("service", { serviceId: initialValue.service.id, updated: true });
             } else {
@@ -426,7 +437,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                         }
 
                         <ActionButton
-                            isLoading={isUpdating}
+                            isLoading={isLoading}
                             onPress={onSubmit}
                             label={initialValue ? "Atualizar" : "Agendar"}
                             style={{ backgroundColor: colors.primary.green }}
