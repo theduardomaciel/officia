@@ -16,12 +16,16 @@ export const basicInfoScheme = z.object({
 
 export type BasicInfoSchemeType = z.infer<typeof basicInfoScheme>;
 
+/*  */
+
 export const additionalInfoScheme = z.object({
     defaultMessage: z.string().optional(),
     defaultWarrantyDetails: z.string().optional(),
 });
 
 export type AdditionalInfoSchemeType = z.infer<typeof additionalInfoScheme>;
+
+/*  */
 
 export const contactAndAddressScheme = z.object({
     email: z.string({ required_error: "O e-mail inserido não é válido." }).email({ message: "O e-mail inserido não é válido." }),
@@ -33,6 +37,8 @@ export const contactAndAddressScheme = z.object({
 
 export type ContactAndAddressSchemeType = z.infer<typeof contactAndAddressScheme>;
 
+/*  */
+
 export const bankAccountScheme = z.object({
     agency: z.string().optional(),
     account: z.string().optional(),
@@ -42,10 +48,34 @@ export const bankAccountScheme = z.object({
 
 export type BankAccountSchemeType = z.infer<typeof bankAccountScheme>;
 
+/*  */
+
+export const socialMediaScheme = z.object({
+    site: z.string().optional(),
+    facebook: z.string().optional(),
+    instagram: z.string().optional(),
+    twitter: z.string().optional(),
+    whatsAppBusiness: z.string().optional(),
+    youtube: z.string().optional(),
+    tiktok: z.string().optional(),
+});
+
+export type SocialMediaSchemeType = z.infer<typeof socialMediaScheme>;
+
+/*  */
+
+export type Category = {
+    id: string;
+    name: string;
+    icon: string;
+    color: string;
+}
+
 export type BusinessData = BasicInfoSchemeType
     & AdditionalInfoSchemeType
     & ContactAndAddressSchemeType
     & BankAccountSchemeType
+    & SocialMediaSchemeType
     & {
         logo?: string;
         geocodedAddress?: string;
@@ -53,4 +83,5 @@ export type BusinessData = BasicInfoSchemeType
         bank?: string;
         bankPixType?: string;
         bankAccountType?: string;
+        categories?: Category[];
     }

@@ -5,7 +5,6 @@ import { TouchableOpacity, View, Text, TouchableOpacityProps, ViewStyle } from "
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
-import { tags } from "global/tags";
 import { SubServiceModel } from "database/models/subServiceModel";
 import { Preview, PreviewStatic } from "./Preview";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
@@ -64,7 +63,7 @@ const InfoHolderRight = ({ children, onPress }: { children: React.ReactNode, onP
     </TouchableWithoutFeedback>
 )
 
-interface ServicePreviewProps {
+export interface ServicePreviewProps {
     service: ServiceModel;
     subServices?: SubServiceModel[];
     onPress: () => void;
@@ -74,13 +73,13 @@ interface ServicePreviewProps {
 const specialStyle = { borderColor: colors.primary.green, borderWidth: 1, borderRadius: 5, paddingHorizontal: 10, paddingVertical: 5, borderStyle: "dashed" } as ViewStyle;
 
 export default function ServicePreview({ service, subServices, onPress, additionalInfo }: ServicePreviewProps) {
-    const servicesTypes = subServices?.map(subService => subService.types).flat();
-    const servicesTypesIcon = servicesTypes && servicesTypes?.length > 0 && tags[tags.findIndex(tag => tag.value === servicesTypes[0])].icon
+    const serviceTypes = subServices?.map(subService => subService.types).flat();
+    const serviceTypesIcon = serviceTypes && serviceTypes?.length > 0 && serviceTypes[0].icon
 
     const currentDate = new Date();
     const serviceDate = new Date(service.date);
     const infoContainers = {
-        day: serviceDate.getDate() === currentDate.getDate() ? "hoje" : serviceDate.getDate() === currentDate.getDate() + 1 ? "amanhã" : serviceDate.toLocaleDateString("pt-BR", { weekday: "long" }).split("-")[0],
+        day: serviceDate.getDate() === currentDate.getDate() ? "hoje" : serviceDate.getDate() === currentDate.getDate() + 1 ? "amanhã" : serviceDate.toLocaleDateString("pt-BR", { weekday: "long" }).split(", ")[0].split("-")[0],
         date: serviceDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
         time: serviceDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
     }
@@ -88,8 +87,8 @@ export default function ServicePreview({ service, subServices, onPress, addition
     return (
         <Container style={serviceDate.getDate() === currentDate.getDate() && specialStyle} onPress={onPress}>
             {
-                servicesTypes && <InfoHolderLeft>
-                    <MaterialIcons name={servicesTypes.length > 1 ? "api" : servicesTypesIcon ? servicesTypesIcon as unknown as any : "hourglass-empty"} size={32} color={colors.text[100]} />
+                serviceTypes && <InfoHolderLeft>
+                    <MaterialIcons name={serviceTypes.length > 1 ? "api" : serviceTypesIcon ? serviceTypesIcon as unknown as any : "hourglass-empty"} size={32} color={colors.text[100]} />
                 </InfoHolderLeft>
             }
             <Line />
@@ -121,6 +120,7 @@ interface ServiceWithSubServicesPreviewProps {
 
 export function ServiceWithSubServicesPreview({ service, subServices, onPress }: ServiceWithSubServicesPreviewProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    console.log(subServices)
 
     const earnings = subServices && subServices?.map(subService => subService.price).reduce((a, b) => a + b, 0);
 

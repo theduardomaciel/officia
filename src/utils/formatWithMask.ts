@@ -142,11 +142,14 @@ const BRL_CNPJ = [/\d/, /\d/, ".", /\d/, /\d/, /\d/, ".", /\d/, /\d/, /\d/, "/",
 
 const ZIP_CODE = [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/];
 
+const BRL_AGENCY = [/\d/, /\d/, /\d/, /\d/, '-', /\d/];
+
 const MASKS = {
     BRL_PHONE,
     BRL_CPF,
     BRL_CNPJ,
-    ZIP_CODE
+    ZIP_CODE,
+    BRL_AGENCY
 }
 
 export { MASKS };

@@ -7,13 +7,13 @@ import clsx from "clsx";
 import Label from "./Label";
 import React, { forwardRef } from "react";
 
-import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialIcons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 
 interface Props extends TextInputProps {
     label?: string;
     icon?: {
         name: string;
-        family?: "MaterialIcons" | "MaterialCommunityIcons" /* | "Entypo" | "Feather" | "FontAwesome" | "Ionicons" | "FontAwesome5" | "AntDesign" | "Octicons" | "Zocial" | "SimpleLineIcons" | "Foundation" | "EvilIcons" | undefined */;
+        family?: "MaterialIcons" | "MaterialCommunityIcons" | "FontAwesome5" /* | "Entypo" | "Feather" | "FontAwesome" | "Ionicons"  | "AntDesign" | "Octicons" | "Zocial" | "SimpleLineIcons" | "Foundation" | "EvilIcons" | undefined */;
     }
     customIcon?: any;
     pallette?: "dark" | "disabled";
@@ -61,6 +61,12 @@ const Input = forwardRef(({ label, customIcon, icon, pallette = undefined, requi
                                             {
                                                 icon.family === "MaterialCommunityIcons" ? (
                                                     <MaterialCommunityIcons
+                                                        name={icon.name as unknown as any}
+                                                        size={18}
+                                                        color={colorScheme === "dark" ? colors.text[200] : colors.black}
+                                                    />
+                                                ) : icon.family === "FontAwesome5" ? (
+                                                    <FontAwesome5
                                                         name={icon.name as unknown as any}
                                                         size={18}
                                                         color={colorScheme === "dark" ? colors.text[200] : colors.black}

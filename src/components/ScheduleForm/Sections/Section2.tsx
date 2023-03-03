@@ -3,15 +3,17 @@ import React, { useCallback, useState } from 'react';
 import { Text, View } from "react-native";
 
 import clsx from 'clsx';
+import colors from 'global/colors';
 
 import PaymentMethodsIcon from 'assets/icons/currency_exchange.svg';
 import WarrantyIcon from 'assets/icons/warranty.svg';
 
 // Components
+import SectionBottomSheet from '../SectionBottomSheet';
 import { Loading } from 'components/StatusMessage';
 import { PreviewStatic } from 'components/Preview';
-import SectionBottomSheet from '../SectionBottomSheet';
-import { NextButton, Section, SubSectionWrapper, SubSectionWrapperProps } from '../SubSectionWrapper';
+import { Section, SubSectionWrapper, SubSectionWrapperProps } from '../SubSectionWrapper';
+import { ActionButton } from 'components/Button';
 
 // Utils
 import { database } from 'database/index.native';
@@ -423,11 +425,12 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
                             )
                         }
 
-                        <NextButton
-                            isLastButton
+                        <ActionButton
                             isLoading={isUpdating}
-                            title={initialValue ? "Atualizar" : "Agendar"}
                             onPress={onSubmit}
+                            label={initialValue ? "Atualizar" : "Agendar"}
+                            style={{ backgroundColor: colors.primary.green }}
+                            preset="next"
                         />
                     </>
                 ) : <Loading message='Aguarde enquanto verificamos os dados do agendamento...' />

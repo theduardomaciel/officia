@@ -27,10 +27,10 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     async function loadStorageData(): Promise<void> {
         try {
-            /* const data = await database.localStorage.get('businessData') as BusinessData;
+            const data = await database.localStorage.get('businessData') as BusinessData;
             if (data) {
                 setAuthData(data);
-            } */
+            }
         } catch (error) {
             // console.log(error);
         } finally {

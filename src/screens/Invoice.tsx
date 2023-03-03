@@ -14,8 +14,9 @@ import { Loading } from 'components/StatusMessage';
 import { Checkbox } from 'components/Checkbox';
 import { PreviewStatic } from 'components/Preview';
 import { daysToMonthsOrYears, PaymentMethodsReview, ReviewSection, WarrantyReview } from 'components/ScheduleForm/Sections/Section2';
-import { NextButton, SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
+import { SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
 import { SectionsNavigator } from 'components/SectionsNavigator';
+import { ActionButton } from 'components/Button';
 
 // Database
 import { database } from 'database/index.native';
@@ -33,9 +34,9 @@ import type { BusinessData } from './Main/Business/@types';
 import FileViewer from 'react-native-file-viewer';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 
-import { getPaymentCondition, getPDFString } from 'utils/getInvoicePDFString';
+import { Config, getPaymentCondition, getPDFString } from 'utils/getInvoicePDFString';
 
-export default function Invoice({ route }: any) {
+export default function Invoice({ route, navigation }: any) {
     const [modalProps, setModalProps] = useState<{
         status: "success" | 'error' | false,
         data?: string,
@@ -49,14 +50,15 @@ export default function Invoice({ route }: any) {
     const sections = [section0BottomSheetRef, section1BottomSheetRef];
 
     const updateHandler = useCallback((id: number) => {
-        console.log(id, "id")
-        if (sections[selectedSectionId.value] && sections[id]) {
+        if (sections[selectedSectionId.value] && sections[id] && id >= 0) {
             sections[selectedSectionId.value].current?.close();
             selectedSectionId.value = withSpring(id, {
                 damping: 100,
                 stiffness: 400
             });
             sections[id].current?.expand();
+        } else {
+            navigation.goBack();
         }
     }, [])
 
@@ -77,7 +79,6 @@ export default function Invoice({ route }: any) {
                 const subServices = await service.subServices.fetch();
                 const materials = await service.materials.fetch();
                 const client = await service.client.fetch() ?? undefined;
-                console.log(client, "cliente")
 
                 if (subServices && materials) {
                     setInvoiceService({
@@ -146,14 +147,22 @@ export default function Invoice({ route }: any) {
         }
     }
 
+    const [selectedOptions, setSelectedOptions] = useState<Config>({
+        showLogo: true,
+        showInvoiceName: true,
+        showDigitalSignature: true,
+        showSubtotals: false,
+        showSubServicesDetails: false,
+        showMaterialsDetails: false,
+    })
+
     async function createPDF() {
         const data = await database.localStorage.get('businessData') as BusinessData;
 
-        if (!data || (data && (!data.phone || data.email === undefined || !data.address || !data.fantasyName || !data.juridicalPerson || !data.postalCode))) {
-            const dataMissing = !data ? "Dados da empresa" : !data.phone ? "Telefone" : data.email === undefined ? "Email" : !data.address ? "Endereço" : !data.fantasyName ? "Nome fantasia" : !data.juridicalPerson ? "Razão social" : !data.postalCode ? "CEP" : "Dados da empresa";
+        if (!data) {
             setModalProps({
                 status: 'error',
-                data: `Você precisa preencher os dados da sua empresa (${dataMissing.toLowerCase()}) antes de gerar o documento.`
+                data: 'Você precisa preencher os dados da sua empresa antes de gerar o documento.'
             })
             return;
         }
@@ -166,7 +175,14 @@ export default function Invoice({ route }: any) {
             return;
         }
 
-        const PDFString = await getPDFString(data, invoiceService?.service!, invoiceService?.subServices, invoiceService?.materials, invoiceService?.client);
+        const PDFString = await getPDFString(
+            data,
+            invoiceService?.service!,
+            invoiceService?.subServices,
+            invoiceService?.materials,
+            invoiceService?.client,
+            selectedOptions
+        );
 
         const options = {
             html: PDFString,
@@ -208,8 +224,7 @@ export default function Invoice({ route }: any) {
                     <View>
                         <Header
                             title={"Orçamento"}
-                            cancelButton={selectedSectionId.value === 0}
-                            returnButton={selectedSectionId.value !== 0 ? () => updateHandler(selectedSectionId.value - 1) : undefined}
+                            returnButton={() => updateHandler(selectedSectionId.value - 1)}
                         />
                     </View>
                     <SectionsNavigator
@@ -299,7 +314,7 @@ export default function Invoice({ route }: any) {
 
                                     <View className='flex flex-1' />
 
-                                    <NextButton onPress={() => updateHandler && updateHandler(1)} />
+                                    <ActionButton onPress={() => updateHandler && updateHandler(1)} label="Próximo" preset="next" />
                                 </SectionBottomSheet>
 
                                 <SectionBottomSheet bottomSheetRef={section1BottomSheetRef} expanded={false}>
@@ -311,7 +326,7 @@ export default function Invoice({ route }: any) {
                                         value={getPaymentCondition(invoiceService.service)}
                                     />
 
-                                    <PaymentMethodsReview value={invoiceService.service.paymentMethods.join(", ")} />
+                                    <PaymentMethodsReview value={invoiceService.service.paymentMethods.join(", ").length > 0 ? invoiceService.service.paymentMethods.join(", ") : "[nenhum método informado]"} />
 
                                     <SubSectionWrapper
                                         header={{
@@ -320,20 +335,44 @@ export default function Invoice({ route }: any) {
                                     >
                                         <View className='w-full'>
                                             <Checkbox
+                                                title='Mostrar logotipo da empresa'
+                                                checked={selectedOptions.showLogo}
+                                                onPress={() => setSelectedOptions({ ...selectedOptions, showLogo: !selectedOptions.showLogo })}
+                                                inverted
+                                                customKey={"checkbox_5"}
+                                            />
+                                            <Checkbox
+                                                title='Mostrar nome do orçamento'
+                                                checked={selectedOptions.showInvoiceName}
+                                                onPress={() => setSelectedOptions({ ...selectedOptions, showInvoiceName: !selectedOptions.showInvoiceName })}
+                                                inverted
+                                                customKey={"checkbox_4"}
+                                            />
+                                            <Checkbox
+                                                title='Mostrar assinatura digital'
+                                                checked={selectedOptions.showDigitalSignature}
+                                                onPress={() => setSelectedOptions({ ...selectedOptions, showDigitalSignature: !selectedOptions.showDigitalSignature })}
+                                                inverted
+                                                customKey={"checkbox_6"}
+                                            />
+                                            <Checkbox
                                                 title='Mostrar subtotal de serviços e materiais'
-                                                checked={false}
+                                                checked={selectedOptions.showSubtotals}
+                                                onPress={() => setSelectedOptions({ ...selectedOptions, showSubtotals: !selectedOptions.showSubtotals })}
                                                 inverted
                                                 customKey={"checkbox_1"}
                                             />
                                             <Checkbox
                                                 title='Mostrar detalhes de serviços'
-                                                checked={false}
+                                                checked={selectedOptions.showSubServicesDetails}
+                                                onPress={() => setSelectedOptions({ ...selectedOptions, showSubServicesDetails: !selectedOptions.showSubServicesDetails })}
                                                 inverted
                                                 customKey={"checkbox_2"}
                                             />
                                             <Checkbox
                                                 title='Mostrar detalhes de materiais'
-                                                checked={false}
+                                                checked={selectedOptions.showMaterialsDetails}
+                                                onPress={() => setSelectedOptions({ ...selectedOptions, showMaterialsDetails: !selectedOptions.showMaterialsDetails })}
                                                 inverted
                                                 customKey={"checkbox_3"}
                                             />
@@ -440,9 +479,10 @@ export default function Invoice({ route }: any) {
                                         </View>
                                     </SubSectionWrapper>
 
-                                    <NextButton
-                                        isLastButton
-                                        title={"Gerar documento"}
+                                    <ActionButton
+                                        preset='next'
+                                        style={{ backgroundColor: colors.primary.green }}
+                                        label={"Gerar documento"}
                                         onPress={onSubmit}
                                     />
                                 </SectionBottomSheet>

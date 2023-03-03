@@ -5,7 +5,6 @@ import Animated, {
     interpolate,
     useAnimatedStyle,
     useSharedValue,
-    withTiming,
 } from "react-native-reanimated";
 import Carousel from "react-native-reanimated-carousel";
 import { StatisticsCard } from "./Card";
@@ -13,10 +12,9 @@ import { StatisticsCard } from "./Card";
 const PAGE_WIDTH = Dimensions.get("window").width;
 
 interface Props {
-    setCanScrollVertically: (value: boolean) => void;
 }
 
-export default function StatisticsCarousel({ setCanScrollVertically }: Props) {
+export default function StatisticsCarousel({ }: Props) {
     const progressValue = useSharedValue<number>(0);
     const baseOptions = {
         vertical: false,
@@ -38,29 +36,10 @@ export default function StatisticsCarousel({ setCanScrollVertically }: Props) {
                 autoPlayInterval={10000}
                 onProgressChange={(_, absoluteProgress) => (progressValue.value = absoluteProgress)}
                 panGestureHandlerProps={{
-                    /* onBegan: () => setCanScrollVertically(false),
-                    onEnded: () => setCanScrollVertically(true),
-                    onCancelled: () => setCanScrollVertically(true), */
-                    /* onBegan: () => {
-                        console.log("onBegan")
-                        setCanScrollVertically(false)
-                    }, */
-                    /* onEnded: () => {
-                        //console.log("onEnded")
-                        setCanScrollVertically(true)
-                    },
-                    onCancelled: () => {
-                        //console.log("onCancelled")
-                        carousel.current.scrollTo(Math.round(progressValue.value))
-                        setCanScrollVertically(true)
-                    }, */
                     minDist: 0,
                     activeOffsetY: 0,
                     activeOffsetX: 0,
                 }}
-                /* onScrollBegin={() => {
-                    setCanScrollVertically(false);
-                }} */
                 mode="parallax"
                 modeConfig={{
                     parallaxScrollingScale: 0.88,
@@ -68,7 +47,7 @@ export default function StatisticsCarousel({ setCanScrollVertically }: Props) {
                 }}
                 autoFillData
                 data={[...new Array(3).keys()]}
-                renderItem={({ index }) => <StatisticsCard progressValue={progressValue} index={index} />}
+                renderItem={({ index }) => <StatisticsCard index={index} />}
             />
             {!!progressValue && (
                 <View className="flex-row justify-between self-center w-10">

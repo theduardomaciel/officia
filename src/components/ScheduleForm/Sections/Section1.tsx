@@ -11,8 +11,9 @@ import WarrantyIcon from 'src/assets/icons/warranty.svg';
 
 // Components
 import SectionBottomSheet from '../SectionBottomSheet';
-import { NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
 import ToggleGroup, { ToggleGroupWithManualValue } from 'components/ToggleGroup';
+import { Section, SubSectionWrapper } from '../SubSectionWrapper';
+import { ActionButton } from 'components/Button';
 import { CheckboxesGroup } from 'components/Checkbox';
 
 // Forms
@@ -462,7 +463,11 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
             </SubSectionWrapper>
 
             <SubSection2 />
-            <NextButton onPress={() => updateHandler && updateHandler(2)} />
+            <ActionButton
+                label='Próximo'
+                onPress={() => updateHandler && updateHandler(2)}
+                preset="next"
+            />
         </SectionBottomSheet>
     )
 });

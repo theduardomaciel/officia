@@ -27,6 +27,7 @@ import AdditionalInfo from "screens/Main/Business/screens/AdditionalInfo";
 import BankAccount from "screens/Main/Business/screens/BankAccount";
 import PhoneAndAddress from "screens/Main/Business/screens/ContactAndAddress";
 import SocialMedia from "screens/Main/Business/screens/SocialMedia";
+import CategoriesScreen from "screens/Main/Business/screens/Categories";
 
 import Settings from "screens/Main/Business/screens/Settings";
 import DigitalSignature from "screens/Main/Business/screens/DigitalSignature";
@@ -185,8 +186,8 @@ export function AppStack() {
                 }}
             />
             <Stack.Screen
-                name="settings"
-                component={Settings}
+                name="categories"
+                component={CategoriesScreen}
                 options={{
                     cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
                 }}
@@ -194,6 +195,13 @@ export function AppStack() {
             <Stack.Screen
                 name="digitalSignature"
                 component={DigitalSignature}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+                }}
+            />
+            <Stack.Screen
+                name="settings"
+                component={Settings}
                 options={{
                     cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
                 }}

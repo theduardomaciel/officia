@@ -7,7 +7,7 @@ import colors, { primary } from 'global/colors';
 // Components
 import Modal from 'components/Modal';
 import BottomSheet, { BottomSheetActions, Title } from 'components/BottomSheet';
-import { EmptyMessage } from 'components/StatusMessage';
+import { Empty } from 'components/StatusMessage';
 
 // Database
 import { database } from 'database/index.native';
@@ -98,7 +98,7 @@ export default function ClientSelect({ lastBottomSheetRef, bottomSheetRef, servi
                         />
                     ) : (
                         <View className='flex flex-1 items-center justify-center'>
-                            <EmptyMessage message='Nenhum cliente foi adicionado até o momento.' />
+                            <Empty message='Nenhum cliente foi adicionado até o momento.' />
                         </View>
                     )
                 }

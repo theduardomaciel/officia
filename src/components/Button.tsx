@@ -1,16 +1,9 @@
 import React from "react";
-import { TouchableOpacity, Text, ViewStyle, ActivityIndicator } from "react-native";
+import { TouchableOpacity, Text, ViewStyle, ActivityIndicator, TouchableOpacityProps } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
-
-interface Props {
-    label?: string;
-    icon?: string;
-    onPress: () => void;
-    isLoading?: boolean;
-    style?: ViewStyle;
-}
+import clsx from "clsx";
 
 const Label = ({ children }: { children: React.ReactNode }) => (
     <Text className='ml-2 font-medium text-white text-sm'>
@@ -18,25 +11,45 @@ const Label = ({ children }: { children: React.ReactNode }) => (
     </Text>
 )
 
-export const ActionButton = ({ onPress, label, icon, isLoading, style }: Props) => {
+interface Props {
+    label?: string;
+    icon?: string;
+    onPress: () => void;
+    isLoading?: boolean;
+    preset?: "next" | "dashed";
+    style?: ViewStyle;
+}
+
+export const ActionButton = ({ onPress, label, icon, isLoading, style, preset }: Props) => {
     return (
         <TouchableOpacity
-            activeOpacity={0.8}
-            className='flex-row items-center justify-center w-full py-4 rounded bg-primary-green'
-            style={style}
+            activeOpacity={isLoading ? 1 : 0.8}
+            disabled={isLoading}
+            className={clsx('flex-row items-center justify-center w-full py-4 rounded bg-primary-green', {
+                'bg-gray-200': isLoading || preset === "next",
+            })}
+            style={[style, { columnGap: 10 }]}
             onPress={onPress}
-            ref={(ref) => { ref = ref }}
         >
             {
                 isLoading ? (
-                    <ActivityIndicator size={"small"} color={"#FFFFFF"} />
+                    <ActivityIndicator size={"small"} color={colors.white} />
                 ) : (
                     <>
-                        <MaterialIcons name={icon as unknown as any || 'add'} size={18} color={colors.white} />
+                        {icon &&
+                            <MaterialIcons name={icon as unknown as any || 'add'}
+                                size={preset === "next" ? 22 : 18} color={colors.white}
+                            />}
                         {
-                            label && <Label>
-                                {label}
-                            </Label>
+                            label && preset === "next" ? (
+                                <Text className='font-bold text-white text-base'>
+                                    {label}
+                                </Text>
+                            ) : (
+                                <Label>
+                                    {label}
+                                </Label>
+                            )
                         }
                     </>
                 )
@@ -46,7 +59,6 @@ export const ActionButton = ({ onPress, label, icon, isLoading, style }: Props) 
 }
 
 interface SubProps extends Props {
-    preset?: 'dashed';
     borderColor?: string;
 }
 

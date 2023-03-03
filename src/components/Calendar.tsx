@@ -85,11 +85,11 @@ function DayView({ date, selected, selectedPreset, style, status, onPress, inver
 type WeekDay = "busy" | "contains" | undefined;
 
 interface WeekView {
-    weekDayStatusArray?: WeekDay[];
+    statusArray?: WeekDay[];
     navigate: any;
 }
 
-export function WeekView({ weekDayStatusArray, navigate }: WeekView) {
+export function WeekView({ statusArray, navigate }: WeekView) {
     const currentDate = new Date();
 
     return (
@@ -104,7 +104,7 @@ export function WeekView({ weekDayStatusArray, navigate }: WeekView) {
                             key={`day_number${index}`}
                             onPress={() => navigate('dayAgenda', { dateString })}
                             date={date}
-                            status={weekDayStatusArray && weekDayStatusArray[index]}
+                            status={statusArray && statusArray[index]}
                             selected={DATE === currentDate.getDate()}
                         />
                     )
@@ -177,10 +177,11 @@ interface CalendarProps {
     style?: ViewStyle;
     isStatic?: boolean;
     selectedDate?: CalendarDate;
+    statusArray: WeekDay[][];
     setSelectedDate?: (date: CalendarDate) => void;
 }
 
-export default function Calendar({ style, isStatic, selectedDate, setSelectedDate }: CalendarProps) {
+export default function Calendar({ style, isStatic, selectedDate, statusArray, setSelectedDate }: CalendarProps) {
     const { navigate } = useNavigation();
 
     const currentDate = new Date();
@@ -346,6 +347,7 @@ export default function Calendar({ style, isStatic, selectedDate, setSelectedDat
                                     setSelectedDate && setSelectedDate(date) :
                                     navigate('dayAgenda', { dateString })
                                 }
+                                status={statusArray && statusArray[currentMonth][index]}
                                 invert
                                 activeOpacity={REMAINING_LAST && isStatic ? 1 : 0.5}
                                 style={{

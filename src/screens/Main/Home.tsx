@@ -3,6 +3,7 @@ import { SectionList, Text, TouchableOpacity, View } from 'react-native';
 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useColorScheme } from 'nativewind';
+import * as NavigationBar from "expo-navigation-bar";
 
 import Animated, { FadeInUp, FadeOutUp, Layout } from 'react-native-reanimated';
 
@@ -13,14 +14,11 @@ import colors from 'global/colors';
 import Container from 'components/Container';
 import Header from 'components/Header';
 import Toast from 'components/Toast';
-import ServicePreview from 'components/ServicePreview';
+import ServicePreview, { ServicePreviewProps } from 'components/ServicePreview';
 
 import Calendar, { WeekDays, WeekView } from 'components/Calendar';
 import { Empty, Loading } from 'components/StatusMessage';
-import { Tag, TagsSelector } from 'components/TagsSelector';
-
-// Utils
-import { tags } from 'global/tags';
+import { Tag, TagObject, TagsSelector } from 'components/TagsSelector';
 
 // Database
 import { Q } from '@nozbe/watermelondb';
@@ -29,9 +27,10 @@ import { database } from 'database/index.native';
 // Types
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
+import type { BusinessData, Category } from 'screens/Main/Business/@types';
 
 export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
-    <View className='bg-black dark:bg-gray-200 flex-row items-center  h-full mr-3 px-3 rounded-full'>
+    <View className='bg-black dark:bg-gray-200 flex-row items-center h-full mr-3 px-3 py-[7.5px] rounded-full'>
         <MaterialIcons name='filter-alt' color={colorScheme === "dark" ? colors.text[100] : colors.white} size={20} />
         <Text className='text-white dark:text-text-100 font-semibold text-sm ml-2'>
             Filtros
@@ -44,10 +43,16 @@ export const isToday = (date: Date) => {
     return (date.getDate() === today.getDate() /* || date.getDate() === today.getDate() + 1 */) ? true : false
 }
 
-function getWeekServices(services: ServiceModel[], week: Date) {
+const hasTags = (tags: Array<TagObject>, subServices: SubServiceModel[]) => {
+    const serviceTypes = subServices?.map(subService => subService.types).flat().map(type => type.name);
+    //return tags.every(tag => serviceTypes.includes(tag.name))
+    return tags.some(tag => serviceTypes.includes(tag.name))
+}
+
+function getWeekServices(services: ServiceModel[], date: Date) {
     const weekServices = services.filter(service => {
         const serviceDate = new Date(service.date)
-        return serviceDate.getDate() >= week.getDate() && serviceDate.getDate() <= week.getDate() + 6 && !isToday(serviceDate);
+        return serviceDate.getDate() > date.getDate() && (serviceDate.getDate() <= date.getDate() + 5) && !isToday(serviceDate);
     })
     return weekServices.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).reverse()
 }
@@ -58,6 +63,10 @@ function getMonthServices(services: ServiceModel[], month: Date, excludeElements
         return serviceDate.getMonth() === month.getMonth() && serviceDate.getFullYear() === month.getFullYear() && !excludeElements.includes(service) && !isToday(serviceDate);
     })
     return monthServices
+}
+
+const daysOnMonth = (month: number, year: number) => {
+    return new Date(year, month, 0).getDate();
 }
 
 export default function Home({ route }: any) {
@@ -81,18 +90,24 @@ export default function Home({ route }: any) {
     }, [])
 
     const [pendingServices, setPendingServices] = useState<ServiceModel[] | undefined>(undefined)
+    const [categories, setCategories] = useState<Category[] | undefined>([])
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(false)
 
     const currentDate = new Date();
     async function fetchData() {
         setPendingServices(undefined)
         try {
-            const services = await database
+            await database
                 .get<ServiceModel>('services')
                 .query(Q.where('status', "scheduled"))
-                .fetch()
+                .observe().subscribe(services => {
+                    setPendingServices(services)
+                })
 
-            setPendingServices(services)
+            const businessData = await database.localStorage.get('businessData') as BusinessData;
+            if (businessData) {
+                setCategories(businessData.categories)
+            }
         } catch (error) {
             console.log(error)
             setPendingServices([])
@@ -109,6 +124,8 @@ export default function Home({ route }: any) {
             showDeleteServiceToast
         }
     }, []))
+
+    const [currentFilteredTags, setCurrentFilteredTags] = useState<TagObject[]>([])
 
     const isolatedServices = pendingServices?.filter(service => isToday(service.date)).reverse() ?? []
     const weekServices = getWeekServices(pendingServices || [], currentDate);
@@ -134,19 +151,29 @@ export default function Home({ route }: any) {
         }] : [],
     ]
 
-    function handleTagSelection(data: Tag[]) {
-        /* console.log(data) */
+    function handleTagSelection(data: TagObject[]) {
+        setCurrentFilteredTags(data)
     }
 
-    const weekDayStatusArray = new Array(7).fill(null).map((_, index) => {
-        const servicesCountOnDay = weekServices.filter(service => new Date(service.date).getDay() === index).length;
-        if (servicesCountOnDay === 1) {
-            return "contains"
-        } else if (servicesCountOnDay > 1) {
-            return "busy"
-        } else {
-            return undefined
-        }
+    const statusArray = new Array(12).fill(null).map((_, month) => {
+        if (month >= currentDate.getMonth()) {
+            return new Array(daysOnMonth(month, currentDate.getFullYear())).fill(null).map((_, index) => {
+                if (pendingServices) {
+                    const firstDayOfMonth = new Date(currentDate.getFullYear(), month, 1).getDay();
+                    const servicesCountOnDay = pendingServices.filter(service => {
+                        const serviceDate = new Date(service.date)
+                        return serviceDate.getDate() + (firstDayOfMonth - 1) === index && serviceDate.getMonth() === month
+                    }).length;
+                    if (servicesCountOnDay === 1) {
+                        return "contains"
+                    } else if (servicesCountOnDay > 1) {
+                        return "busy"
+                    } else {
+                        return undefined
+                    }
+                }
+            })
+        } else return []
     })
 
     return (
@@ -176,7 +203,7 @@ export default function Home({ route }: any) {
             {
                 isCalendarExpanded && (
                     <Animated.View entering={FadeInUp.duration(235)} exiting={FadeOutUp.duration(150)} className='flex-col items-center justify-center w-full'>
-                        <Calendar />
+                        <Calendar statusArray={statusArray} />
                     </Animated.View>
                 )
             }
@@ -185,18 +212,20 @@ export default function Home({ route }: any) {
                     <Animated.View entering={FadeInUp.duration(235)} exiting={FadeOutUp} className='flex-col items-center justify-start w-full'>
                         <WeekDays />
                         <WeekView
-                            weekDayStatusArray={weekDayStatusArray}
+                            statusArray={statusArray[currentDate.getMonth()].splice(0, 7)}
                             navigate={navigate}
                         />
                     </Animated.View>
                 )
             }
-            <Animated.View className='flex-row items-start w-full' layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}>
+            <Animated.View className='flex flex-row items-start w-full pr-6' layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}>
                 <FilterView colorScheme={colorScheme} />
-                <TagsSelector
-                    tags={tags}
-                    onSelectTags={handleTagSelection}
-                />
+                <View className='w-full pr-10'>
+                    <TagsSelector
+                        tags={categories ?? []}
+                        onSelectTags={handleTagSelection}
+                    />
+                </View>
             </Animated.View>
             <Animated.View
                 layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}
@@ -211,7 +240,8 @@ export default function Home({ route }: any) {
                         <SectionList
                             sections={DATA}
                             keyExtractor={(item, index) => index.toString()}
-                            contentContainerStyle={{ flex: 1 }}
+                            style={{ flex: 1 }}
+                            showsVerticalScrollIndicator={false}
                             renderSectionHeader={({ section: { title } }) => (
                                 title !== 'blank' ? (
                                     <Text className='text-xl font-titleBold text-white mb-2'>
@@ -224,6 +254,7 @@ export default function Home({ route }: any) {
                                 onPress={() => navigate("service", { serviceId: item.id })}
                                 service={item}
                                 additionalInfo={section.title === "Esta semana" || section.title === "blank" ? "day" : "date"}
+                                filterTags={currentFilteredTags}
                             />
                             }
                         />
@@ -240,7 +271,7 @@ export default function Home({ route }: any) {
     );
 }
 
-export const EnhancedServicePreview = ({ service, ...rest }: any) => {
+export const EnhancedServicePreview = ({ service, filterTags, ...rest }: any) => {
     const [observedSubServices, setSubServices] = useState<SubServiceModel[] | undefined>(undefined);
 
     useEffect(() => {
@@ -249,5 +280,7 @@ export const EnhancedServicePreview = ({ service, ...rest }: any) => {
         })
     }, [])
 
-    return <ServicePreview service={service} subServices={observedSubServices} {...rest} />
+    return !filterTags || filterTags && filterTags.length === 0 || filterTags && hasTags(filterTags, observedSubServices ?? []) ? (
+        <ServicePreview service={service} subServices={observedSubServices} {...rest} />
+    ) : <></>
 }

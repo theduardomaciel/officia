@@ -13,11 +13,11 @@ import colors from 'global/colors';
 // Components
 import Container from 'components/Container';
 import Header from 'components/Header';
-import { NextButton } from 'components/ScheduleForm/SubSectionWrapper';
 
 // Types
 import type { BusinessData } from 'screens/Main/Business/@types';
-import { SubActionButton } from 'components/Button';
+import { ActionButton, SubActionButton } from 'components/Button';
+
 import { updateData } from 'screens/Main/Business';
 
 const style = `
@@ -149,12 +149,12 @@ export default function DigitalSignature({ route, navigation }: any) {
             </View>
             <View className='flex-row justify-between'>
                 <View className='flex-2 mr-3'>
-                    <NextButton
-                        title='Salvar assinatura'
+                    <ActionButton
+                        label='Salvar assinatura'
                         icon='brush'
-                        isLastButton
                         onPress={handleConfirm}
-                        style={{ marginBottom: insets.bottom + 15 }}
+                        style={{ marginBottom: insets.bottom + 15, backgroundColor: colors.primary.green }}
+                        preset="next"
                     />
                 </View>
                 <View className='flex-1'>

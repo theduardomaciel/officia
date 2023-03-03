@@ -39,6 +39,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     ```
 
+5. Change keyboard behavior
+    `android:windowSoftInputMode="adjustResize"`
 
 ### Customization
 
@@ -50,7 +52,7 @@
     ```xml
         <resources>
         <!-- Base application theme. -->
-        <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar"> -->
             <!-- Make status & navigation bar translucent -->
             <item name="android:navigationBarColor">@android:color/transparent</item>
             <item name="android:windowTranslucentNavigation">true</item>

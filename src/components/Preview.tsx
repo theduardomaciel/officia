@@ -1,37 +1,23 @@
-import { Dispatch, SetStateAction, useRef } from "react";
+import { useRef } from "react";
 import { Animated, View, Text } from "react-native";
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { TouchableOpacity } from "react-native-gesture-handler";
 
+import clsx from "clsx";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
-import clsx from "clsx";
 
 import { SubServiceModel } from "database/models/subServiceModel";
 import { MaterialModel } from "database/models/materialModel";
 
-const categories = {
-    hydraulic: {
-        icon: "plumbing",
-        name: "Hidráulico"
-    },
-    electric: {
-        icon: "bolt",
-        name: "Elétrico"
-    },
-    various: {
-        icon: "build",
-        name: "Várias categorias"
-    }
-}
+// Tyoes
+import type { Category } from "screens/Main/Business/@types";
 
-type Types = 'hydraulic' | 'electric' | 'various';
-
-const Category = ({ category }: { category: Types }) => (
+const Category = ({ category }: { category: Category }) => (
     <>
-        <MaterialIcons name={categories[category].icon as unknown as any} size={12} color={colors.white} style={{ marginRight: 5 }} />
+        <MaterialIcons name={category.icon as unknown as any} size={12} color={colors.white} style={{ marginRight: 5 }} />
         <Text className='font-semibold text-black dark:text-white text-xs mr-1'>
-            {categories[category].name}
+            {category.name}
         </Text>
     </>
 )
@@ -60,7 +46,10 @@ export const PreviewStatic = ({ subService, material, palette, hasBorder, paddin
                 <View className='flex-row'>
                     {
                         subService?.types && subService.types.length > 0 && (
-                            <Category category={subService.types?.length > 1 ? "various" : subService.types[0] as Types} />
+                            <Category category={subService.types?.length > 1 ?
+                                { icon: "build", name: "Várias categorias" } as Category :
+                                subService.types[0]}
+                            />
                         )
                     }
                     {

@@ -1,8 +1,5 @@
 import React, { FC, SVGProps } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, TouchableOpacityProps, View, ViewStyle } from "react-native";
-
-import { MaterialIcons } from "@expo/vector-icons";
-import colors from "global/colors";
+import { Text, View, ViewStyle } from "react-native";
 
 import Label from "components/Label";
 
@@ -36,7 +33,7 @@ export interface SubSectionWrapperProps {
 
 export const SubSectionWrapper = React.memo(({ header, children, style, preset }: SubSectionWrapperProps) => {
     return (
-        <View className='w-full flex-col items-start justify-start' style={[{ rowGap: 10 }, style]}>
+        <View className='w-full flex-1 flex-col items-start justify-start' style={[{ rowGap: 10 }, style]}>
             <View className='flex-1 flex-row items-center justify-between' style={{ marginBottom: preset === "smallMargin" ? 0 : 10 }}>
                 <View className="flex-1 flex-col items-start justify-start">
                     <Label
@@ -63,38 +60,3 @@ export const SubSectionWrapper = React.memo(({ header, children, style, preset }
         </View>
     )
 });
-
-interface NextButtonProps extends TouchableOpacityProps {
-    isLastButton?: boolean;
-    isLoading?: boolean;
-    style?: ViewStyle;
-    title?: string;
-    icon?: string;
-}
-
-export const NextButton = ({ isLastButton, isLoading, title, style, icon, ...rest }: NextButtonProps) => {
-    return (
-        <TouchableOpacity
-            activeOpacity={isLoading ? 1 : 0.8}
-            className='flex-row items-center justify-center w-full py-4 rounded'
-            disabled={isLoading}
-            style={[{
-                backgroundColor: isLastButton ? colors.primary.green : colors.gray[200],
-            }, style]}
-            {...rest}
-        >
-            {
-                isLoading ? (
-                    <ActivityIndicator size={"small"} color={colors.white} />
-                ) : (
-                    <>
-                        {icon && <MaterialIcons name={icon as unknown as any} size={22} color={colors.white} style={{ marginRight: 15 }} />}
-                        <Text className='font-bold text-white text-base'>
-                            {title ? title : isLastButton ? "Agendar" : "Próximo"}
-                        </Text>
-                    </>
-                )
-            }
-        </TouchableOpacity>
-    )
-}

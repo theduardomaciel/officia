@@ -1,14 +1,11 @@
 import React from 'react';
-import { BackHandler, ScrollView, View } from "react-native";
 
 // Components
-import Container, { BusinessScrollView } from 'components/Container';
-import Header from 'components/Header';
+import { BusinessScrollView } from 'components/Container';
 import Toast from 'components/Toast';
 import Input from 'components/Input';
 
-import SaveButton from 'components/Business/SaveButton';
-import ConfirmExitModal from 'components/Business/ConfirmExitModal';
+import BusinessLayout, { ChangesObserver } from '../Layout';
 
 // Form
 import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
@@ -75,9 +72,11 @@ export function BasicInfo({ control, errors }: FormProps) {
     )
 }
 
-export default function BasicInfoScreen({ route, navigation }: any) {
+export default function BasicInfoScreen({ route }: any) {
     const { businessData: data }: { businessData: BusinessData } = route.params;
-    const [businessData, setBusinessData] = React.useState<BusinessData>(data); // é necessário em todas as telas pois o parâmetro de comparação tem que mudar após a atualização dos dados
+    const [businessData, setBusinessData] = React.useState<BusinessData>(data);
+    // este estado é necessário em todas as telas pois o parâmetro de comparação tem que atualizar junto com a atualização dos dados
+
     const screenData = {
         fantasyName: businessData?.fantasyName ?? "",
         juridicalPerson: businessData?.juridicalPerson ?? "",
@@ -115,53 +114,25 @@ export default function BasicInfoScreen({ route, navigation }: any) {
         const result = await updateData(getValues(), businessData);
         if (result) {
             setHasDifferences(false)
-            console.log(hasDifferences)
             setBusinessData(result);
         }
     }, onError);
 
-    const [isConfirmExitModalVisible, setConfirmExitModalVisible] = React.useState(false);
-
-    React.useEffect(() => {
-        const subscription = watch((value) => {
-            // Os valores dos inputs precisam estar vazios tanto no "screenData" como no "initialValues" para que o botão de salvar fique desabilitado.
-            console.log(screenData, value)
-            setHasDifferences(JSON.stringify(screenData) !== JSON.stringify(value))
-        });
-
-        const backAction = () => {
-            if (hasDifferences) {
-                setConfirmExitModalVisible(true);
-                return true;
-            } else {
-                return false;
-            }
-        };
-
-        const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-
-        return () => {
-            subscription.unsubscribe();
-            backHandler.remove();
-        };
-    }, [watch, businessData]);
-
     return (
-        <Container>
-            <Header title='Informações Básicas' returnButton />
-            <BasicInfo control={control} errors={errors} />
-            <SaveButton hasDifferences={hasDifferences} submitData={submitData} />
-            <Toast
-                toastPosition='top'
-                toastOffset='14%'
-            />
-            <ConfirmExitModal
-                isVisible={isConfirmExitModalVisible}
-                toggleVisibility={() => setConfirmExitModalVisible(false)}
-                onExitConfirmation={() => {
-                    navigation.goBack();
-                }}
-            />
-        </Container>
+        <BusinessLayout
+            headerProps={{
+                title: 'Informações Básicas',
+            }}
+            hasDifferences={hasDifferences}
+            submitData={submitData}
+        >
+            <ChangesObserver
+                setHasDifferences={setHasDifferences}
+                currentData={screenData}
+                watch={watch}
+            >
+                <BasicInfo control={control} errors={errors} />
+            </ChangesObserver>
+        </BusinessLayout>
     )
 }

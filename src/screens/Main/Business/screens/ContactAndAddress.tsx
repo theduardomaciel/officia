@@ -1,17 +1,18 @@
 import React from "react";
-import { ActivityIndicator, ScrollView, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import * as Location from "expo-location"
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
 // Components
-import Container, { BusinessScrollView } from 'components/Container';
-import Header from 'components/Header';
+import { BusinessScrollView } from 'components/Container';
 import Input from 'components/Input';
 import Toast from 'components/Toast';
 import { SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
-import SaveButton from 'components/Business/SaveButton';
+
+import BusinessLayout, { ChangesObserver } from "../Layout";
+import { updateData } from 'screens/Main/Business';
 
 // Form
 import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
@@ -19,7 +20,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
 import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
-import { updateData } from 'screens/Main/Business';
 
 // Types
 import { BusinessData, contactAndAddressScheme, ContactAndAddressSchemeType, FormProps } from 'screens/Main/Business/@types';
@@ -247,13 +247,12 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
 export default function ContactAndAddressScreen({ route }: any) {
     const { businessData: data }: { businessData: BusinessData } = route.params;
     const [businessData, setBusinessData] = React.useState<BusinessData>(data);
-    const currentData = {
+    const screenData = {
         email: data?.email ?? "",
         phone: data?.phone ?? "",
-        phone2: data?.phone2 ?? "",
+        phone2: data.phone2 ?? "",
         postalCode: data?.postalCode ?? "",
         address: data?.address ?? "",
-        geocodedAddress: data.geocodedAddress ?? ""
     } as ContactAndAddressSchemeType;
 
     const [hasDifferences, setHasDifferences] = React.useState(false);
@@ -270,9 +269,9 @@ export default function ContactAndAddressScreen({ route }: any) {
         values: businessData ? {
             email: businessData?.email,
             phone: businessData?.phone,
-            phone2: businessData?.phone2,
+            phone2: businessData?.phone2 ?? "",
             postalCode: businessData?.postalCode,
-            address: businessData?.address,
+            address: businessData?.address ?? "",
         } : undefined,
         resolver: zodResolver(contactAndAddressScheme),
         resetOptions: {
@@ -295,36 +294,35 @@ export default function ContactAndAddressScreen({ route }: any) {
         const result = await updateData(getValues(), businessData);
         if (result) {
             setBusinessData(result);
-            setHasDifferences(false)
         }
+        setHasDifferences(false)
     }, onError);
 
-    React.useEffect(() => {
-        const subscription = watch((value) => {
-            setHasDifferences(JSON.stringify(value) !== JSON.stringify(currentData))
-        });
-        return () => subscription.unsubscribe();
-    }, [watch, businessData]);
-
     return (
-        <Container>
-            <Header title='Contato e Endereço' returnButton />
-            <ContactAndAddress
-                businessData={businessData}
-                control={control}
-                errors={errors}
-                onAddressFetch={(addressText) => {
-                    setValue("address", "")
-                    setHasDifferences(true)
-                    setBusinessData({ ...businessData, geocodedAddress: addressText })
-                    /* updateData({ geocodedAddress: addressText }, businessData, setBusinessData); */
-                }}
-            />
-            <SaveButton hasDifferences={hasDifferences} submitData={submitData} />
-            <Toast
-                toastPosition='top'
-                toastOffset='14%'
-            />
-        </Container>
+        <BusinessLayout
+            headerProps={{
+                title: "Contato e Endereço",
+            }}
+            hasDifferences={hasDifferences}
+            submitData={submitData}
+        >
+            <ChangesObserver
+                setHasDifferences={setHasDifferences}
+                currentData={screenData}
+                watch={watch}
+            >
+                <ContactAndAddress
+                    businessData={businessData}
+                    control={control}
+                    errors={errors}
+                    onAddressFetch={(addressText) => {
+                        setValue("address", "")
+                        setHasDifferences(true)
+                        setBusinessData({ ...businessData, geocodedAddress: addressText })
+                        /* updateData({ geocodedAddress: addressText }, businessData, setBusinessData); */
+                    }}
+                />
+            </ChangesObserver>
+        </BusinessLayout>
     )
 }

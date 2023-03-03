@@ -10,8 +10,8 @@ import Modal from 'components/Modal';
 import Input from 'components/Input';
 import SectionBottomSheet from '../SectionBottomSheet';
 import Calendar, { CalendarDate } from 'components/Calendar';
-import { NextButton, Section, SubSectionWrapper } from '../SubSectionWrapper';
-import { SubActionButton } from 'components/Button';
+import { Section, SubSectionWrapper } from '../SubSectionWrapper';
+import { ActionButton, SubActionButton } from 'components/Button';
 import { Preview } from 'components/Preview';
 
 // Types
@@ -285,7 +285,11 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
                 name="additionalInfo"
             />
 
-            <NextButton onPress={() => updateHandler && updateHandler(1)} />
+            <ActionButton
+                label='Próximo'
+                onPress={() => updateHandler && updateHandler(1)}
+                preset="next"
+            />
 
             <TimePickerModal />
         </SectionBottomSheet>

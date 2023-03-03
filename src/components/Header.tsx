@@ -9,12 +9,13 @@ interface HeaderProps extends ViewProps {
     returnButton?: boolean | (() => void);
     cancelButton?: boolean | (() => void);
     title: string;
+    description?: string;
     upperChildren?: React.ReactNode;
     aboveTitle?: React.ReactNode;
     bellowTitle?: React.ReactNode;
 }
 
-export default function Header({ title, cancelButton, returnButton, children, upperChildren, aboveTitle, bellowTitle, ...props }: HeaderProps) {
+export default function Header({ title, description, cancelButton, returnButton, children, upperChildren, aboveTitle, bellowTitle, ...props }: HeaderProps) {
     const { colorScheme } = useColorScheme();
     const { goBack } = useNavigation();
 
@@ -67,6 +68,13 @@ export default function Header({ title, cancelButton, returnButton, children, up
                     </Text>
                     {children}
                 </View>
+                {
+                    description && (
+                        <Text className="text-sm leading-4 text-text-200">
+                            {description}
+                        </Text>
+                    )
+                }
                 {bellowTitle}
             </View>
         </View>

@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useRef } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MaterialIcons } from "@expo/vector-icons";
@@ -17,7 +17,7 @@ import { ActionButton } from 'components/Button';
 import { BottomSheetActions } from 'components/BottomSheet';
 import { Loading } from 'components/StatusMessage';
 import { PreviewStatic } from 'components/Preview';
-import { NextButton, SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
+import { SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
 import { Tag } from 'components/TagsSelector';
 
 import ClientAdd from 'components/ClientForms/ClientAdd';
@@ -31,8 +31,6 @@ import type { ClientModel } from 'database/models/clientModel';
 import type { MaterialModel } from 'database/models/materialModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
-
-import { tags } from 'global/tags';
 
 interface Props {
     service: ServiceModel;
@@ -119,7 +117,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
     const { navigate } = useNavigation();
 
     const [isDeleteModalVisible, setDeleteModalVisible] = React.useState(false);
-    const servicesTypes = [...new Set(subServices?.map(subService => subService.types).flat())];
+    const servicesTypes = [...new Set(subServices?.map(subService => subService.types.length > 0 ? subService.types.map(category => category) : []).flat())];
 
     // Bottom Sheets
     const clientAddBottomSheetRef = React.useRef<BottomSheetActions>(null);
@@ -217,119 +215,110 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
             <ScrollView
                 className=''
                 contentContainerStyle={{
-                    paddingBottom: 75
+                    paddingBottom: 75,
+                    rowGap: 20
                 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View className='flex-col'>
-                    {
-                        servicesTypes && servicesTypes.length > 0 && (
-                            <SubSectionWrapper header={{
-                                title: "Categorias"
-                            }}>
-                                <ScrollView
+                {
+                    servicesTypes && servicesTypes.length > 0 && (
+                        <SubSectionWrapper
+                            header={{
+                                title: "Categorias",
+                            }}
+                            preset="smallMargin"
+                        >
+                            <View className='h-9 w-full'>
+                                <FlatList
                                     horizontal
-                                    className='w-full'
+                                    className='w-full pr-10'
                                     contentContainerStyle={{}}
                                     nestedScrollEnabled
                                     showsHorizontalScrollIndicator={false}
-                                >
-                                    {
-                                        servicesTypes?.map((type, index) => {
-                                            const tagData = tags.find(tag => tag.value === type);
+                                    data={servicesTypes}
+                                    renderItem={({ item, index }) => (
+                                        <Tag {...item} />
+                                    )}
+                                />
+                            </View>
+                        </SubSectionWrapper>
+                    )
+                }
 
-                                            return (
-                                                tagData && (
-                                                    <Tag
-                                                        key={index.toString()}
-                                                        isChecked
-                                                        activeOpacity={1}
-                                                        height={35}
-                                                        title={tagData?.title}
-                                                        icon={tagData?.icon}
-                                                    />
-                                                )
-                                            )
-                                        })
-                                    }
-                                </ScrollView>
-                            </SubSectionWrapper>
-                        )
-                    }
+                {
+                    subServices && subServices.length > 0 && (
+                        <SubSectionWrapper
+                            header={{
+                                title: "Serviços",
+                            }}
+                            preset="smallMargin"
+                        >
+                            <View className='w-full'>
+                                {
+                                    subServices?.map((subService, index) => (
+                                        <View className='mb-2' key={index.toString()}>
+                                            <PreviewStatic
+                                                palette="light"
+                                                hasBorder
+                                                subService={subService}
+                                            />
+                                        </View>
+                                    ))
+                                }
+                            </View>
+                        </SubSectionWrapper>
+                    )
+                }
 
-                    {
-                        subServices && subServices.length > 0 && (
-                            <SubSectionWrapper
-                                header={{
-                                    title: "Serviços",
-                                }}
-                            >
-                                <View className='w-full'>
-                                    {
-                                        subServices?.map((subService, index) => (
+                {
+                    materials && materials.length > 0 && (
+                        <SubSectionWrapper
+                            header={{
+                                title: "Materiais",
+                            }}
+                        >
+                            <View className='w-full'>
+                                {
+                                    materials?.map((material, index) => {
+                                        return (
                                             <View className='mb-2' key={index.toString()}>
                                                 <PreviewStatic
                                                     palette="light"
                                                     hasBorder
-                                                    subService={subService}
+                                                    material={material}
                                                 />
                                             </View>
-                                        ))
-                                    }
-                                </View>
-                            </SubSectionWrapper>
-                        )
-                    }
-
-                    {
-                        materials && materials.length > 0 && (
-                            <SubSectionWrapper
-                                header={{
-                                    title: "Materiais",
-                                }}
-                            >
-                                <View className='w-full'>
-                                    {
-                                        materials?.map((material, index) => {
-                                            return (
-                                                <View className='mb-2' key={index.toString()}>
-                                                    <PreviewStatic
-                                                        palette="light"
-                                                        hasBorder
-                                                        material={material}
-                                                    />
-                                                </View>
-                                            )
-                                        })
-                                    }
-                                </View>
-                            </SubSectionWrapper>
-                        )
-                    }
-
-                    <SubSectionWrapper
-                        header={{
-                            title: "Ações",
-                        }}
-                    >
-                        <View className='flex w-full gap-y-2'>
-                            <ActionButton
-                                label='Editar serviço'
-                                icon='edit'
-                                style={{ paddingTop: 12, paddingBottom: 12 }}
-                                onPress={() => navigate('schedule', { serviceId: service.id })}
-                            />
-                            <View>
-                                <ActionButton
-                                    label='Excluir serviço'
-                                    icon='delete'
-                                    style={{ backgroundColor: colors.primary.red, paddingTop: 12, paddingBottom: 12 }}
-                                    onPress={() => setDeleteModalVisible(true)}
-                                />
+                                        )
+                                    })
+                                }
                             </View>
+                        </SubSectionWrapper>
+                    )
+                }
+
+                <SubSectionWrapper
+                    header={{
+                        title: "Ações",
+                    }}
+                    preset="smallMargin"
+                >
+                    <View className='flex w-full gap-y-2'>
+                        <ActionButton
+                            label='Editar serviço'
+                            icon='edit'
+                            style={{ paddingTop: 12, paddingBottom: 12 }}
+                            onPress={() => navigate('schedule', { serviceId: service.id })}
+                        />
+                        <View>
+                            <ActionButton
+                                label='Excluir serviço'
+                                icon='delete'
+                                style={{ backgroundColor: colors.primary.red, paddingTop: 12, paddingBottom: 12 }}
+                                onPress={() => setDeleteModalVisible(true)}
+                            />
                         </View>
-                    </SubSectionWrapper>
-                </View>
+                    </View>
+                </SubSectionWrapper>
 
             </ScrollView>
             <View
@@ -338,9 +327,10 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                     paddingBottom: insets.bottom + 10,
                 }}
             >
-                <NextButton
+                <ActionButton
+                    preset='next'
                     icon={"attach-money"}
-                    title={"Gerar orçamento"}
+                    label={"Gerar orçamento"}
                     onPress={() => navigate("invoice", { serviceId: service.id })}
                 />
             </View>

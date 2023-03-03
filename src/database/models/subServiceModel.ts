@@ -3,9 +3,10 @@ import { field, readonly, date, relation, json } from "@nozbe/watermelondb/decor
 import { Associations } from "@nozbe/watermelondb/Model";
 import { ServiceModel } from "./serviceModel";
 
-const sanitizeTypes = (rawReactions: string[]) => {
-    return Array.isArray(rawReactions) ? rawReactions.map(String) : []
-}
+// Category
+import { Category } from "screens/Main/Business/@types";
+
+const sanitizeTypes = (json: Category) => json;
 
 export class SubServiceModel extends Model {
     static table = "sub_services";
@@ -15,7 +16,7 @@ export class SubServiceModel extends Model {
 
     @field("description") description!: string;
     @field("details") details!: string | null;
-    @json("types", sanitizeTypes) types!: string[];
+    @json("types", sanitizeTypes) types!: Category[];
     @field("price") price!: number;
     @field("amount") amount!: number;
     @readonly @date('created_at') createdAt!: number;

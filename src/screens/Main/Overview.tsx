@@ -96,25 +96,22 @@ export default function Overview() {
                 showsVerticalScrollIndicator={false}
                 scrollEnabled={canScrollVertically}
                 disallowInterruption
-            /* style={{
-                backgroundColor: canScrollVertically ? "green" : "red"
-            }} */
             >
                 <View className='flex flex-row items-start w-full px-6'>
                     <FilterView colorScheme={colorScheme} />
-                    <View className='w-full pr-10'>
+                    {/* <View className='w-full pr-10'>
                         <TagsSelector
                             tags={[
-                                { title: 'Datas', value: "dates" },
-                                { title: 'Tipos', value: "types" },
+                                { name: 'Datas', id: "dates" },
+                                { name: 'Tipos', id: "types" },
                             ]}
-                            hasClearButton
+                            onClear={() => { }}
                             insertPaddingRight
                             onSelectTags={() => { }}
                         />
-                    </View>
+                    </View> */}
                 </View>
-                <StatisticsCarousel setCanScrollVertically={setCanScrollVertically} />
+                <StatisticsCarousel />
                 {
                     monthsWithServices.length > 0 ? (
                         <FlatList
@@ -197,7 +194,7 @@ const DateServicesList = ({ title, data }: { title: string, data: ServiceModel[]
         <View className='flex flex-col items-start justify-center w-full'>
             <View className='flex flex-row items-center justify-between w-full mt-4 mb-2'>
                 <Text className='text-black dark:text-white font-titleRegular text-sm capitalize'>
-                    {dayName.split("-")[0]}, {date.getDate()} {dateMonth} {date.getFullYear()}
+                    {dayName.split(", ")[0].split("-")[0]}, {date.getDate()} {dateMonth} {date.getFullYear()}
                 </Text>
                 <View className='flex flex-row items-end'>
                     <Text className='text-text-100 font-titleSemiBold text-sm'>
@@ -211,7 +208,7 @@ const DateServicesList = ({ title, data }: { title: string, data: ServiceModel[]
 }
 
 const EnhancedServiceWithSubServicesPreview = ({ service, ...rest }: any) => {
-    const [observedSubServices, setSubServices] = useState<SubServiceModel[]>(service);
+    const [observedSubServices, setSubServices] = useState<SubServiceModel[] | undefined>(undefined);
 
     useEffect(() => {
         service.subServices.observe().subscribe((subServices: SubServiceModel[]) => {

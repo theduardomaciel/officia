@@ -70,6 +70,7 @@ export default function DayAgenda({ route, navigation }: any) {
                         keyExtractor={item => item.id}
                         renderItem={({ item }) => (
                             <EnhancedServicePreview
+                                key={item.id}
                                 service={item}
                                 additionalInfo="time"
                                 onPress={() => navigation.navigate('service', { serviceId: item.id })}

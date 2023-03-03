@@ -14,7 +14,7 @@ import { SectionsNavigator } from 'components/SectionsNavigator';
 
 import { BasicInfo } from 'screens/Main/Business/screens/BasicInfo';
 import { ContactAndAddress } from 'screens/Main/Business/screens/ContactAndAddress';
-import { NextButton } from 'components/ScheduleForm/SubSectionWrapper';
+import { ActionButton } from 'components/Button';
 
 // Types
 import type { BottomSheetActions } from 'components/BottomSheet';
@@ -187,7 +187,7 @@ export default function Register({ route, navigation }: any) {
                     }}
                 />
                 <BasicInfo control={section0Control} errors={section0Errors} />
-                <NextButton onPress={submitSection0Data} />
+                <ActionButton onPress={submitSection0Data} preset="next" label='Próximo' />
             </SectionBottomSheet>
 
             <SectionBottomSheet
@@ -204,7 +204,12 @@ export default function Register({ route, navigation }: any) {
                         setNewBusinessData({ ...newBusinessData, geocodedAddress: addressText })
                     }}
                 />
-                <NextButton onPress={submitSection1Data} />
+                <ActionButton
+                    onPress={submitSection1Data}
+                    preset="next"
+                    style={{ backgroundColor: colors.primary.green }}
+                    label='Concluir'
+                />
             </SectionBottomSheet>
 
             <Toast

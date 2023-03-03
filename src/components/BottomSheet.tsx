@@ -202,43 +202,48 @@ const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, on
         )
     );
 
-    const BottomSheet = () => (
-        <>
-            {
-                !defaultValues?.suppressBackdrop && (
-                    <TouchableWithoutFeedback onPress={() => {
-                        close();
-                        onDismiss && onDismiss();
-                    }}>
-                        <Animated.View
-                            style={[backdropAnimationStyle, colors?.backdrop ? { backgroundColor: colors?.backdrop } : {},]}
-                            className='bg-black absolute top-0 bottom-0 right-0 left-0'
-                        />
-                    </TouchableWithoutFeedback>
-                )
-            }
-            <PanGestureHandler onGestureEvent={gestureHandler}>
-                <Animated.View
-                    onLayout={(event) => contentHeight.value = event.nativeEvent.layout.height}
-                    style={[
-                        animationStyle,
-                        heightLimitBehaviour === "contentHeight" ? contentHeightStyle : defaultStyle,
-                        colors?.background ? { backgroundColor: colors?.background } : {},
-                    ]}
-                    className='flex flex-col bg-white dark:bg-gray-200 absolute left-0 right-0 rounded-tl-3xl rounded-tr overflow-auto'
-                >
-                    {
-                        !defaultValues?.suppressHandle && <View className='my-3 items-center'>
-                            <View className='w-12 h-1 bg-black dark:bg-gray-100 rounded-2xl my-1' />
-                        </View>
-                    }
-                    {children}
-                    {/* <View className='w-full bottom-0 bg-blue-800' style={{ height: overDrag + insets.bottom }} /> */}
-                    <View className='w-full bg-transparent' style={{ height: overDrag + insets.bottom }} />
-                </Animated.View>
-            </PanGestureHandler>
-        </>
-    )
+    function BottomSheet() {
+        return (
+            <>
+                {
+                    !defaultValues?.suppressBackdrop && (
+                        <TouchableWithoutFeedback
+                            onPress={() => {
+                                close();
+                                onDismiss && onDismiss();
+                            }}
+                        >
+                            <Animated.View
+                                key="BottomSheetBackdrop"
+                                style={[backdropAnimationStyle, colors?.backdrop ? { backgroundColor: colors?.backdrop } : {},]}
+                                className='bg-black absolute top-0 bottom-0 right-0 left-0'
+                            />
+                        </TouchableWithoutFeedback>
+                    )
+                }
+                <PanGestureHandler onGestureEvent={gestureHandler} key="BottomSheetContainer">
+                    <Animated.View
+                        onLayout={(event) => contentHeight.value = event.nativeEvent.layout.height}
+                        style={[
+                            animationStyle,
+                            heightLimitBehaviour === "contentHeight" ? contentHeightStyle : defaultStyle,
+                            colors?.background ? { backgroundColor: colors?.background } : {},
+                        ]}
+                        className='flex flex-col bg-white dark:bg-gray-200 absolute left-0 right-0 rounded-tl-3xl rounded-tr overflow-auto'
+                    >
+                        {
+                            !defaultValues?.suppressHandle && <View className='my-3 items-center'>
+                                <View className='w-12 h-1 bg-black dark:bg-gray-100 rounded-2xl my-1' />
+                            </View>
+                        }
+                        {children}
+                        {/* <View className='w-full bottom-0 bg-blue-800' style={{ height: overDrag + insets.bottom }} /> */}
+                        <View className='w-full bg-transparent' style={{ height: overDrag + insets.bottom }} />
+                    </Animated.View>
+                </PanGestureHandler>
+            </>
+        )
+    }
 
     return (
         defaultValues?.suppressPortal ?

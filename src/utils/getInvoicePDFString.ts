@@ -6,7 +6,7 @@ import type { MaterialModel } from 'database/models/materialModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
 
-import type { BusinessData } from 'screens/Main/Business';
+import type { BusinessData } from 'screens/Main/Business/@types';
 
 interface Props {
     data: BusinessData;
@@ -16,19 +16,27 @@ interface Props {
     client?: ClientModel;
 }
 
+export interface Config {
+    showLogo: boolean;
+    showInvoiceName: boolean;
+    showDigitalSignature: boolean;
+    showSubtotals: boolean;
+    showSubServicesDetails: boolean;
+    showMaterialsDetails: boolean;
+}
+
 // Data
 export const getPaymentCondition = (service: ServiceModel) => service.installmentsAmount ? `${service.installmentsAmount} parcelas`
     : service.agreementInitialValue ? `${service.splitMethod === "percentage" ? `${service.agreementInitialValue}%` : `R% ${service.agreementInitialValue}`} antecipado e o valor restante ${!service.installmentsAmount ? "após a conclusão do serviço" : `dividido em ${service.installmentsAmount} parcelas`}`
         : "À vista";
-
-import { tags } from 'global/tags';
 
 export async function getPDFString(
     data: BusinessData,
     service: ServiceModel,
     subServices: SubServiceModel[],
     materials: MaterialModel[],
-    client: ClientModel
+    client: ClientModel,
+    config: Config
 ) {
     const servicesTypes = subServices?.map(subService => subService.types).flat();
 
@@ -38,14 +46,21 @@ export async function getPDFString(
     const serviceDateIn30Days = new Date();
     serviceDateIn30Days.setDate(serviceDateIn30Days.getDate() + 30);
 
+    const title = config.showInvoiceName ? `Orçamento - ${service?.name}` : "Orçamento";
     const image = data.logo ? await manipulateAsync(data.logo!, [], { base64: true }) : null;
+    const digitalSignature = data.digitalSignatureUri ? await manipulateAsync(data.digitalSignatureUri!, [], { base64: true }) : null;
+
+    const splitGeocodedAddress = data.geocodedAddress?.split(", ");
+
+    const geocodedAddressBeforeStreetNumber = splitGeocodedAddress ? [splitGeocodedAddress[0], splitGeocodedAddress[1]]?.join(", ") : null;
+    const geocodedAddressAfterStreetNumber = splitGeocodedAddress ? splitGeocodedAddress.slice(2).join(", ") : null;
 
     const html = `
     <html>
 
     <head>
         <meta charset="utf-8">
-        <title>Orçamento do ${service?.name}</title>
+        <title>${title}</title>
         <style>
             :root {
                 font-size: 40%;
@@ -482,22 +497,23 @@ export async function getPDFString(
     <body>
         <header>
             <div class="logo_mark">
-                ${data.logo && `
+                ${data.logo && config.showLogo ? `
                     <img
                         src="data:image/jpeg;base64,${image!.base64}"
                     />
-                `}
+                ` : ""}
                     <h1>${data.fantasyName}</h1>
             </div>
             <div class="row full">
                 <address style="width: 50%;">
                     <p>${data.juridicalPerson}</p>
-                    <p>${data.address} <br />
+                    <p>${data.geocodedAddress ? `${geocodedAddressBeforeStreetNumber}${data.address ? `, ${data.address}` : ""}, ${geocodedAddressAfterStreetNumber}` : data.address ? data.address : ""} </p>
+                    <p>    
                         CEP ${data.postalCode}
                     </p>
                 </address>
                 <address>
-                    <div class="row">
+                    ${data.email ? `<div class="row">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <mask id="mask0_998_1654" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
                                 width="24" height="24">
@@ -510,7 +526,7 @@ export async function getPDFString(
                             </g>
                         </svg>
                         <p>${data.email}</p>
-                    </div>
+                    </div>` : ""}
                     <div class="row">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <mask id="mask0_998_1669" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
@@ -525,7 +541,7 @@ export async function getPDFString(
                         </svg>
                         <p>${data.phone}</p>
                     </div>
-                    ${data.phone2 && `<div class="row">
+                    ${data.phone2 ? `<div class="row">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <mask id="mask0_998_1669" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
                                 width="24" height="24">
@@ -539,35 +555,35 @@ export async function getPDFString(
                         </svg>
                         <p>${data.phone2}</p>
                     </div>`
-        }
+            : ""}
                 </address>
             </div>
         </header>
 
         <main>
             <header id="main_header">
-                <p>Orçamento ${service?.name.split(' ')[1]}</p>
+                <p>${title}</p>
                 <p>#${service?.id}</p>
             </header>
 
             <section class="full">
                 <div class="row">
-                    ${service?.client && service.client.id && `
+                    ${service?.client && service.client.id ? `
                     <div class="column">
                         <p class="section_title">Cliente: ${client?.name}</p>
                         ${client?.address && `<p class="section_description">${client?.address}</p>`}
                     </div>`
-        }
+            : ""}
                     <div class="column">
                         <p class="section_title">Data e horário da visita técnica</p>
                         <p class="section_description">${service.date.toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        })} - ${service.date.toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit'
-        })}</p >
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            })} - ${service.date.toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            })}</p >
                     </div>
                 </div>
             </section>
@@ -580,7 +596,7 @@ export async function getPDFString(
                     <p class="total">Total</p>
                 </header>
                 
-                ${subServices && subServices.length > 0 && `
+                ${subServices && subServices.length > 0 ? `
                         <div class="subsection">
                             <div class="sub_sectionHeader">
                                 <p>Serviços</p>
@@ -598,10 +614,10 @@ export async function getPDFString(
                                         <tr>
                                             <td>
                                                 <h3>${subService.description}</h3>
-                                                ${subService.details && `
+                                                ${subService.details ? config.showSubServicesDetails ? `
                                                     <h4>${subService.details}</h4>
-                                                `
-            }
+                                                ` : ""
+                    : ""}
                                             </td>
                                             <td class="quantity">
                                                 <p>${subService.amount}</p>
@@ -617,15 +633,15 @@ export async function getPDFString(
                                 </tbody>
                             </table>
                             <div class="line"></div>
-                            <div class="subtotal">
+                            ${config.showSubtotals ? `<div class="subtotal">
                                 <p>Subtotal</p>
                                 <p>R$ ${subServicesTotal}</p>
-                            </div>
+                            </div>` : ""}
                         </div>            
                     `
-        }
+            : ""}
 
-                ${materials && materials.length > 0 && `
+                ${materials && materials.length > 0 ? `
                         <div class="subsection">
                             <div class="sub_sectionHeader">
                                 <p>Materiais</p>
@@ -643,10 +659,10 @@ export async function getPDFString(
                                         <tr>
                                             <td>
                                                 <h3>${material.name}</h3>
-                                                ${material.description && `
+                                                ${material.description ? config.showMaterialsDetails && `
                                                     <h4>${material.description}</h4>
-                                                `
-            }
+                                                ` : ""
+                }
                                             </td>
                                             <td class="quantity">
                                                 <p>${material.amount}</p>
@@ -662,13 +678,13 @@ export async function getPDFString(
                                 </tbody>
                             </table>
                             <div class="line"></div>
-                            <div class="subtotal">
+                            ${config.showSubtotals ? `<div class="subtotal">
                                 <p>Subtotal</p>
                                 <p>R$ ${materialsTotal}</p>
-                            </div>
+                            </div>` : ""}
                         </div>            
                     `
-        }
+            : ""}
 
             </section>
 
@@ -686,22 +702,21 @@ export async function getPDFString(
                         <p class="section_title">Condições de Pagamento</p>
                         <p class="section_description">${getPaymentCondition(service)}</p>
                     </div>
-                    <div class="column">
+                    ${service.paymentMethods.length > 0 ? `<div class="column">
                         <p class="section_title">Meios de Pagamento</p>
                         <p class="section_description">${service.paymentMethods.join(", ")}</p>
-                    </div>
+                    </div>` : ""}
                 </div>
-                <!--
-                <div class="row" style="justify-content: flex-start; gap: var(--gap);">
-                    <div class="payment_info">
-                        <p><span>Conta Corrente:</span> 63945-5</p>
-                        <p><span>Agência:</span> 6101</p>
-                        <p><span>Banco:</span> Itaú</p>
-                    </div>
-                    <div class="payment_info">
-                        <p><span>PIX:</span> andserv.maceio@gmail.com</p>
-                    </div>
-                </div>-->
+                ${data.pixKey || data.bank ? `<div class="row" style="justify-content: flex-start; gap: var(--gap);">
+                    ${data.bank && data.bankAccountType && data.account && data.agency ? `<div class="payment_info">
+                        <p><span>Conta Corrente:</span> ${data.account}</p>
+                        <p><span>Agência:</span> ${data.agency}</p>
+                        <p><span>Banco:</span> ${data.bank}</p>
+                    </div>` : ""}
+                    ${data.pixKey ? `<div class="payment_info">
+                        <p><span>PIX:</span> ${data.pixKey}</p>
+                    </div>` : ""}
+                </div>` : ""}
             </section>
 
             <section class="full">
@@ -722,9 +737,36 @@ export async function getPDFString(
                 </div>
             </section>
 
-            <p id="date">Maceió, 27/01/2023</p>
+            ${service.additionalInfo && service.additionalInfo.length > 0 && `<section class="full">
+                <header>
+                    <p>Garantia</p>
+                </header>
+                <div class="row">
+                    <div class="column" style="min-width: 25%;">
+                        <p class="section_title">Período de Garantia</p>
+                        <p class="section_description">${service.warrantyPeriod} dias</p>
+                    </div>
+                    ${service.warrantyDetails && `
+                        <div class="column">
+                        <p class="section_title">Condições da Garantia</p>
+                        <p class="section_description">${service.warrantyDetails}</p>
+                        </div>
+                    `}
+                </div>
+            </section>`}
+
+            <p id="date">${data.geocodedAddress ? `${data.geocodedAddress.split(", ")[3]},` : ""} ${new Date().toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            })}</p>
 
             <div class="signature">
+                ${data.digitalSignatureUri && config.showDigitalSignature ? `
+                    <img
+                        src="data:image/jpeg;base64,${digitalSignature!.base64}"
+                    />
+                ` : ""}
                 <div></div>
                 <div class="info">
                     <p>${data.fantasyName}</p>
@@ -741,15 +783,15 @@ export async function getPDFString(
                     <div class="column" style="min-width: 25%;">
                         <p class="section_title">Validade do orçamento</p>
                         <p class="section_description">${serviceDateIn30Days.toLocaleDateString('pt-BR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        })}</p>
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            })}</p>
                     </div>
 
                     <div class="column" style="min-width: 25%;">
                         <p class="section_title">Categorias</p>
-                        <p class="section_description">${servicesTypes?.map(type => tags.find(tag => tag.value === type)?.title)}</p>
+                        <p class="section_description">${servicesTypes?.map(type => type.name).join(", ")}</p>
                     </div>
                 </div>
 

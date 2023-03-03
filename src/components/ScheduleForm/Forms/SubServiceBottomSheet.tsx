@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 import { runOnUI } from 'react-native-reanimated';
 
@@ -12,7 +12,6 @@ import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from 'react-ho
 import * as z from 'zod';
 
 // Utils
-import { tags } from 'global/tags';
 import { v4 as uuidv4 } from 'uuid';
 
 // Components
@@ -20,12 +19,17 @@ import { ActionButton } from 'components/Button';
 import BottomSheet, { Title } from 'components/BottomSheet';
 import Input from 'components/Input';
 import Label from 'components/Label';
-import { TagsSelector } from 'components/TagsSelector';
+import { TagObject, TagsSelector } from 'components/TagsSelector';
 import Toast from 'components/Toast';
 
 // Types
 import { MaterialModel } from 'database/models/materialModel';
 import { SubServiceModel } from 'database/models/subServiceModel';
+
+
+import { BusinessData, Category } from 'screens/Main/Business/@types';
+import { database } from 'database/index.native';
+import { Loading } from 'components/StatusMessage';
 
 interface FormValues {
     description: string;
@@ -48,6 +52,8 @@ interface Props {
 }
 
 export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, editableData }: Props) {
+    const [businessData, setBusinessData] = React.useState<BusinessData | null | undefined>(null);
+
     const showToast = (errorMessage?: string) => {
         Toast.show({
             preset: "error",
@@ -55,8 +61,6 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
             message: errorMessage || "Não foi possível adicionar o serviço."
         })
     }
-
-    const selectedTags = useRef<string[]>([]);
 
     const { handleSubmit, control, reset, formState: { errors } } = useForm({
         defaultValues: {
@@ -74,7 +78,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
     });
 
     const onSubmit: SubmitHandler<FormValues> = data => {
-        const tags = selectedTags.current;
+        //const tags = selectedTags.current;
 
         const newSubService = {
             id: editableData ? editableData.id : uuidv4(),
@@ -82,7 +86,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
             details: data.details,
             price: parseFloat(data.price),
             amount: parseInt(data.amount),
-            types: tags,
+            types: selectedTags.current,
         };
         //console.log(newSubService)
         Toast.hide();
@@ -97,21 +101,19 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
         reset();
     };
 
-    const onChange = (arg: any) => {
-        return {
-            value: arg.nativeEvent.text,
-        };
-    };
-
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
         console.log(errors)
         showToast(Object.values(errors).map(error => error.message).join('\n'))
     }
 
+    const selectedTags = useRef<TagObject[]>([]);
+    /* const [selectedTags, setSelectedTags] = React.useState<TagObject[]>([]); */
+
     useEffect(() => {
         if (editableData) {
             //console.log("Dados de edição inseridos.")
-            selectedTags.current = editableData.types;
+            /* setSelectedTags(editableData.types as Category[]); */
+            selectedTags.current = editableData.types as Category[];
             reset({
                 description: editableData.description,
                 details: editableData.details ?? "",
@@ -120,6 +122,20 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
             })
         }
     }, [editableData])
+
+    useEffect(() => {
+        const getBusinessData = async () => {
+            const data = await database.localStorage.get('businessData') as BusinessData;
+            if (data) {
+                console.log("Dados obtidos com sucesso.", data)
+                setBusinessData(data);
+            } else {
+                setBusinessData(undefined)
+            }
+        }
+
+        getBusinessData();
+    }, [])
 
     return (
         <BottomSheet
@@ -134,8 +150,9 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                         price: "",
                         amount: "1",
                     });
+                    /* setSelectedTags([]); */
+                    selectedTags.current = [];
                 }
-                selectedTags.current = [];
             }}
         >
             <View
@@ -238,15 +255,24 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                         <Label>
                             Categorias
                         </Label>
-                        <View className='mt-2'>
-                            <TagsSelector
-                                tags={tags.map(tag => ({ ...tag, checked: selectedTags.current.includes(tag.value) }))}
-                                onSelectTags={(newTags) => {
-                                    selectedTags.current = newTags.map(tag => tag.value)
-                                }}
-                                pallette="dark"
-                            />
+                        <View className='my-2 flex items-start justify-center w-full'>
+                            {
+                                businessData != null && (
+                                    <TagsSelector
+                                        tags={businessData.categories ?? []}
+                                        onSelectTags={(newTags) => {
+                                            selectedTags.current = newTags;
+                                            //setSelectedTags(newTags);
+                                        }}
+                                        height={40}
+                                        pallette="dark"
+                                    />
+                                )
+                            }
                         </View>
+                        <Text className="text-sm text-gray-100 text-center">
+                            Para adicionar categorias, vá em "Seu Negócio" e acesse a seção "Categorias"
+                        </Text>
                     </View>
                 </ScrollView>
                 <ActionButton
