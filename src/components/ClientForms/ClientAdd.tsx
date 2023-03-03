@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useId } from 'react';
 import { Text, View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 import { runOnUI } from 'react-native-reanimated';
@@ -14,22 +14,21 @@ import type { ServiceModel } from 'database/models/serviceModel';
 import type { ClientModel } from 'database/models/clientModel';
 
 // Components
-import BottomSheet, { BottomSheetActions, Title } from 'components/BottomSheet';
+import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
 import { ActionButton, SubActionButton } from 'components/Button';
 import Toast from 'components/Toast';
 import ClientSelect from './ClientSelect';
 
 import { database } from 'database/index.native';
 import ClientDataForm, { ClientFormValues, clientSchema } from './ClientDataForm';
-import { scheduleServiceNotification } from 'utils/notificationHandler';
 
 interface Props {
-    bottomSheetRef: React.RefObject<BottomSheetActions>;
+    bottomSheet: string;
     service: ServiceModel;
     onSubmitForm?: (data: ClientModel) => void;
 }
 
-export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Props) {
+export default function ClientAdd({ bottomSheet, service, onSubmitForm }: Props) {
     const showToast = (errorMessage?: string) => {
         Toast.show({
             preset: "error",
@@ -39,13 +38,13 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
     }
 
     // Bottom Sheets and Dropdowns
-    const clientSelectBottomSheet = useRef<BottomSheetActions>(null);
+    const clientSelectBottomSheet = useId();
     const clientSelectBottomSheetOpenHandler = useCallback(() => {
-        clientSelectBottomSheet.current?.expand();
+        BottomSheet.expand(clientSelectBottomSheet)
     }, [])
 
     const clientAddBottomSheetCloseHandler = useCallback(() => {
-        bottomSheetRef.current?.close();
+        BottomSheet.close(bottomSheet);
     }, [])
 
     async function handleCreate(client: ClientModel) {
@@ -97,7 +96,7 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
 
         setTimeout(() => {
             try {
-                runOnUI(bottomSheetRef.current?.close())();
+                runOnUI(() => BottomSheet.close(bottomSheet))();
             } catch { }
         }, 100);
 
@@ -113,7 +112,7 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
     return (
         <BottomSheet
             height={"60%"}
-            ref={bottomSheetRef}
+            id={bottomSheet}
         >
             <View
                 className='flex flex-1 gap-y-5'
@@ -123,9 +122,9 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
                     paddingBottom: 12
                 }}
             >
-                <Title>
+                <BottomSheet.Title>
                     Adicionar dados do cliente
-                </Title>
+                </BottomSheet.Title>
                 <ScrollView className='flex flex-1 relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
                     paddingBottom: 16,
                 }}>
@@ -151,7 +150,7 @@ export default function ClientAdd({ bottomSheetRef, service, onSubmitForm }: Pro
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>
-            <ClientSelect bottomSheetRef={clientSelectBottomSheet} service={service} lastBottomSheetRef={bottomSheetRef} />
+            <ClientSelect bottomSheet={clientSelectBottomSheet} service={service} lastBottomSheet={bottomSheet} />
         </BottomSheet>
     )
 }

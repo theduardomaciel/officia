@@ -177,7 +177,7 @@ interface CalendarProps {
     style?: ViewStyle;
     isStatic?: boolean;
     selectedDate?: CalendarDate;
-    statusArray: WeekDay[][];
+    statusArray?: WeekDay[][];
     setSelectedDate?: (date: CalendarDate) => void;
 }
 

@@ -20,7 +20,7 @@ type ToastRef = {
     hide: () => void;
 };
 
-import ToastUI from './ToastUI';
+import ToastUI from './Toast';
 
 const ToastRoot = React.forwardRef((defaultProps: ToastConfig, ref) => {
     const [config, setConfig] = React.useState<ToastConfig | undefined>(defaultProps);

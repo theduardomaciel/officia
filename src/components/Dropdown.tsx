@@ -1,4 +1,4 @@
-import React, { useCallback, useImperativeHandle, useRef } from "react";
+import React, { useCallback, useId, useImperativeHandle, useRef } from "react";
 import { TouchableOpacity, TouchableOpacityProps, View, Text, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlatList } from "react-native-gesture-handler";
@@ -10,7 +10,7 @@ import colors from "global/colors";
 import clsx from "clsx";
 
 import Label from "./Label";
-import BottomSheet from "./BottomSheet";
+import BottomSheet from "./BottomSheet/index";
 import { runOnUI } from "react-native-reanimated";
 
 export type DropdownData = {
@@ -32,15 +32,14 @@ interface Props extends TouchableOpacityProps {
 
 const Dropdown = React.forwardRef(({ label, bottomSheetLabel, overDragAmount, data, bottomSheetHeight, pallette, selected, setSelected, ...rest }: Props, ref) => {
     const { colorScheme } = useColorScheme();
-
-    const bottomSheetRef = useRef<any>(null);
+    const id = useId();
 
     const openHandler = useCallback(() => {
-        bottomSheetRef.current.expand();
+        BottomSheet.expand(id);
     }, [])
 
     const closeHandler = useCallback(() => {
-        bottomSheetRef.current.close();
+        BottomSheet.close(id);
     }, [])
 
     useImperativeHandle(ref, () => ({
@@ -75,7 +74,7 @@ const Dropdown = React.forwardRef(({ label, bottomSheetLabel, overDragAmount, da
             <BottomSheet
                 overDragAmount={overDragAmount || 0}
                 height={bottomSheetHeight || "40%"}
-                ref={bottomSheetRef}
+                id={id}
             >
                 <View
                     className="flex flex-1"

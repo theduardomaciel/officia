@@ -102,7 +102,7 @@ const createFilter = (databaseArray: Array<any>, newArray: Array<any>) => {
     return newArray.filter((newItem) => !databaseArray.some((databaseItem) => databaseItem.id === newItem.id));
 }
 
-export default function Section2({ bottomSheetRef, formRefs, initialValue }: Section2Props) {
+export default function Section2({ bottomSheet, formRefs, initialValue }: Section2Props) {
     const { navigate } = useNavigation();
     const { section0Ref, section1Ref } = formRefs;
 
@@ -326,7 +326,7 @@ export default function Section2({ bottomSheetRef, formRefs, initialValue }: Sec
     }, [])
 
     return (
-        <SectionBottomSheet bottomSheetRef={bottomSheetRef} onExpanded={onExpanded} onDismissed={onDismissed}>
+        <SectionBottomSheet bottomSheet={bottomSheet} onExpanded={onExpanded} onDismissed={onDismissed}>
             {
                 data ? (
                     <>

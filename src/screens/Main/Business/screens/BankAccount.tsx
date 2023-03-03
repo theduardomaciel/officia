@@ -206,7 +206,7 @@ export default function BankAccountScreen({ route, navigation }: any) {
                                     setValue("pixKey", "")
                                     setHasDifferences(true)
                                 }}
-                                bottomSheetHeight={"40%"}
+                                bottomSheetHeight={"35%"}
                                 overDragAmount={60}
                                 data={[
                                     { label: "Nenhum tipo", value: "unselected" },

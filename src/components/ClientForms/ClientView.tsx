@@ -12,7 +12,7 @@ import type { ServiceModel } from 'database/models/serviceModel';
 
 // Components
 import { ActionButton, SubActionButton, } from 'components/Button';
-import BottomSheet, { BottomSheetActions, Title } from 'components/BottomSheet';
+import BottomSheet from 'components/BottomSheet';
 import ClientAdd from './ClientAdd';
 import ClientEdit from './ClientEdit';
 import ClientSelect from './ClientSelect';
@@ -20,28 +20,28 @@ import ClientSelect from './ClientSelect';
 import { database } from 'database/index.native';
 
 interface Props {
-    bottomSheetRef: React.RefObject<BottomSheetActions>;
+    bottomSheet: string;
     client: ClientModel;
     service: ServiceModel;
 }
 
-export default function ClientView({ bottomSheetRef, client, service }: Props) {
+export default function ClientView({ bottomSheet, client, service }: Props) {
 
     // Bottom Sheets
-    const clientSelectBottomSheet = useRef<BottomSheetActions>(null);
+    const clientSelectBottomSheet = "clientSelectBottomSheet"
     const clientSelectBottomSheetOpenHandler = useCallback(() => {
-        clientSelectBottomSheet.current?.expand();
+        BottomSheet.expand(clientSelectBottomSheet);
     }, [])
 
-    const clientAddBottomSheetRef = useRef<BottomSheetActions>(null);
+    const clientAddBottomSheet = "clientAddBottomSheet";
 
-    const clientEditBottomSheet = useRef<BottomSheetActions>(null);
+    const clientEditBottomSheet = "clientEditBottomSheet";
     const clientEditBottomSheetOpenHandler = useCallback(() => {
-        clientEditBottomSheet.current?.expand();
+        BottomSheet.expand(clientEditBottomSheet);
     }, [])
 
     const bottomSheetCloseHandler = useCallback(() => {
-        bottomSheetRef.current?.close();
+        BottomSheet.close(bottomSheet);
     }, [])
 
     async function removeServiceClient() {
@@ -61,7 +61,7 @@ export default function ClientView({ bottomSheetRef, client, service }: Props) {
     return (
         <BottomSheet
             height={client.address ? "47%" : "40%"}
-            ref={bottomSheetRef}
+            id={bottomSheet}
         >
             <View
                 className='flex flex-1 gap-y-5 items-center justify-between'
@@ -72,9 +72,9 @@ export default function ClientView({ bottomSheetRef, client, service }: Props) {
                 }}
             >
                 <View className='flex-col items-center justify-center'>
-                    <Title ellipsizeMode="tail" numberOfLines={1}>
+                    <BottomSheet.Title ellipsizeMode="tail" numberOfLines={1}>
                         {client.name}
-                    </Title>
+                    </BottomSheet.Title>
                     <View className='flex-row items-center justify-center gap-x-4'>
                         <TouchableOpacity
                             className='flex-row mt-2 items-center justify-center'
@@ -151,18 +151,18 @@ export default function ClientView({ bottomSheetRef, client, service }: Props) {
                 </View>
             </View>
             <ClientEdit
-                bottomSheetRef={clientEditBottomSheet}
-                lastBottomSheetRef={bottomSheetRef}
+                bottomSheet={clientEditBottomSheet}
+                lastBottomSheet={bottomSheet}
                 client={client}
             />
             <ClientAdd
-                bottomSheetRef={clientAddBottomSheetRef}
+                bottomSheet={clientAddBottomSheet}
                 service={service}
             />
             <ClientSelect
-                bottomSheetRef={clientSelectBottomSheet}
+                bottomSheet={clientSelectBottomSheet}
                 service={service}
-                lastBottomSheetRef={bottomSheetRef}
+                lastBottomSheet={bottomSheet}
             />
         </BottomSheet>
     )

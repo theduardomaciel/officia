@@ -16,7 +16,7 @@ import { useColorScheme } from 'nativewind';
 
 // Components
 import { ActionButton } from 'components/Button';
-import BottomSheet, { Title } from 'components/BottomSheet';
+import BottomSheet from 'components/BottomSheet';
 import Dropdown from 'components/Dropdown';
 import Input from 'components/Input';
 import Toast from 'components/Toast';
@@ -43,12 +43,12 @@ interface FormValues {
 };
 
 interface Props {
-    bottomSheetRef: React.MutableRefObject<any>;
+    bottomSheet: string;
     onSubmitForm?: (data: MaterialModel) => void;
     editableData?: MaterialModel;
 }
 
-export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, editableData = undefined }: Props) {
+export default function MaterialBottomSheet({ bottomSheet, onSubmitForm, editableData = undefined }: Props) {
     const { colorScheme } = useColorScheme();
 
     const [availability, setAvailability] = useState(editableData?.availability ? "available" : "unavailable" ?? "unavailable");
@@ -92,7 +92,7 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
 
         setTimeout(() => {
             try {
-                runOnUI(bottomSheetRef.current.close())();
+                runOnUI(() => BottomSheet.close(bottomSheet))();
             } catch { }
         }, 100);
 
@@ -120,7 +120,7 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
     return (
         <BottomSheet
             height={"78%"}
-            ref={bottomSheetRef}
+            id={bottomSheet}
             onDismissed={() => {
                 if (editableData) {
                     reset({
@@ -141,9 +141,9 @@ export default function MaterialBottomSheet({ bottomSheetRef, onSubmitForm, edit
                     paddingBottom: 12
                 }}
             >
-                <Title>
+                <BottomSheet.Title>
                     {editableData ? "Editar" : "Adicionar"} material
-                </Title>
+                </BottomSheet.Title>
                 <ScrollView
                     className='flex flex-1 flex-col relative'
                     showsVerticalScrollIndicator={false}

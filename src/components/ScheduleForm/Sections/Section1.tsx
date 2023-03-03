@@ -56,7 +56,7 @@ function checkedPaymentsReducer(state: any, action: any) {
     }
 }
 
-const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Section, ref) => {
+const Section1 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Section, ref) => {
     // General
     const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>(initialValue?.service?.paymentCondition as PaymentCondition ?? 'cash');
     /* const checkedPaymentMethods = useRef<string[]>([]); */
@@ -430,7 +430,7 @@ const Section1 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
     }));
 
     return (
-        <SectionBottomSheet bottomSheetRef={bottomSheetRef}>
+        <SectionBottomSheet bottomSheet={bottomSheet}>
             <SubSection1 />
 
             <SubSectionWrapper

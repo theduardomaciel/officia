@@ -7,19 +7,19 @@ import colors from 'global/colors';
 
 interface Props {
     children: React.ReactNode;
-    bottomSheetRef: React.RefObject<any>;
+    bottomSheet: string;
     expanded?: boolean;
     onDismissed?: () => void;
     onExpanded?: () => void;
     bottomSheetHeight?: string;
 }
 
-export default function SectionBottomSheet({ children, bottomSheetRef, expanded = false, onDismissed, onExpanded, bottomSheetHeight }: Props) {
+export default function SectionBottomSheet({ children, bottomSheet, expanded = false, onDismissed, onExpanded, bottomSheetHeight }: Props) {
     const insets = useSafeAreaInsets();
 
     return (
         <BottomSheet
-            ref={bottomSheetRef}
+            id={bottomSheet}
             defaultValues={{
                 expanded: expanded,
                 suppressBackdrop: true,

@@ -1,4 +1,5 @@
-import React from 'react';
+import BottomSheet from 'components/BottomSheet';
+import React, { useId } from 'react';
 
 interface FormProps {
     editableData?: any;
@@ -18,15 +19,13 @@ import SubServiceBottomSheet from './SubServiceBottomSheet';
 const FormRoot = React.forwardRef((props: { type: 'material' | 'subService' }, ref) => {
     const [config, setConfig] = React.useState<FormProps | undefined>(undefined);
 
-    const formRef = React.useRef<any | null>(null);
-
     const expand = React.useCallback((newProps: FormProps) => {
         setConfig(newProps);
-        formRef.current?.expand();
+        BottomSheet.expand(props.type === 'material' ? 'materialBottomSheet' : 'subServiceBottomSheet');
     }, []);
 
     const close = React.useCallback(() => {
-        formRef.current?.close();
+        BottomSheet.close(props.type === 'material' ? 'materialBottomSheet' : 'subServiceBottomSheet');
     }, []);
 
     // This must use useCallback to ensure the ref doesn't get set to null and then a new ref every render.
@@ -45,13 +44,13 @@ const FormRoot = React.forwardRef((props: { type: 'material' | 'subService' }, r
         props.type === 'material' ?
             <MaterialBottomSheet
                 key={config?.editableData?.id}
-                bottomSheetRef={formRef}
+                bottomSheet={"materialBottomSheet"}
                 {...config}
             />
             :
             <SubServiceBottomSheet
                 key={config?.editableData?.id}
-                bottomSheetRef={formRef}
+                bottomSheet={"subServiceBottomSheet"}
                 {...config}
             />
     );

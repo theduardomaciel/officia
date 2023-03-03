@@ -6,7 +6,7 @@ import colors, { primary } from 'global/colors';
 
 // Components
 import Modal from 'components/Modal';
-import BottomSheet, { BottomSheetActions, Title } from 'components/BottomSheet';
+import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
 import { Empty } from 'components/StatusMessage';
 
 // Database
@@ -18,21 +18,21 @@ import type { ClientModel } from 'database/models/clientModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 
 interface Props {
-    lastBottomSheetRef: React.RefObject<BottomSheetActions>;
-    bottomSheetRef: React.MutableRefObject<any>;
+    lastBottomSheet: string;
+    bottomSheet: string;
     service: ServiceModel;
     onSelectClient?: (data: ClientModel) => void;
 }
 
-export default function ClientSelect({ lastBottomSheetRef, bottomSheetRef, service }: Props) {
+export default function ClientSelect({ lastBottomSheet, bottomSheet, service }: Props) {
     const [clients, setClients] = useState<ClientModel[]>([]);
 
     const lastBottomSheetRefOpenHandler = useCallback(() => {
-        lastBottomSheetRef.current?.expand();
+        BottomSheet.expand(lastBottomSheet);
     }, [])
 
     const bottomSheetCloseHandler = useCallback(() => {
-        bottomSheetRef.current?.close();
+        BottomSheet.close(bottomSheet);
     }, [])
 
     async function handleSelectClient(client: ClientModel) {
@@ -64,9 +64,8 @@ export default function ClientSelect({ lastBottomSheetRef, bottomSheetRef, servi
 
     return (
         <BottomSheet
-            height={/* clientAddBottomSheetRef ? "40%" : */ "35%"}
-            ref={bottomSheetRef}
-            /* onExpand={fetchClients} */
+            height={"35%"}
+            id={bottomSheet}
             onDismiss={lastBottomSheetRefOpenHandler}
         >
             <View
@@ -77,9 +76,9 @@ export default function ClientSelect({ lastBottomSheetRef, bottomSheetRef, servi
                     paddingBottom: 12
                 }}
             >
-                <Title>
+                <BottomSheet.Title>
                     Selecionar cliente
-                </Title>
+                </BottomSheet.Title>
                 {
                     clients.length > 0 ? (
                         <FlatList

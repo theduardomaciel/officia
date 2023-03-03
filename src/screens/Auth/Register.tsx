@@ -16,9 +16,7 @@ import { BasicInfo } from 'screens/Main/Business/screens/BasicInfo';
 import { ContactAndAddress } from 'screens/Main/Business/screens/ContactAndAddress';
 import { ActionButton } from 'components/Button';
 
-// Types
-import type { BottomSheetActions } from 'components/BottomSheet';
-
+// Form
 import { SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -26,28 +24,29 @@ import { basicInfoScheme, BasicInfoSchemeType, BusinessData, contactAndAddressSc
 import { updateData } from 'screens/Main/Business';
 
 import { useAuth } from 'context/AuthContext';
+import BottomSheet from 'components/BottomSheet';
 
 export default function Register({ route, navigation }: any) {
     const { email } = route.params;
     const { signIn } = useAuth();
     const selectedSectionId = useSharedValue(0);
 
-    const section0BottomSheetRef = useRef<BottomSheetActions>(null);
-    const section1BottomSheetRef = useRef<BottomSheetActions>(null);
-    const section2BottomSheetRef = useRef<BottomSheetActions>(null);
+    const section0BottomSheet = "registerSection0BottomSheet"
+    const section1BottomSheet = "registerSection1BottomSheet"
+    const section2BottomSheet = "registerSection2BottomSheet"
 
-    const sections = [section0BottomSheetRef, section1BottomSheetRef, section2BottomSheetRef];
+    const sections = [section0BottomSheet, section1BottomSheet, section2BottomSheet];
 
     const [newBusinessData, setNewBusinessData] = React.useState<Partial<BusinessData> | undefined>(undefined);
 
     const updateHandler = useCallback((id: number) => {
         if (sections[selectedSectionId.value] && sections[id] && id >= 0) {
-            sections[selectedSectionId.value].current?.close();
+            BottomSheet.close(sections[selectedSectionId.value]);
             selectedSectionId.value = withSpring(id, {
                 damping: 100,
                 stiffness: 400
             });
-            sections[id].current?.expand();
+            BottomSheet.expand(sections[id]);
         } else {
             navigation.goBack();
         }
@@ -67,7 +66,7 @@ export default function Register({ route, navigation }: any) {
             backAction,
         );
 
-        section0BottomSheetRef.current?.expand();
+        BottomSheet.expand(section0BottomSheet);
 
         return () => backHandler.remove();
     }, [])
@@ -176,7 +175,7 @@ export default function Register({ route, navigation }: any) {
             />
 
             <SectionBottomSheet
-                bottomSheetRef={section0BottomSheetRef}
+                bottomSheet={section0BottomSheet}
                 expanded={false}
                 bottomSheetHeight={"67%"}
             >
@@ -191,7 +190,7 @@ export default function Register({ route, navigation }: any) {
             </SectionBottomSheet>
 
             <SectionBottomSheet
-                bottomSheetRef={section1BottomSheetRef}
+                bottomSheet={section1BottomSheet}
                 expanded={false}
                 bottomSheetHeight={"67%"}
             >

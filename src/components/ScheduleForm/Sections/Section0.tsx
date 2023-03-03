@@ -19,16 +19,12 @@ import { SubServiceModel } from 'database/models/subServiceModel';
 import { MaterialModel } from 'database/models/materialModel';
 
 // Bottom Sheets
-import MaterialBottomSheet from '../Forms/MaterialBottomSheet';
-import SubServiceBottomSheet from '../Forms/SubServiceBottomSheet';
+import Form from '../Forms/Form';
 
 // Forms
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { runOnUI } from 'react-native-reanimated';
-import Form from '../Forms/Form';
-
 
 const schema = z.object({
     name: z.string().max(30),
@@ -40,7 +36,7 @@ interface FormData {
     additionalInfo: string;
 }
 
-const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Section, ref) => {
+const Section0 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Section, ref) => {
     const { colorScheme } = useColorScheme();
     const currentDate = new Date();
 
@@ -135,7 +131,7 @@ const Section0 = forwardRef(({ bottomSheetRef, updateHandler, initialValue }: Se
     }));
 
     return (
-        <SectionBottomSheet bottomSheetRef={bottomSheetRef} expanded={!initialValue}>
+        <SectionBottomSheet bottomSheet={bottomSheet} expanded={!initialValue}>
             <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (

@@ -21,24 +21,25 @@ import { database } from 'database/index.native';
 // Types
 import type { BottomSheetActions } from 'components/BottomSheet';
 import type { ServiceModel } from 'database/models/serviceModel';
+import BottomSheet from 'components/BottomSheet';
 
 export default function ScheduleForm({ route }: any) {
     const selectedSectionId = useSharedValue(0);
 
-    const section0BottomSheetRef = useRef<BottomSheetActions>(null);
-    const section1BottomSheetRef = useRef<BottomSheetActions>(null);
-    const section2BottomSheetRef = useRef<BottomSheetActions>(null);
+    const section0BottomSheet = "scheduleFormSection0BottomSheet";
+    const section1BottomSheet = "scheduleFormSection1BottomSheet";
+    const section2BottomSheet = "scheduleFormSection2BottomSheet";
 
-    const sections = [section0BottomSheetRef, section1BottomSheetRef, section2BottomSheetRef];
+    const sections = [section0BottomSheet, section1BottomSheet, section2BottomSheet];
 
     const updateHandler = useCallback((id: number) => {
         if (sections[selectedSectionId.value] && sections[id]) {
-            sections[selectedSectionId.value].current?.close();
+            BottomSheet.close(sections[selectedSectionId.value]);
             selectedSectionId.value = withSpring(id, {
                 damping: 100,
                 stiffness: 400
             });
-            sections[id].current?.expand();
+            BottomSheet.expand(sections[id]);
         }
     }, [])
 
@@ -69,7 +70,7 @@ export default function ScheduleForm({ route }: any) {
                         subServices,
                         materials
                     })
-                    section0BottomSheetRef.current?.expand();
+                    BottomSheet.expand(section0BottomSheet)
                 }
             }
         } catch (error) {
@@ -133,21 +134,21 @@ export default function ScheduleForm({ route }: any) {
                     (!route.params?.serviceId || route.params?.serviceId && initialValue) ? (
                         <>
                             <Section0
-                                bottomSheetRef={section0BottomSheetRef}
+                                bottomSheet={section0BottomSheet}
                                 initialValue={initialValue}
                                 ref={section0Ref}
                                 updateHandler={updateHandler}
                             />
 
                             <Section1
-                                bottomSheetRef={section1BottomSheetRef}
+                                bottomSheet={section1BottomSheet}
                                 initialValue={initialValue}
                                 ref={section1Ref}
                                 updateHandler={updateHandler}
                             />
 
                             <Section2
-                                bottomSheetRef={section2BottomSheetRef}
+                                bottomSheet={section2BottomSheet}
                                 initialValue={initialValue}
                                 formRefs={{ section0Ref, section1Ref }}
                             />

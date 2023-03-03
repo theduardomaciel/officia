@@ -14,7 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { ClientModel } from 'database/models/clientModel';
 
 // Components
-import BottomSheet, { BottomSheetActions, Title } from 'components/BottomSheet';
+import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
 import { ActionButton, SubActionButton } from 'components/Button';
 import Toast from 'components/Toast';
 import { ClientDeleteModal } from './ClientSelect';
@@ -23,12 +23,12 @@ import { database } from 'database/index.native';
 import ClientDataForm, { ClientFormValues, clientSchema } from './ClientDataForm';
 
 interface Props {
-    bottomSheetRef: React.RefObject<BottomSheetActions>;
-    lastBottomSheetRef: React.RefObject<BottomSheetActions>;
+    bottomSheet: string;
+    lastBottomSheet: string;
     client: ClientModel;
 }
 
-export default function ClientEdit({ bottomSheetRef, lastBottomSheetRef, client }: Props) {
+export default function ClientEdit({ bottomSheet, lastBottomSheet, client }: Props) {
     const [isDeleteModalVisible, setDeleteModalVisible] = React.useState(false);
 
     const showToast = (errorMessage?: string) => {
@@ -40,7 +40,7 @@ export default function ClientEdit({ bottomSheetRef, lastBottomSheetRef, client 
     }
 
     const bottomSheetCloseHandler = useCallback(() => {
-        bottomSheetRef.current?.close();
+        BottomSheet.close(bottomSheet);
     }, [])
 
     async function handleUpdate(updatedClient: ClientModel) {
@@ -92,8 +92,8 @@ export default function ClientEdit({ bottomSheetRef, lastBottomSheetRef, client 
 
         setTimeout(() => {
             try {
-                runOnUI(bottomSheetRef.current?.close())();
-                runOnUI(lastBottomSheetRef.current?.expand())();
+                runOnUI(() => BottomSheet.close(bottomSheet))();
+                runOnUI(() => BottomSheet.expand(lastBottomSheet))();
             } catch { }
         }, 100);
 
@@ -108,7 +108,7 @@ export default function ClientEdit({ bottomSheetRef, lastBottomSheetRef, client 
     return (
         <BottomSheet
             height={"60%"}
-            ref={bottomSheetRef}
+            id={bottomSheet}
         >
             <View
                 className='flex flex-1 gap-y-5'
@@ -118,9 +118,9 @@ export default function ClientEdit({ bottomSheetRef, lastBottomSheetRef, client 
                     paddingBottom: 12
                 }}
             >
-                <Title>
+                <BottomSheet.Title>
                     Editar cliente
-                </Title>
+                </BottomSheet.Title>
                 <ScrollView className='flex flex-1 relative' showsVerticalScrollIndicator={false} contentContainerStyle={{
                     paddingBottom: 16,
                 }}>

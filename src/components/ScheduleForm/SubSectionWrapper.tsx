@@ -9,7 +9,7 @@ import type { ServiceModel } from "database/models/serviceModel";
 import type { SubServiceModel } from "database/models/subServiceModel";
 
 export interface Section {
-    bottomSheetRef: React.RefObject<any>;
+    bottomSheet: string;
     initialValue?: {
         service: ServiceModel;
         subServices: SubServiceModel[];

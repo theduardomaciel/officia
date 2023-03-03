@@ -35,6 +35,7 @@ import FileViewer from 'react-native-file-viewer';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 
 import { Config, getPaymentCondition, getPDFString } from 'utils/getInvoicePDFString';
+import BottomSheet from 'components/BottomSheet';
 
 export default function Invoice({ route, navigation }: any) {
     const [modalProps, setModalProps] = useState<{
@@ -44,19 +45,19 @@ export default function Invoice({ route, navigation }: any) {
 
     const selectedSectionId = useSharedValue(0);
 
-    const section0BottomSheetRef = useRef<BottomSheetActions>(null);
-    const section1BottomSheetRef = useRef<BottomSheetActions>(null);
+    const section0BottomSheet = "invoiceSection0BottomSheet";
+    const section1BottomSheet = "invoiceSection1BottomSheet";
 
-    const sections = [section0BottomSheetRef, section1BottomSheetRef];
+    const sections = ["invoiceSection0BottomSheet", "invoiceSection1BottomSheet"];
 
     const updateHandler = useCallback((id: number) => {
         if (sections[selectedSectionId.value] && sections[id] && id >= 0) {
-            sections[selectedSectionId.value].current?.close();
+            BottomSheet.close(sections[selectedSectionId.value])
             selectedSectionId.value = withSpring(id, {
                 damping: 100,
                 stiffness: 400
             });
-            sections[id].current?.expand();
+            BottomSheet.expand(sections[id])
         } else {
             navigation.goBack();
         }
@@ -87,7 +88,7 @@ export default function Invoice({ route, navigation }: any) {
                         materials,
                         client
                     })
-                    section0BottomSheetRef.current?.expand();
+                    BottomSheet.expand(section0BottomSheet);
                 }
             }
         } catch (error) {
@@ -250,7 +251,7 @@ export default function Invoice({ route, navigation }: any) {
                     {
                         (route.params?.serviceId && invoiceService) ? (
                             <>
-                                <SectionBottomSheet bottomSheetRef={section0BottomSheetRef} expanded={false}>
+                                <SectionBottomSheet bottomSheet={section0BottomSheet} expanded={false}>
                                     <SubSectionWrapper
                                         header={{
                                             title: "Serviços",
@@ -321,7 +322,7 @@ export default function Invoice({ route, navigation }: any) {
                                     <ActionButton onPress={() => updateHandler && updateHandler(1)} label="Próximo" preset="next" />
                                 </SectionBottomSheet>
 
-                                <SectionBottomSheet bottomSheetRef={section1BottomSheetRef} expanded={false}>
+                                <SectionBottomSheet bottomSheet={section1BottomSheet} expanded={false}>
                                     <ReviewSection
                                         wrapperProps={{
                                             header: { title: "Condições	de Pagamento", icon: "credit-card" },

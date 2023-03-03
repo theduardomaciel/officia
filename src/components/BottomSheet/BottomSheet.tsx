@@ -1,46 +1,19 @@
 import React, { useCallback, forwardRef, useImperativeHandle } from 'react';
-import { View, Dimensions, TouchableWithoutFeedback, ViewStyle, TextProps, Text } from "react-native";
+import { View, Dimensions, TouchableWithoutFeedback, ViewStyle } from "react-native";
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { Portal } from "@gorhom/portal";
 
 import Animated, { interpolate, runOnJS, runOnUI, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withDecay, withSpring, WithSpringConfig } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BottomSheetProps } from '.';
+
 export const animProps = {
     damping: 100,
     stiffness: 400
 } as WithSpringConfig
 
-export interface BottomSheetProps {
-    children: React.ReactNode;
-    height: string;
-    heightLimitBehaviour?: /* 'top' | */ 'lock' | 'contentHeight';
-    // a animação do lock muda dependendo de se no futuro haverá a opção de adicionar uma propriedade de altura adicional para o bottom sheet. Possuindo essa altura adicional a animação passa a ser de spring
-    overDragAmount?: number;
-    canDismiss?: boolean;
-    colors?: {
-        backdrop?: string;
-        background?: string;
-    },
-    defaultValues?: {
-        expanded?: boolean;
-        suppressHandle?: boolean;
-        suppressBackdrop?: boolean;
-        suppressPortal?: boolean;
-    };
-    onDismiss?: () => any;
-    onDismissed?: () => any;
-    onExpand?: () => any;
-    onExpanded?: () => any;
-}
-
-export interface BottomSheetActions {
-    expand: () => any;
-    close: () => any;
-    update: (updateFunction: () => any) => any;
-}
-
-const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, onExpanded, height, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues, colors }: BottomSheetProps, ref) => {
+const BottomSheetUI = forwardRef(({ children, onDismiss, onDismissed, onExpand, onExpanded, height, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues, colors }: BottomSheetProps, ref) => {
     const insets = useSafeAreaInsets();
 
     const overDrag = overDragAmount && overDragAmount > 0 ? overDragAmount : 0;
@@ -257,14 +230,4 @@ const BottomSheet = forwardRef(({ children, onDismiss, onDismissed, onExpand, on
     )
 });
 
-export default BottomSheet;
-
-export function Title({ children, ...rest }: TextProps) {
-    return (
-        <View className="w-full items-center justify-center ">
-            <Text className="font-titleBold text-2xl text-black text-center dark:text-white" {...rest}>
-                {children}
-            </Text>
-        </View>
-    )
-}
+export default BottomSheetUI;

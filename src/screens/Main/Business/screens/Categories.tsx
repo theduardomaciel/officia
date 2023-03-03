@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useId } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,7 +11,7 @@ import colors from 'global/colors';
 
 // Components
 import Input from 'components/Input';
-import BottomSheet, { BottomSheetActions, Title } from 'components/BottomSheet';
+import BottomSheet from 'components/BottomSheet';
 import { ActionButton } from 'components/Button';
 
 import BusinessLayout from '../Layout';
@@ -119,10 +119,10 @@ export default function CategoriesScreen({ route }: any) {
 
     const [categoryToEditId, setCategoryToEditId] = React.useState<string | undefined>(undefined);
 
-    const bottomSheetRef = React.useRef<BottomSheetActions>(null);
+    const bottomSheet = useId();
     const openBottomSheet = useCallback((id?: string) => {
         setCategoryToEditId(id);
-        bottomSheetRef.current?.expand();
+        BottomSheet.expand(bottomSheet);
     }, []);
 
     const [isColorModalVisible, setColorModalVisible] = React.useState(false);
@@ -168,7 +168,7 @@ export default function CategoriesScreen({ route }: any) {
                 setCategories(newCategories);
             }
             setHasDifferences(true);
-            bottomSheetRef.current?.close();
+            BottomSheet.close(bottomSheet);
         } else {
             Toast.show({
                 preset: 'error',
@@ -232,12 +232,12 @@ export default function CategoriesScreen({ route }: any) {
             />
 
             <BottomSheet
-                ref={bottomSheetRef}
+                id={bottomSheet}
                 height={"49%"}
             >
-                <Title>
+                <BottomSheet.Title>
                     {categoryToEditId ? "Editar categoria" : "Adicionar categoria"}
-                </Title>
+                </BottomSheet.Title>
                 <View
                     className="flex flex-1"
                     style={{

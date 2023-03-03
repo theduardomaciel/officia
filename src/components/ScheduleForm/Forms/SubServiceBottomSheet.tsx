@@ -16,7 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Components
 import { ActionButton } from 'components/Button';
-import BottomSheet, { Title } from 'components/BottomSheet';
+import BottomSheet from 'components/BottomSheet';
 import Input from 'components/Input';
 import Label from 'components/Label';
 import { TagObject, TagsSelector } from 'components/TagsSelector';
@@ -46,12 +46,12 @@ const schema = z.object({
 });
 
 interface Props {
-    bottomSheetRef: React.MutableRefObject<any>;
+    bottomSheet: string;
     onSubmitForm?: (data: MaterialModel) => void;
     editableData?: SubServiceModel;
 }
 
-export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, editableData }: Props) {
+export default function SubServiceBottomSheet({ bottomSheet, onSubmitForm, editableData }: Props) {
     const [businessData, setBusinessData] = React.useState<BusinessData | null | undefined>(null);
 
     const showToast = (errorMessage?: string) => {
@@ -93,7 +93,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
 
         setTimeout(() => {
             try {
-                runOnUI(bottomSheetRef.current.close())();
+                runOnUI(() => BottomSheet.close(bottomSheet))();
             } catch { }
         }, 100);
 
@@ -140,7 +140,7 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
     return (
         <BottomSheet
             height={"65%"}
-            ref={bottomSheetRef}
+            id={bottomSheet}
             onDismissed={() => {
                 if (editableData) {
                     //console.log("Dados de edição removidos.")
@@ -163,9 +163,9 @@ export default function SubServiceBottomSheet({ bottomSheetRef, onSubmitForm, ed
                     paddingBottom: 12
                 }}
             >
-                <Title>
+                <BottomSheet.Title>
                     {editableData ? 'Editar Serviço' : 'Adicionar Serviço'}
-                </Title>
+                </BottomSheet.Title>
                 <ScrollView
                     className='flex flex-1 relative'
                     showsVerticalScrollIndicator={false}

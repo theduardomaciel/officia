@@ -14,7 +14,7 @@ import Toast from 'components/Toast';
 import Dropdown, { DropdownData } from 'components/Dropdown';
 
 import { ActionButton } from 'components/Button';
-import { BottomSheetActions } from 'components/BottomSheet';
+import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
 import { Loading } from 'components/StatusMessage';
 import { PreviewStatic } from 'components/Preview';
 import { SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
@@ -126,14 +126,14 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
     const servicesTypes = [...new Set(subServices?.map(subService => subService.types.length > 0 ? subService.types.map(category => category) : []).flat())];
 
     // Bottom Sheets
-    const clientAddBottomSheetRef = React.useRef<BottomSheetActions>(null);
+    const clientAddBottomSheet = "clientAddBottomSheet"
     const expandClientAddBottomSheet = useCallback(() => {
-        clientAddBottomSheetRef.current?.expand();
+        BottomSheet.expand(clientAddBottomSheet);
     }, [])
 
-    const clientViewBottomSheetRef = React.useRef<BottomSheetActions>(null);
+    const clientViewBottomSheet = "clientViewBottomSheet"
     const expandClientViewBottomSheet = useCallback(() => {
-        clientViewBottomSheetRef.current?.expand();
+        BottomSheet.expand(clientViewBottomSheet);
     }, [])
 
     // Dropdowns
@@ -357,14 +357,14 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
             {
                 client && (
                     <ClientView
-                        bottomSheetRef={clientViewBottomSheetRef}
+                        bottomSheet={clientViewBottomSheet}
                         client={client}
                         service={service}
                     />
                 )
             }
             <ClientAdd
-                bottomSheetRef={clientAddBottomSheetRef}
+                bottomSheet={clientAddBottomSheet}
                 service={service}
             />
             <Dropdown
