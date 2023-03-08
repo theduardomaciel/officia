@@ -45,7 +45,12 @@ export default function Overview() {
         setServices(undefined)
         try {
             const servicesCollection = database.get<ServiceModel>('services')
-            const services = await servicesCollection.query(Q.where('status', Q.notEq('scheduled'))).fetch()
+            const services = await servicesCollection.query(
+                Q.or(
+                    Q.where('date', Q.lte(new Date().getTime())),
+                    Q.where('status', Q.notEq('scheduled')),
+                )
+            ).fetch()
             setServices(services)
         } catch (error) {
             console.log(error, "erro")

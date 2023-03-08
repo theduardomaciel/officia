@@ -100,7 +100,7 @@ export default function Home({ route, navigation }: any) {
                 .get<ServiceModel>('services')
                 .query(Q.where('status', "scheduled"))
                 .observe().subscribe(services => {
-                    setPendingServices(services)
+                    setPendingServices(services.filter(service => service.date.getTime() >= currentDate.getTime()))
                 })
 
             const businessData = await database.localStorage.get('businessData') as BusinessData;
@@ -115,11 +115,12 @@ export default function Home({ route, navigation }: any) {
 
     useFocusEffect(
         useCallback(() => {
-            console.log(route?.params?.service)
             if (route?.params?.service === "created") {
                 showCreatedServiceToast()
             } else if (route?.params?.service === "deleted") {
+                console.log(route?.params)
                 showDeleteServiceToast();
+                navigation.setParams({ service: undefined })
             }
         }, [route.params])
     )
@@ -127,14 +128,6 @@ export default function Home({ route, navigation }: any) {
     useEffect(() => {
         fetchData()
     }, [])
-
-    useEffect(() => {
-        const unsubscribe = navigation.addListener('tabPress', (event: any) => {
-            navigation.setParams({ service: undefined })
-        });
-
-        return unsubscribe;
-    }, [navigation]);
 
     const [currentFilteredTags, setCurrentFilteredTags] = useState<TagObject[]>([])
 
@@ -243,15 +236,14 @@ export default function Home({ route, navigation }: any) {
                 className='flex-1 pb-3'
             >
                 {
-                    pendingServices && pendingServices.length === 0 ? (
-                        <Animated.View className='flex-1 items-center pt-24'>
-                            <Empty />
-                        </Animated.View>
-                    ) : pendingServices && pendingServices.length > 0 ? (
+                    pendingServices !== undefined ? (
                         <SectionList
                             sections={DATA}
                             keyExtractor={(item, index) => index.toString()}
                             style={{ flex: 1 }}
+                            ListEmptyComponent={<Animated.View className='flex-1 items-center pt-24'>
+                                <Empty />
+                            </Animated.View>}
                             showsVerticalScrollIndicator={false}
                             renderSectionHeader={({ section: { title } }) => (
                                 title !== 'blank' ? (
@@ -276,7 +268,7 @@ export default function Home({ route, navigation }: any) {
             </Animated.View>
             <Toast
                 toastPosition="top"
-                toastOffset={"17.5%"}
+                toastOffset={"15%"}
             />
         </Container>
     );

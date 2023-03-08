@@ -9,7 +9,7 @@ import React, { forwardRef } from "react";
 
 import { MaterialIcons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 
-interface Props extends TextInputProps {
+export interface CustomInputProps extends TextInputProps {
     label?: string;
     icon?: {
         name: string;
@@ -23,7 +23,7 @@ interface Props extends TextInputProps {
     onPress?: () => void;
 }
 
-const Input = forwardRef(({ label, customIcon, icon, pallette = undefined, required, multiline, onPress, appendedChildren, infoMessage, ...rest }: Props, ref) => {
+const Input = forwardRef(({ label, customIcon, icon, pallette = undefined, required, multiline, onPress, appendedChildren, infoMessage, ...rest }: CustomInputProps, ref) => {
     const { colorScheme } = useColorScheme();
     /* const [isInfoMessageVisible, setIsInfoMessageVisible] = React.useState(false); */
 

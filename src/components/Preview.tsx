@@ -97,7 +97,7 @@ export function Preview({ material, subService, onDelete, onEdit }: PreviewProps
             swipeableRef.current.close();
         }
         onEdit();
-        console.log('editPreService')
+        //console.log('editPreService')
     }
 
     return (

@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Keyboard, Platform, Text, TouchableWithoutFeedback, View } from "react-native";
 import { useSharedValue, withSpring } from 'react-native-reanimated';
 
+import * as FileSystem from "expo-file-system";
+import * as Print from 'expo-print';
+
 import colors from 'global/colors';
 
 // Components
@@ -17,6 +20,8 @@ import { daysToMonthsOrYears, PaymentMethodsReview, ReviewSection, WarrantyRevie
 import { SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
 import { SectionsNavigator } from 'components/SectionsNavigator';
 import { ActionButton } from 'components/Button';
+
+import { updateData } from './Main/Business';
 
 // Database
 import { database } from 'database/index.native';
@@ -157,6 +162,7 @@ export default function Invoice({ route, navigation }: any) {
         showSubtotals: true,
         showSubServicesDetails: true,
         showMaterialsDetails: true,
+        showMaterialsImages: true,
     })
 
     async function createPDF() {
@@ -188,18 +194,18 @@ export default function Invoice({ route, navigation }: any) {
             selectedOptions
         );
 
-        const options = {
-            html: PDFString,
-            fileName: invoiceService?.service.name,
-            directory: 'Documents',
-            base64: true
-        };
+        const { uri } = await Print.printToFileAsync({ html: PDFString });
 
-        const file = await RNHTMLtoPDF.convert(options)
+        if (data.invoiceUri) {
+            await FileSystem.deleteAsync(data.invoiceUri, { idempotent: true });
+        }
+
+        updateData({ invoiceUri: uri }, data, true)
+
         setIsLoading(false);
         setModalProps({
             status: "success",
-            data: file.filePath
+            data: uri
         })
     }
 
@@ -317,7 +323,11 @@ export default function Invoice({ route, navigation }: any) {
                                         <View className='w-3/5 h-[0px] border-dashed border-t border-gray-100' />
                                     </View>
 
-                                    <View className='flex flex-1' />
+                                    {
+                                        invoiceService?.subServices.length === 0 && invoiceService?.materials.length === 0 ? (
+                                            <View className='flex flex-1' />
+                                        ) : <></>
+                                    }
 
                                     <ActionButton onPress={() => updateHandler && updateHandler(1)} label="Próximo" preset="next" />
                                 </SectionBottomSheet>
@@ -381,10 +391,15 @@ export default function Invoice({ route, navigation }: any) {
                                                 inverted
                                                 customKey={"checkbox_3"}
                                             />
+                                            <Checkbox
+                                                title='Mostrar imagens dos materiais'
+                                                checked={selectedOptions.showMaterialsImages}
+                                                onPress={() => setSelectedOptions({ ...selectedOptions, showMaterialsImages: !selectedOptions.showMaterialsDetails })}
+                                                inverted
+                                                customKey={"checkbox_7"}
+                                            />
                                         </View>
                                     </SubSectionWrapper>
-
-                                    <View className='flex flex-1' />
 
                                     <SubSectionWrapper
                                         header={{

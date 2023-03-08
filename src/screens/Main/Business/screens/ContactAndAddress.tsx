@@ -1,15 +1,12 @@
 import React from "react";
-import { ActivityIndicator, TouchableOpacity, View } from "react-native";
-import * as Location from "expo-location"
-
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import colors from 'global/colors';
+import { View } from "react-native";
 
 // Components
-import { BusinessScrollView } from 'components/Container';
 import Input from 'components/Input';
 import Toast from 'components/Toast';
+import AddressFetch from "components/AddressFetch";
 import { SubSectionWrapper } from 'components/ScheduleForm/SubSectionWrapper';
+import { BusinessScrollView } from 'components/Container';
 
 import BusinessLayout, { ChangesObserver } from "../Layout";
 import { updateData } from 'screens/Main/Business';
@@ -19,7 +16,7 @@ import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
-import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
+import { borderErrorStyle } from 'utils/errorBorderStyle';
 
 // Types
 import { BusinessData, contactAndAddressScheme, ContactAndAddressSchemeType, FormProps } from 'screens/Main/Business/@types';
@@ -30,50 +27,7 @@ interface ContactAndAddressProps {
 }
 
 export function ContactAndAddress({ businessData, control, errors, onAddressFetch }: FormProps & ContactAndAddressProps) {
-    const [isFetchingLocation, setFetchingLocation] = React.useState(false);
-
-    async function getPostalCodeAddress() {
-        try {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                Toast.show({
-                    message: "É necessário que a permissão de localização seja concedida para que o endereço do CEP seja identificado automaticamente.",
-                    title: "Permissão negada",
-                    preset: "error",
-                })
-                return;
-            }
-
-            setFetchingLocation(true)
-
-            const { coords } = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-            const addressFetched = await Location.reverseGeocodeAsync(coords);
-            const address = addressFetched[0];
-
-            //console.log(address)
-            /* 
-                [0] = street
-                [1] = name or streetNumber
-                [2] = district (Bairro)
-                [3] = city
-                [4] = region (Estado)
-                [5] = country
-            */
-            const addressText = address.street + ", " + (address.name ?? address.streetNumber ?? "") + ", " + address.district + ", " + (address.city ?? address.subregion) + ", " + address.region + ", " + address.country;
-
-            onAddressFetch(addressText);
-            setFetchingLocation(false);
-        } catch (error) {
-            console.log(error)
-            Toast.show({
-                title: "Ops! Algo deu errado.",
-                message: "Não foi possível obter o endereço do seu negócio. Por favor, tente novamente.",
-                preset: "error",
-            })
-        }
-    }
-
-    const decodedGeocodedAddress = businessData?.geocodedAddress ? businessData.geocodedAddress.split(", ").map(geo => geo) : undefined;
+    const decodedGeocodedAddress = businessData.geocodedAddress ? businessData.geocodedAddress.split(", ").map(geo => geo) : undefined;
 
     return (
         <BusinessScrollView>
@@ -93,7 +47,6 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
                     />
                 )}
                 name="email"
-            //rules={{ maxLength: 50, pattern: { value: /\S+@\S+\.\S+/, message: "E-mail inválido" } }}
             />
             <Controller
                 control={control}
@@ -138,43 +91,24 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
                     <Controller
                         control={control}
                         render={({ field: { onChange, onBlur, value } }) => (
-                            <Input
-                                label='CEP'
+                            <AddressFetch
                                 value={value}
                                 onBlur={onBlur}
+                                label='CEP'
+                                style={!!errors.postalCode && borderErrorStyle}
                                 onChangeText={value => {
                                     const { masked } = formatWithMask({ text: value, mask: MASKS.ZIP_CODE })
                                     onChange(masked)
                                 }}
-                                maxLength={9}
-                                keyboardType='number-pad'
-                                style={!!errors.postalCode && borderErrorStyle}
-                                appendedChildren={
-                                    <TouchableOpacity
-                                        className='flex items-center justify-center p-3 px-4 rounded-lg ml-2'
-                                        disabled={!value || value && value.length < 9 ? true : false || isFetchingLocation}
-                                        activeOpacity={0.7}
-                                        onPress={businessData?.geocodedAddress ? () => onAddressFetch(undefined) : getPostalCodeAddress}
-                                        style={{
-                                            backgroundColor: businessData?.geocodedAddress || !value || value && value.length < 9 ? colors.gray[200] : colors.primary.green,
-                                        }}
-                                    >
-                                        {
-                                            isFetchingLocation ? (
-                                                <ActivityIndicator size={"small"} color={colors.white} />
-                                            ) : (
-                                                <MaterialCommunityIcons name={businessData?.geocodedAddress ? "close" : 'map'} size={18} color={businessData?.geocodedAddress || !value || value.length < 9 ? colors.text[200] : colors.white} />
-                                            )
-                                        }
-                                    </TouchableOpacity>
-                                }
+                                geocodedAddress={businessData.geocodedAddress}
+                                onAddressFetch={onAddressFetch}
                             />
                         )}
                         name="postalCode"
                     />
                 </View>
                 {
-                    businessData?.geocodedAddress ? (
+                    businessData.geocodedAddress ? (
                         <View className='flex-col w-full' style={{ rowGap: 15 }}>
                             <Input
                                 label='Logradouro'
@@ -185,8 +119,8 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
                                 control={control}
                                 render={({ field: { onChange, onBlur, value } }) => (
                                     <Input
-                                        label='Informações Adicionais'
-                                        infoMessage={`informações que não podem ser obtidas automaticamente, como número, complemento, etc.`}
+                                        label='Endereço Adicional'
+                                        infoMessage={`Tudo aquilo que não pode ser obtido automaticamente como: número da casa/apartamento, complemento, etc.`}
                                         value={value}
                                         onBlur={onBlur}
                                         onChangeText={value => onChange(value)}
@@ -225,10 +159,7 @@ export function ContactAndAddress({ businessData, control, errors, onAddressFetc
                                     <Input
                                         label='Endereço'
                                         value={value}
-                                        onBlur={() => {
-                                            getPostalCodeAddress()
-                                            onBlur()
-                                        }}
+                                        onBlur={onBlur}
                                         maxLength={100}
                                         onChangeText={value => onChange(value)}
                                         style={!!errors.address && borderErrorStyle}
@@ -248,11 +179,11 @@ export default function ContactAndAddressScreen({ route }: any) {
     const { businessData: data }: { businessData: BusinessData } = route.params;
     const [businessData, setBusinessData] = React.useState<BusinessData>(data);
     const screenData = {
-        email: data?.email ?? "",
-        phone: data?.phone ?? "",
-        phone2: data.phone2 ?? "",
-        postalCode: data?.postalCode ?? "",
-        address: data?.address ?? "",
+        email: businessData?.email ?? "",
+        phone: businessData?.phone ?? "",
+        phone2: businessData.phone2 ?? "",
+        postalCode: businessData?.postalCode ?? "",
+        address: businessData?.address ?? "",
     } as ContactAndAddressSchemeType;
 
     const [hasDifferences, setHasDifferences] = React.useState(false);
@@ -319,7 +250,6 @@ export default function ContactAndAddressScreen({ route }: any) {
                         setValue("address", "")
                         setHasDifferences(true)
                         setBusinessData({ ...businessData, geocodedAddress: addressText })
-                        /* updateData({ geocodedAddress: addressText }, businessData, setBusinessData); */
                     }}
                 />
             </ChangesObserver>

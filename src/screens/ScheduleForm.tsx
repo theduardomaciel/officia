@@ -11,7 +11,6 @@ import Section2 from 'components/ScheduleForm/Sections/Section2';
 
 // Components
 import Container from 'components/Container';
-import Form from 'components/ScheduleForm/Forms/Form';
 import Toast from 'components/Toast';
 import { Loading } from 'components/StatusMessage';
 
@@ -19,11 +18,10 @@ import { Loading } from 'components/StatusMessage';
 import { database } from 'database/index.native';
 
 // Types
-import type { BottomSheetActions } from 'components/BottomSheet';
 import type { ServiceModel } from 'database/models/serviceModel';
 import BottomSheet from 'components/BottomSheet';
 
-export default function ScheduleForm({ route }: any) {
+export default function ScheduleForm({ route, navigation }: any) {
     const selectedSectionId = useSharedValue(0);
 
     const section0BottomSheet = "scheduleFormSection0BottomSheet";
@@ -40,6 +38,8 @@ export default function ScheduleForm({ route }: any) {
                 stiffness: 400
             });
             BottomSheet.expand(sections[id]);
+        } else {
+            navigation.goBack();
         }
     }, [])
 
@@ -105,8 +105,7 @@ export default function ScheduleForm({ route }: any) {
                 <View>
                     <Header
                         title={route.params?.serviceId ? "Editar serviço" : "Agendamento"}
-                        cancelButton={selectedSectionId.value === 0}
-                        returnButton={selectedSectionId.value !== 0 ? () => updateHandler(selectedSectionId.value - 1) : undefined}
+                        returnButton
                     />
                 </View>
                 <SectionsNavigator
@@ -156,8 +155,6 @@ export default function ScheduleForm({ route }: any) {
                     ) : <Loading />
                 }
 
-                <Form type='material' />
-                <Form type='subService' />
                 <Toast
                     toastPosition="top"
                     maxDragDistance={65}

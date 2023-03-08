@@ -12,7 +12,7 @@ import Header from 'components/Header';
 
 // Data
 import { database } from 'database/index.native';
-import LogoPicker from 'components/LogoPicker';
+import ImagePicker from 'components/ImagePicker';
 import Toast from 'components/Toast';
 
 import type { BusinessData } from './@types';
@@ -49,17 +49,19 @@ const NavigationButton = ({ title, description, onPress, colorScheme = "dark" }:
     )
 }
 
-export async function updateData(dataToUpdate: Partial<BusinessData>, businessData: BusinessData | Partial<BusinessData>) {
+export async function updateData(dataToUpdate: Partial<BusinessData>, businessData: BusinessData | Partial<BusinessData>, suppressToast?: boolean) {
     try {
         const updatedData = { ...businessData, ...dataToUpdate } as BusinessData;
 
         await database.localStorage.set('businessData', updatedData);
 
-        Toast.show({
-            preset: "success",
-            title: "Tudo certo!",
-            message: "Os dados do seu negócio foram atualizados com sucesso."
-        })
+        if (!suppressToast) {
+            Toast.show({
+                preset: "success",
+                title: "Tudo certo!",
+                message: "Os dados do seu negócio foram atualizados com sucesso."
+            })
+        }
 
         //console.log("Dados do negócio atualizados com sucesso.")
         return updatedData;
@@ -102,15 +104,16 @@ export default function Business() {
         <Container>
             <Header title='Meu Negócio' />
             <BusinessScrollView style={{ paddingBottom: 25, paddingTop: 4, rowGap: 20 }}>
-                <LogoPicker
-                    businessData={businessData}
+                <ImagePicker
+                    imageUri={businessData?.logo}
                     onUpdate={async (dataToUpdate) => {
                         if (!businessData) return;
-                        const updatedData = await updateData(dataToUpdate, businessData);
+                        const updatedData = await updateData({ logo: dataToUpdate }, businessData);
                         if (updatedData) {
                             setBusinessData(updatedData);
                         }
                     }}
+                    label="Adicionar logotipo da empresa"
                     showDeleteButton
                 />
                 <NavigationButton

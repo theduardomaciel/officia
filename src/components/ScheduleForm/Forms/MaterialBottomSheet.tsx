@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -22,9 +22,9 @@ import Input from 'components/Input';
 import Toast from 'components/Toast';
 
 // Utils
-import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
+import { borderErrorStyle } from 'utils/errorBorderStyle';
 import { MaterialModel } from 'database/models/materialModel';
-import { runOnUI } from 'react-native-reanimated';
+import ImagePicker from 'components/ImagePicker';
 
 const schema = z.object({
     name: z.string().max(40, { message: 'O nome do material deve ter no máximo 40 caracteres.' }).min(3, { message: 'O nome do material deve ter no mínimo 3 caracteres.' }),
@@ -43,15 +43,15 @@ interface FormValues {
 };
 
 interface Props {
-    bottomSheet: string;
     onSubmitForm?: (data: MaterialModel) => void;
     editableData?: MaterialModel;
 }
 
-export default function MaterialBottomSheet({ bottomSheet, onSubmitForm, editableData = undefined }: Props) {
+export default function MaterialBottomSheet({ onSubmitForm, editableData = undefined }: Props) {
     const { colorScheme } = useColorScheme();
 
     const [availability, setAvailability] = useState(editableData?.availability ? "available" : "unavailable" ?? "unavailable");
+    const [materialImage, setMaterialImage] = useState(editableData?.image_url ?? undefined);
 
     const showToast = (errorMessage?: string) => {
         Toast.show({
@@ -86,16 +86,14 @@ export default function MaterialBottomSheet({ bottomSheet, onSubmitForm, editabl
             amount: (data.amount ? parseFloat(data.amount) : 1) ?? 1,
             profitMargin: (data.profitMargin ? parseFloat(data.profitMargin) : 0),
             availability: availability === "unavailable" ? false : true,
+            image_url: materialImage,
         };
-        console.log(newMaterial)
+        //console.log(newMaterial)
         Toast.hide();
 
-        setTimeout(() => {
-            try {
-                runOnUI(() => BottomSheet.close(bottomSheet))();
-            } catch { }
-        }, 100);
+        BottomSheet.close("materialBottomSheet");
 
+        setMaterialImage(undefined);
         onSubmitForm && onSubmitForm(newMaterial as unknown as MaterialModel);
         reset();
     };
@@ -114,24 +112,23 @@ export default function MaterialBottomSheet({ bottomSheet, onSubmitForm, editabl
                 amount: editableData.amount.toString(),
                 profitMargin: editableData.profitMargin?.toString() ?? "",
             });
+            setMaterialImage(editableData?.image_url ?? undefined);
+            setAvailability(editableData?.availability ? "available" : "unavailable" ?? "unavailable");
+        } else {
+            reset({
+                name: "",
+                description: "",
+                price: "",
+                amount: "1",
+                profitMargin: "",
+            });
         }
     }, [editableData])
 
     return (
         <BottomSheet
             height={"78%"}
-            id={bottomSheet}
-            onDismissed={() => {
-                if (editableData) {
-                    reset({
-                        name: "",
-                        description: "",
-                        price: "",
-                        profitMargin: "",
-                        amount: "1",
-                    });
-                }
-            }}
+            id={"materialBottomSheet"}
         >
             <View
                 className='flex flex-1 gap-y-5'
@@ -152,18 +149,11 @@ export default function MaterialBottomSheet({ bottomSheet, onSubmitForm, editabl
                         rowGap: 20
                     }}
                 >
-                    <View>
-                        <TouchableOpacity
-                            activeOpacity={0.8}
-                            className='w-full flex-col items-center justify-center px-12 py-14 border rounded-lg border-dashed border-primary-green'
-                            style={{ marginBottom: 20 }}
-                        >
-                            <MaterialIcons name='add-photo-alternate' size={32} color={colorScheme === "dark" ? colors.white : colors.black} />
-                            <Text className='font-medium text-sm text-black dark:text-white mt-1'>
-                                Adicionar imagem do produto
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+                    <ImagePicker
+                        imageUri={materialImage}
+                        onUpdate={(imageUri) => setMaterialImage(imageUri)}
+                        label='Adicionar imagem do produto'
+                    />
                     <Controller
                         control={control}
                         render={({ field: { onChange, onBlur, value } }) => (

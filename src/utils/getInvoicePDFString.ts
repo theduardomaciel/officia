@@ -23,6 +23,7 @@ export interface Config {
     showSubtotals: boolean;
     showSubServicesDetails: boolean;
     showMaterialsDetails: boolean;
+    showMaterialsImages: boolean;
 }
 
 // Data
@@ -47,8 +48,16 @@ export async function getPDFString(
     serviceDateIn30Days.setDate(serviceDateIn30Days.getDate() + 30);
 
     const title = config.showInvoiceName ? `Orçamento - ${service?.name}` : "Orçamento";
+
     const image = data.logo ? await manipulateAsync(data.logo!, [], { base64: true }) : null;
     const digitalSignature = data.digitalSignatureUri ? await manipulateAsync(data.digitalSignatureUri!, [], { base64: true }) : null;
+
+    const materialImages = await Promise.all(materials?.map(async material => {
+        if (material.image_url) {
+            const image = await manipulateAsync(material.image_url, [], { base64: true });
+            return image.base64;
+        }
+    }));
 
     const splitGeocodedAddress = data.geocodedAddress?.split(", ");
 
@@ -655,7 +664,7 @@ export async function getPDFString(
                                 </colgroup>
 
                                 <tbody>
-                                   ${materials.map(material => `
+                                   ${materials.map((material, index) => `
                                         <tr>
                                             <td>
                                                 <h3>${material.name}</h3>
@@ -675,6 +684,7 @@ export async function getPDFString(
                                             </td>
                                         </tr>
                                         `).toString().split(',').join('')}
+
                                 </tbody>
                             </table>
                             <div class="line"></div>
@@ -682,7 +692,17 @@ export async function getPDFString(
                                 <p>Subtotal</p>
                                 <p>R$ ${materialsTotal}</p>
                             </div>` : ""}
-                        </div>            
+                        </div>
+                        ${materialImages && materialImages.length > 0 ? `
+                        <div>
+                            ${materialImages.map((image, index) => `
+                                <div>
+                                    <img src="${image}" alt="Imagem do material ${materials[index].name}" />
+                                    <p>Imagem do material ${materials[index].name}</p>
+                                </div>
+                            `)}
+                        </div>
+                        ` : ""}
                     `
             : ""}
 

@@ -1,7 +1,6 @@
-import React, { useRef, useCallback, useId } from 'react';
+import React, { useCallback } from 'react';
 import { Text, View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
-import { runOnUI } from 'react-native-reanimated';
 
 // Form
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
@@ -23,12 +22,11 @@ import { database } from 'database/index.native';
 import ClientDataForm, { ClientFormValues, clientSchema } from './ClientDataForm';
 
 interface Props {
-    bottomSheet: string;
     service: ServiceModel;
     onSubmitForm?: (data: ClientModel) => void;
 }
 
-export default function ClientAdd({ bottomSheet, service, onSubmitForm }: Props) {
+export default function ClientAdd({ service, onSubmitForm }: Props) {
     const showToast = (errorMessage?: string) => {
         Toast.show({
             preset: "error",
@@ -38,13 +36,12 @@ export default function ClientAdd({ bottomSheet, service, onSubmitForm }: Props)
     }
 
     // Bottom Sheets and Dropdowns
-    const clientSelectBottomSheet = useId();
     const clientSelectBottomSheetOpenHandler = useCallback(() => {
-        BottomSheet.expand(clientSelectBottomSheet)
+        BottomSheet.expand("clientSelectBottomSheet")
     }, [])
 
-    const clientAddBottomSheetCloseHandler = useCallback(() => {
-        BottomSheet.close(bottomSheet);
+    const bottomSheetCloseHandler = useCallback(() => {
+        BottomSheet.close("clientAddBottomSheet");
     }, [])
 
     async function handleCreate(client: ClientModel) {
@@ -59,9 +56,6 @@ export default function ClientAdd({ bottomSheet, service, onSubmitForm }: Props)
                     service.client.set(newClient)
                 })
             });
-
-            /* const subServicesAmount = await service.subServices.fetchCount();
-            await scheduleServiceNotification() */
         } catch (error) {
             console.log(error)
         }
@@ -94,11 +88,7 @@ export default function ClientAdd({ bottomSheet, service, onSubmitForm }: Props)
         // Inserimos o novo cliente no banco de dados
         handleCreate(newClient as unknown as ClientModel)
 
-        setTimeout(() => {
-            try {
-                runOnUI(() => BottomSheet.close(bottomSheet))();
-            } catch { }
-        }, 100);
+        bottomSheetCloseHandler();
 
         /* onSubmitForm && onSubmitForm(newClient as unknown as ClientModel); */
         reset();
@@ -111,8 +101,8 @@ export default function ClientAdd({ bottomSheet, service, onSubmitForm }: Props)
 
     return (
         <BottomSheet
-            height={"60%"}
-            id={bottomSheet}
+            height={"55%"}
+            id={"clientAddBottomSheet"}
         >
             <View
                 className='flex flex-1 gap-y-5'
@@ -133,7 +123,7 @@ export default function ClientAdd({ bottomSheet, service, onSubmitForm }: Props)
                             label='Selecionar cliente existente'
                             onPress={() => {
                                 clientSelectBottomSheetOpenHandler();
-                                clientAddBottomSheetCloseHandler();
+                                bottomSheetCloseHandler();
                             }}
                             borderColor={colors.primary.green}
                             preset="dashed"
@@ -141,7 +131,10 @@ export default function ClientAdd({ bottomSheet, service, onSubmitForm }: Props)
                         <View className='w-full flex items-center justify-center mb-4'>
                             <Text className='text-black dark:text-white text-sm'>ou</Text>
                         </View>
-                        <ClientDataForm control={control} errors={errors} />
+                        <ClientDataForm
+                            control={control}
+                            errors={errors}
+                        />
                     </View>
                 </ScrollView>
                 <ActionButton
@@ -150,7 +143,7 @@ export default function ClientAdd({ bottomSheet, service, onSubmitForm }: Props)
                     onPress={handleSubmit(onSubmit, onError)}
                 />
             </View>
-            <ClientSelect bottomSheet={clientSelectBottomSheet} service={service} lastBottomSheet={bottomSheet} />
+            <ClientSelect service={service} lastBottomSheet={"clientAddBottomSheet"} />
         </BottomSheet>
     )
 }

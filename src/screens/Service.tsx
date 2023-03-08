@@ -67,12 +67,25 @@ export default function Service({ route }: any) {
             .get<ServiceModel>("services")
             .find(serviceId) as ObservableServiceModel;
 
+        if (newService.date < new Date() && newService.status === "scheduled") {
+            await database.write(async () => {
+                await newService.update((service: any) => {
+                    service.status = "archived"
+                })
+            })
+            removeNotification(newService.id)
+        }
+
         setService(newService)
+
+        //newService.observe().subscribe(setService);
         newService.subServices.observe().subscribe(setSubServices);
         newService.materials.observe().subscribe(setMaterials);
-        newService.client.observe().subscribe(client => {
-            setClient(client);
-            scheduleServiceNotification(newService, subServices?.length ?? 0, client?.name)
+        newService.client.observe().subscribe(newClient => {
+            setClient(newClient);
+            if (client !== undefined && service && service?.date.getTime() >= new Date().getTime() && service?.status === "scheduled") {
+                scheduleServiceNotification(newService, subServices?.length ?? 0, client?.name)
+            }
         });
     }
 
@@ -105,8 +118,9 @@ export default function Service({ route }: any) {
                 )
             }
             <Toast
-                toastPosition="top"
-                toastOffset={"90%"}
+                toastPosition="bottom"
+                maxDragDistance={25}
+                toastOffset={"10%"}
             />
         </>
     )
@@ -126,14 +140,12 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
     const servicesTypes = [...new Set(subServices?.map(subService => subService.types.length > 0 ? subService.types.map(category => category) : []).flat())];
 
     // Bottom Sheets
-    const clientAddBottomSheet = "clientAddBottomSheet"
     const expandClientAddBottomSheet = useCallback(() => {
-        BottomSheet.expand(clientAddBottomSheet);
+        BottomSheet.expand("clientAddBottomSheet");
     }, [])
 
-    const clientViewBottomSheet = "clientViewBottomSheet"
     const expandClientViewBottomSheet = useCallback(() => {
-        BottomSheet.expand(clientViewBottomSheet);
+        BottomSheet.expand("clientViewBottomSheet");
     }, [])
 
     // Dropdowns
@@ -159,7 +171,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 
         if (status === "archived") {
             await removeNotification(service.id)
-        } else if (status === "scheduled") {
+        } else if (status === "scheduled" && service.date.getTime() >= new Date().getTime()) {
             await scheduleServiceNotification(service, subServices?.length ?? 0, client?.name)
         }
     }
@@ -207,12 +219,17 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                         </TouchableOpacity>
                     }
                     bellowTitle={
-                        <TouchableOpacity activeOpacity={0.8} onPress={client ? expandClientViewBottomSheet : expandClientAddBottomSheet}>
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={client && service.status === "scheduled" ? expandClientViewBottomSheet : expandClientAddBottomSheet}
+                        >
                             {
                                 client ? (
                                     <View className='flex-row items-center gap-x-2'>
                                         <MaterialIcons name='person' size={18} color={colors.text[100]} />
-                                        <Text className='text-base underline text-text-100'>
+                                        <Text className='text-base text-text-100' style={{
+                                            textDecorationLine: service.status === "scheduled" ? "underline" : "none",
+                                        }}>
                                             {client.name}
                                         </Text>
                                     </View>
@@ -349,24 +366,15 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                     onPress={() => navigate("invoice", { serviceId: service.id })}
                 />
             </View>
-            <Toast
-                toastPosition="top"
-                maxDragDistance={25}
-                toastOffset={"20%"}
-            />
             {
                 client && (
                     <ClientView
-                        bottomSheet={clientViewBottomSheet}
                         client={client}
                         service={service}
                     />
                 )
             }
-            <ClientAdd
-                bottomSheet={clientAddBottomSheet}
-                service={service}
-            />
+            <ClientAdd service={service} />
             <Dropdown
                 ref={statusDropdownRef}
                 data={STATUS_DATA}

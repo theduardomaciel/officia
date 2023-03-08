@@ -44,20 +44,19 @@
 
 ### Customization
 
-* Translucent navigation bar
-
 1. Update xml styles through `android/app/src/main/res/values/styles.xml`, for:
 
     > Translucent navigation bar
     ```xml
         <resources>
         <!-- Base application theme. -->
-        <!-- <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar"> -->
-            <!-- Make status & navigation bar translucent -->
-            <item name="android:navigationBarColor">@android:color/transparent</item>
-            <item name="android:windowTranslucentNavigation">true</item>
-            <item name="android:windowTranslucentStatus">true</item>
-            <item name="android:enforceNavigationBarContrast">false</item>
+        <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+            <!-- Status bar color. -->
+            <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+            <!-- Navigation Bar color. -->
+            <item name="android:navigationBarColor" tools:targetApi="l">@android:color/transparent</item>
+            <item name="android:enforceStatusBarContrast" tools:targetApi="q">false</item>
+            <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
         </style>
     </resources>
     ```

@@ -19,12 +19,11 @@ import type { ServiceModel } from 'database/models/serviceModel';
 
 interface Props {
     lastBottomSheet: string;
-    bottomSheet: string;
     service: ServiceModel;
     onSelectClient?: (data: ClientModel) => void;
 }
 
-export default function ClientSelect({ lastBottomSheet, bottomSheet, service }: Props) {
+export default function ClientSelect({ lastBottomSheet, service }: Props) {
     const [clients, setClients] = useState<ClientModel[]>([]);
 
     const lastBottomSheetRefOpenHandler = useCallback(() => {
@@ -32,7 +31,7 @@ export default function ClientSelect({ lastBottomSheet, bottomSheet, service }: 
     }, [])
 
     const bottomSheetCloseHandler = useCallback(() => {
-        BottomSheet.close(bottomSheet);
+        BottomSheet.close("clientSelectBottomSheet");
     }, [])
 
     async function handleSelectClient(client: ClientModel) {
@@ -65,7 +64,7 @@ export default function ClientSelect({ lastBottomSheet, bottomSheet, service }: 
     return (
         <BottomSheet
             height={"35%"}
-            id={bottomSheet}
+            id={"clientSelectBottomSheet"}
             onDismiss={lastBottomSheetRefOpenHandler}
         >
             <View
@@ -134,6 +133,7 @@ async function deleteClient(client: ClientModel) {
 
         await client.destroyPermanently();
     })
+    console.log("Cliente removido com sucesso.")
 }
 
 interface ConfirmDeleteModalProps {

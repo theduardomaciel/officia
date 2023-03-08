@@ -1,7 +1,7 @@
 import { TouchableOpacity, View, Text } from "react-native";
 import { Image } from 'expo-image';
 
-import * as DocumentPicker from 'expo-document-picker';
+import * as ExpoImagePicker from 'expo-image-picker';
 import * as FileSystem from "expo-file-system";
 
 // Visuals
@@ -13,31 +13,34 @@ import colors from "global/colors";
 import type { BusinessData } from "screens/Main/Business/@types";
 
 interface Props {
-    businessData: BusinessData | Partial<BusinessData> | undefined;
-    onUpdate: (updatedData: Partial<BusinessData>) => void;
+    imageUri?: string;
+    onUpdate: (imageUri: string | undefined) => void;
     showDeleteButton?: boolean;
+    label: string;
 }
 
-export default function LogoPicker({ businessData, onUpdate, showDeleteButton }: Props) {
+export default function ImagePicker({ imageUri, onUpdate, showDeleteButton, label }: Props) {
     const { colorScheme } = useColorScheme();
 
     async function getBusinessLogo() {
-        const result = await DocumentPicker.getDocumentAsync({
-            type: 'image/*',
-            copyToCacheDirectory: true,
+        const result = await ExpoImagePicker.launchImageLibraryAsync({
+            mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            /* aspect: [1, 1], */
+            /* quality: 1, */
         });
 
-        if (result.type === 'success') {
-            const { uri } = result;
+        if (result.assets) {
+            const { uri } = result.assets[0];
             console.log("Nova imagem selecionada ", uri)
-            onUpdate({ logo: uri })
+            onUpdate(uri)
         }
     }
 
     async function removeBusinessLogo() {
-        if (businessData) {
-            FileSystem.deleteAsync(businessData?.logo as string, { idempotent: true });
-            onUpdate({ logo: undefined })
+        if (imageUri) {
+            FileSystem.deleteAsync(imageUri, { idempotent: true });
+            onUpdate(undefined)
         }
     }
 
@@ -47,8 +50,8 @@ export default function LogoPicker({ businessData, onUpdate, showDeleteButton }:
                 activeOpacity={0.8}
                 className='w-full flex-col items-center justify-center px-12 border'
                 style={{
-                    paddingTop: businessData && businessData.logo ? 5 : 50,
-                    paddingBottom: businessData && businessData.logo ? 5 : 50,
+                    paddingTop: imageUri ? 5 : 50,
+                    paddingBottom: imageUri ? 5 : 50,
                     borderRadius: 8,
                     borderColor: colors.primary.green,
                     borderWidth: 1,
@@ -57,9 +60,9 @@ export default function LogoPicker({ businessData, onUpdate, showDeleteButton }:
                 onPress={getBusinessLogo}
             >
                 {
-                    businessData && businessData.logo ? (
+                    imageUri ? (
                         <Image
-                            source={{ uri: businessData?.logo }}
+                            source={{ uri: imageUri }}
                             style={{ width: "100%", height: 200 }}
                             contentFit='contain'
                             transition={1000}
@@ -68,14 +71,14 @@ export default function LogoPicker({ businessData, onUpdate, showDeleteButton }:
                         <>
                             <MaterialIcons name='add-photo-alternate' size={32} color={colorScheme === "dark" ? colors.white : colors.black} />
                             <Text className='font-medium text-sm text-black dark:text-white'>
-                                Adicionar logotipo da empresa
+                                {label}
                             </Text>
                         </>
                     )
                 }
             </TouchableOpacity>
             {
-                showDeleteButton && businessData && businessData.logo && (
+                showDeleteButton && imageUri && (
                     <TouchableOpacity activeOpacity={0.7} onPress={removeBusinessLogo}>
                         <Text className='font-medium text-sm text-primary-red'>
                             Remover logotipo da empresa

@@ -1,13 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
-import { runOnUI } from 'react-native-reanimated';
 
 import colors from 'global/colors';
 
 // Form
 import { zodResolver } from '@hookform/resolvers/zod';
-import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
+import { borderErrorStyle } from 'utils/errorBorderStyle';
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -19,7 +18,7 @@ import { ActionButton } from 'components/Button';
 import BottomSheet from 'components/BottomSheet';
 import Input from 'components/Input';
 import Label from 'components/Label';
-import { TagObject, TagsSelector } from 'components/TagsSelector';
+import { TagObject, TagsSelector, TagsSelectorRef } from 'components/TagsSelector';
 import Toast from 'components/Toast';
 
 // Types
@@ -29,7 +28,6 @@ import { SubServiceModel } from 'database/models/subServiceModel';
 
 import { BusinessData, Category } from 'screens/Main/Business/@types';
 import { database } from 'database/index.native';
-import { Loading } from 'components/StatusMessage';
 
 interface FormValues {
     description: string;
@@ -46,12 +44,11 @@ const schema = z.object({
 });
 
 interface Props {
-    bottomSheet: string;
-    onSubmitForm?: (data: MaterialModel) => void;
+    onSubmitForm?: (data: SubServiceModel) => void;
     editableData?: SubServiceModel;
 }
 
-export default function SubServiceBottomSheet({ bottomSheet, onSubmitForm, editableData }: Props) {
+export default function SubServiceBottomSheet({ onSubmitForm, editableData }: Props) {
     const [businessData, setBusinessData] = React.useState<BusinessData | null | undefined>(null);
 
     const showToast = (errorMessage?: string) => {
@@ -91,29 +88,25 @@ export default function SubServiceBottomSheet({ bottomSheet, onSubmitForm, edita
         //console.log(newSubService)
         Toast.hide();
 
-        setTimeout(() => {
-            try {
-                runOnUI(() => BottomSheet.close(bottomSheet))();
-            } catch { }
-        }, 100);
+        BottomSheet.close("subServiceBottomSheet");
 
-        onSubmitForm && onSubmitForm(newSubService as unknown as MaterialModel);
+        onSubmitForm && onSubmitForm(newSubService as unknown as SubServiceModel);
         reset();
     };
 
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
-        console.log(errors)
         showToast(Object.values(errors).map(error => error.message).join('\n'))
     }
 
     const selectedTags = useRef<TagObject[]>([]);
-    /* const [selectedTags, setSelectedTags] = React.useState<TagObject[]>([]); */
+    const tagsPickerRef = useRef<TagsSelectorRef>(null);
 
     useEffect(() => {
         if (editableData) {
             //console.log("Dados de edição inseridos.")
-            /* setSelectedTags(editableData.types as Category[]); */
             selectedTags.current = editableData.types as Category[];
+            tagsPickerRef.current?.setTags(editableData.types as Category[]);
+
             reset({
                 description: editableData.description,
                 details: editableData.details ?? "",
@@ -127,7 +120,7 @@ export default function SubServiceBottomSheet({ bottomSheet, onSubmitForm, edita
         const getBusinessData = async () => {
             const data = await database.localStorage.get('businessData') as BusinessData;
             if (data) {
-                console.log("Dados obtidos com sucesso.", data)
+                //console.log("Dados obtidos com sucesso.", data)
                 setBusinessData(data);
             } else {
                 setBusinessData(undefined)
@@ -140,19 +133,16 @@ export default function SubServiceBottomSheet({ bottomSheet, onSubmitForm, edita
     return (
         <BottomSheet
             height={"65%"}
-            id={bottomSheet}
-            onDismissed={() => {
-                if (editableData) {
-                    //console.log("Dados de edição removidos.")
-                    reset({
-                        description: "",
-                        details: "",
-                        price: "",
-                        amount: "1",
-                    });
-                    /* setSelectedTags([]); */
-                    selectedTags.current = [];
-                }
+            id={"subServiceBottomSheet"}
+            onExpand={() => {
+                reset({
+                    description: "",
+                    details: "",
+                    price: "",
+                    amount: "1",
+                });
+                selectedTags.current = [];
+                tagsPickerRef.current?.clearTags();
             }}
         >
             <View
@@ -259,6 +249,7 @@ export default function SubServiceBottomSheet({ bottomSheet, onSubmitForm, edita
                             {
                                 businessData != null && (
                                     <TagsSelector
+                                        ref={tagsPickerRef}
                                         tags={businessData.categories ?? []}
                                         onSelectTags={(newTags) => {
                                             selectedTags.current = newTags;

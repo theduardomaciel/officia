@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 import { runOnUI } from 'react-native-reanimated';
@@ -10,8 +10,6 @@ import colors from 'global/colors';
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-// Types
-import type { ClientModel } from 'database/models/clientModel';
 
 // Components
 import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
@@ -22,13 +20,17 @@ import { ClientDeleteModal } from './ClientSelect';
 import { database } from 'database/index.native';
 import ClientDataForm, { ClientFormValues, clientSchema } from './ClientDataForm';
 
+// Types
+import type { ClientModel } from 'database/models/clientModel';
+import type { ServiceModel } from 'database/models/serviceModel';
+
 interface Props {
-    bottomSheet: string;
     lastBottomSheet: string;
     client: ClientModel;
+    service?: ServiceModel;
 }
 
-export default function ClientEdit({ bottomSheet, lastBottomSheet, client }: Props) {
+export default function ClientEdit({ lastBottomSheet, client }: Props) {
     const [isDeleteModalVisible, setDeleteModalVisible] = React.useState(false);
 
     const showToast = (errorMessage?: string) => {
@@ -40,7 +42,11 @@ export default function ClientEdit({ bottomSheet, lastBottomSheet, client }: Pro
     }
 
     const bottomSheetCloseHandler = useCallback(() => {
-        BottomSheet.close(bottomSheet);
+        BottomSheet.close("clientEditBottomSheet");
+    }, [])
+
+    const lastBottomSheetOpenHandler = useCallback(() => {
+        BottomSheet.expand(lastBottomSheet);
     }, [])
 
     async function handleUpdate(updatedClient: ClientModel) {
@@ -78,26 +84,23 @@ export default function ClientEdit({ bottomSheet, lastBottomSheet, client }: Pro
         }
     });
 
+    const newClientAddress = useRef<string | undefined>(undefined);
+
     const onSubmit: SubmitHandler<ClientFormValues> = data => {
         const updatedClient = {
             name: data.name,
             contact: data.contact,
-            address: data.address,
+            address: newClientAddress.current ?? data.address,
         };
         //console.log(updatedClient)
         Toast.hide();
 
         // Inserimos o novo cliente no banco de dados
         handleUpdate(updatedClient as unknown as ClientModel)
-
-        setTimeout(() => {
-            try {
-                runOnUI(() => BottomSheet.close(bottomSheet))();
-                runOnUI(() => BottomSheet.expand(lastBottomSheet))();
-            } catch { }
-        }, 100);
-
         reset();
+
+        bottomSheetCloseHandler();
+        lastBottomSheetOpenHandler();
     };
 
     const onError: SubmitErrorHandler<ClientFormValues> = (errors, e) => {
@@ -108,7 +111,7 @@ export default function ClientEdit({ bottomSheet, lastBottomSheet, client }: Pro
     return (
         <BottomSheet
             height={"60%"}
-            id={bottomSheet}
+            id={"clientEditBottomSheet"}
         >
             <View
                 className='flex flex-1 gap-y-5'

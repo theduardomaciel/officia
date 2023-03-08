@@ -8,7 +8,7 @@ import colors from 'global/colors';
 // Components
 import Container from 'components/Container';
 import Toast from 'components/Toast';
-import LogoPicker from 'components/LogoPicker';
+import ImagePicker from 'components/ImagePicker';
 import SectionBottomSheet from 'components/ScheduleForm/SectionBottomSheet';
 import { SectionsNavigator } from 'components/SectionsNavigator';
 
@@ -179,12 +179,12 @@ export default function Register({ route, navigation }: any) {
                 expanded={false}
                 bottomSheetHeight={"67%"}
             >
-                <LogoPicker
+                {/* <ImagePicker
                     businessData={newBusinessData}
                     onUpdate={async (updatedBusinessData) => {
                         setNewBusinessData(prevState => ({ ...prevState, ...updatedBusinessData }))
                     }}
-                />
+                /> */}
                 <BasicInfo control={section0Control} errors={section0Errors} />
                 <ActionButton onPress={submitSection0Data} preset="next" label='Próximo' />
             </SectionBottomSheet>

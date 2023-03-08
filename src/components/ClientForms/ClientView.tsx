@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, } from 'react';
 import { Linking, Text, TouchableOpacity, View } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
@@ -20,12 +20,11 @@ import ClientSelect from './ClientSelect';
 import { database } from 'database/index.native';
 
 interface Props {
-    bottomSheet: string;
     client: ClientModel;
     service: ServiceModel;
 }
 
-export default function ClientView({ bottomSheet, client, service }: Props) {
+export default function ClientView({ client, service }: Props) {
 
     // Bottom Sheets
     const clientSelectBottomSheet = "clientSelectBottomSheet"
@@ -33,15 +32,13 @@ export default function ClientView({ bottomSheet, client, service }: Props) {
         BottomSheet.expand(clientSelectBottomSheet);
     }, [])
 
-    const clientAddBottomSheet = "clientAddBottomSheet";
-
     const clientEditBottomSheet = "clientEditBottomSheet";
     const clientEditBottomSheetOpenHandler = useCallback(() => {
         BottomSheet.expand(clientEditBottomSheet);
     }, [])
 
     const bottomSheetCloseHandler = useCallback(() => {
-        BottomSheet.close(bottomSheet);
+        BottomSheet.close("clientViewBottomSheet");
     }, [])
 
     async function removeServiceClient() {
@@ -60,8 +57,8 @@ export default function ClientView({ bottomSheet, client, service }: Props) {
 
     return (
         <BottomSheet
-            height={client.address ? "47%" : "40%"}
-            id={bottomSheet}
+            height={"40%"}
+            id={"clientViewBottomSheet"}
         >
             <View
                 className='flex flex-1 gap-y-5 items-center justify-between'
@@ -108,15 +105,6 @@ export default function ClientView({ bottomSheet, client, service }: Props) {
                 <View className='rounded-full w-24 h-24 flex items-center justify-center bg-gray-100 mr-4'>
                     <MaterialIcons name="person" size={48} color={colors.text[100]} />
                 </View>
-                {
-                    client.address && (
-                        <ActionButton
-                            icon='directions'
-                            label='Visualizar rota'
-                            onPress={() => { }}
-                        />
-                    )
-                }
                 <View className='flex-row w-full items-center justify-between'>
                     <View className='flex-1 mr-3'>
                         <SubActionButton
@@ -150,19 +138,15 @@ export default function ClientView({ bottomSheet, client, service }: Props) {
                     </View>
                 </View>
             </View>
-            <ClientEdit
-                bottomSheet={clientEditBottomSheet}
-                lastBottomSheet={bottomSheet}
-                client={client}
-            />
-            <ClientAdd
-                bottomSheet={clientAddBottomSheet}
-                service={service}
-            />
             <ClientSelect
-                bottomSheet={clientSelectBottomSheet}
                 service={service}
-                lastBottomSheet={bottomSheet}
+                lastBottomSheet={"clientViewBottomSheet"}
+            />
+            <ClientAdd service={service} />
+            <ClientEdit
+                client={client}
+                service={service}
+                lastBottomSheet={"clientViewBottomSheet"}
             />
         </BottomSheet>
     )

@@ -84,4 +84,5 @@ export type BusinessData = BasicInfoSchemeType
         bankPixType?: string;
         bankAccountType?: string;
         categories?: Category[];
+        invoiceUri?: string;
     }

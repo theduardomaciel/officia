@@ -121,7 +121,13 @@ export default function CategoriesScreen({ route }: any) {
 
     const bottomSheet = useId();
     const openBottomSheet = useCallback((id?: string) => {
-        setCategoryToEditId(id);
+        if (id) {
+            setCategoryToEditId(id);
+        } else {
+            setNewCategoryColor(colors.primary.green);
+            setNewCategoryIcon("category");
+            setNewCategoryName("");
+        }
         BottomSheet.expand(bottomSheet);
     }, []);
 
@@ -153,9 +159,6 @@ export default function CategoriesScreen({ route }: any) {
                     }
                     : oldCategory
                 ))
-                setNewCategoryColor(colors.primary.green);
-                setNewCategoryIcon("category");
-                setNewCategoryName("");
             } else {
                 const newCategory: Category = {
                     id: uuidv4(),
@@ -167,8 +170,8 @@ export default function CategoriesScreen({ route }: any) {
                 const newCategories = [...categories!, newCategory];
                 setCategories(newCategories);
             }
-            setHasDifferences(true);
             BottomSheet.close(bottomSheet);
+            setHasDifferences(true);
         } else {
             Toast.show({
                 preset: 'error',

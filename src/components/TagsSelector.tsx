@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import clsx from 'clsx';
 
 import { Text, TouchableOpacity, FlatList, LayoutAnimation, TouchableOpacityProps, View } from 'react-native';
@@ -60,7 +60,12 @@ export const Tag = ({ onPress, children, pallette, checked, icon, name, color }:
     )
 }
 
-export function TagsSelector({ tags, uniqueSelection, onClear, onSelectTags, insertPaddingRight, pallette, height }: TagSectionProps) {
+export interface TagsSelectorRef {
+    clearTags: () => void;
+    setTags: (newTags: TagObject[]) => void;
+}
+
+export const TagsSelector = forwardRef(({ tags, uniqueSelection, onClear, onSelectTags, insertPaddingRight, pallette, height }: TagSectionProps, ref) => {
     const { colorScheme } = useColorScheme();
     const [sectionData, setSectionData] = useState<TagObject[]>(tags);
     /* .map(tag => ({ ...tag, checked: false })) */
@@ -69,9 +74,18 @@ export function TagsSelector({ tags, uniqueSelection, onClear, onSelectTags, ins
         setSectionData(tags);
     }, [tags])
 
+    useImperativeHandle(ref, () => ({
+        clearTags: () => {
+            console.log("Limpou as tags")
+            setSectionData(tags.map(tag => ({ ...tag, checked: false })));
+        },
+        setTags: (newTags: TagObject[]) => {
+            setSectionData(newTags);
+        }
+    }));
+
     function updateTagsData(updatedSectionData: TagObject[]) {
         const checkedData = [...updatedSectionData].filter(tag => tag.checked);
-        console.log(checkedData)
         const uncheckedData = [...updatedSectionData].filter(tag => !tag.checked);
         const sortedData = checkedData.concat(uncheckedData);
         setSectionData(sortedData);
@@ -138,4 +152,4 @@ export function TagsSelector({ tags, uniqueSelection, onClear, onSelectTags, ins
             keyExtractor={(item, index) => item.id ?? index.toString()}
         />
     )
-}
+});

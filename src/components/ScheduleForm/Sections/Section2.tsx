@@ -115,7 +115,9 @@ export default function Section2({ bottomSheet, formRefs, initialValue }: Sectio
             const section0Data = section0Ref.current?.getData();
             const section1Data = section1Ref.current?.getData();
 
+
             if (section0Data && section1Data) {
+                console.log(section1Data?.agreement?.agreementInitialValue)
                 const serviceId = await getServiceNumber();
                 const newData = {
                     ...section0Data,
@@ -380,7 +382,7 @@ export default function Section2({ bottomSheet, formRefs, initialValue }: Sectio
                                 style: { flex: 1 },
                             }}
                             value={data.installments ? `${data.installments} parcelas`
-                                : data.agreement ? `${data.agreement.splitMethod === "percentage" ? `${data.agreement.agreementInitialValue}%` : `R% ${data.agreement.agreementInitialValue}`} antecipado e o valor restante ${data.agreement.remainingValue === "afterCompletion" ? "após a conclusão do serviço" : `dividido em ${data.installments} parcelas`}`
+                                : data.agreement ? `${data.agreement.splitMethod === "percentage" ? `${data.agreement.agreementInitialValue}%` : `${data.agreement.agreementInitialValue === "half" ? "Metade" : `R$ ${data.agreement.agreementInitialValue}`}`} antecipado e o valor restante ${data.agreement.remainingValue === "afterCompletion" ? "após a conclusão do serviço" : `dividido em ${data.installments} parcelas`}`
                                     : "À vista"
                             }
                         />

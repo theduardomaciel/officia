@@ -1,19 +1,13 @@
 import React from "react";
-import { View, ViewStyle } from "react-native";
-import { Controller, Control } from 'react-hook-form';
+import { View } from "react-native";
 
-import colors from "global/colors";
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
 
 import Input from "components/Input";
-import { z } from "zod";
 
-export const borderErrorStyle = {
-    borderColor: colors.primary.red,
-    borderWidth: 1,
-    borderTopColor: colors.primary.red,
-    borderBottomColor: colors.primary.red,
-} as ViewStyle;
+import { z } from "zod";
+import { Controller, Control } from 'react-hook-form';
+import { borderErrorStyle } from "utils/errorBorderStyle";
 
 export interface ClientFormValues {
     name: string;
@@ -32,10 +26,10 @@ interface Props {
     errors: any;
 }
 
-
 export default function ClientDataForm({ control, errors }: Props) {
+
     return (
-        <View className="w-full gap-y-4">
+        <View className="w-full" style={{ rowGap: 20 }}>
             <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -53,50 +47,29 @@ export default function ClientDataForm({ control, errors }: Props) {
                 )}
                 name="name"
             />
-            <View>
-                <Controller
-                    control={control}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label='Contato'
-                            style={!!errors.contact && borderErrorStyle}
-                            onBlur={onBlur}
-                            onChangeText={value => {
-                                const { masked } = formatWithMask({ text: value, mask: MASKS.BRL_PHONE })
-                                onChange(masked)
-                            }}
-                            maxLength={15}
-                            dataDetectorTypes='phoneNumber'
-                            keyboardType='phone-pad'
-                            value={value}
-                            pallette='dark'
-                            placeholder='(XX) X XXXX-XXXX'
-                            required
-                        />
-                    )}
-                    name="contact"
-                    rules={{ required: true }}
-                />
-            </View>
-            <View>
-                <Controller
-                    control={control}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label='Endereço'
-                            onBlur={onBlur}
-                            onChangeText={value => onChange(value)}
-                            value={value}
-                            spellCheck={false}
-                            maxLength={80}
-                            pallette='dark'
-                            placeholder=''
-                        />
-                    )}
-                    name="address"
-                    rules={{ required: false }}
-                />
-            </View>
+            <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                        label='Contato'
+                        style={!!errors.contact && borderErrorStyle}
+                        onBlur={onBlur}
+                        onChangeText={value => {
+                            const { masked } = formatWithMask({ text: value, mask: MASKS.BRL_PHONE })
+                            onChange(masked)
+                        }}
+                        maxLength={15}
+                        dataDetectorTypes='phoneNumber'
+                        keyboardType='phone-pad'
+                        value={value}
+                        pallette='dark'
+                        placeholder='(XX) X XXXX-XXXX'
+                        required
+                    />
+                )}
+                name="contact"
+                rules={{ required: true }}
+            />
         </View>
     )
 }

@@ -13,7 +13,20 @@ export const animProps = {
     stiffness: 400
 } as WithSpringConfig
 
-const BottomSheetUI = forwardRef(({ children, onDismiss, onDismissed, onExpand, onExpanded, height, overDragAmount = 0, canDismiss = true, heightLimitBehaviour = "lock", defaultValues, colors }: BottomSheetProps, ref) => {
+const BottomSheetUI = forwardRef(({
+    children,
+    onDismiss,
+    onDismissed,
+    onExpand,
+    onExpanded,
+    height,
+    overDragAmount = 0,
+    canDismiss = true,
+    heightLimitBehaviour = "lock",
+    defaultValues,
+    colors
+}: BottomSheetProps, ref
+) => {
     const insets = useSafeAreaInsets();
 
     const overDrag = overDragAmount && overDragAmount > 0 ? overDragAmount : 0;
