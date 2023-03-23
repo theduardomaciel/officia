@@ -3,16 +3,17 @@ import { Text, TouchableOpacity, TouchableOpacityProps, View } from 'react-nativ
 import Animated, { withSpring, withTiming, ZoomOut } from 'react-native-reanimated';
 
 import { Feather } from "@expo/vector-icons";
-import colors from "tailwindcss/colors";
+import colors from 'global/colors';
 
 interface Props extends TouchableOpacityProps {
     checked?: boolean;
     inverted?: boolean;
     title: string;
     customKey: string;
+    preset?: "dark";
 }
 
-export function Checkbox({ title, checked = false, inverted, customKey, ...rest }: Props) {
+export function Checkbox({ title, checked = false, preset, inverted, customKey, ...rest }: Props) {
     const entering = (targetValues: any) => {
         'worklet';
         const animations = {
@@ -44,14 +45,17 @@ export function Checkbox({ title, checked = false, inverted, customKey, ...rest 
             {
                 checked ?
                     <Animated.View
-                        className='h-[30px] w-[30px] bg-primary-green rounded-[9px] items-center justify-center'
+                        className='h-[30px] w-[30px] bg-primary-green rounded-lg items-center justify-center'
                     /* entering={entering} */
                     /* exiting={ZoomOut.duration(100)} */
                     >
                         <Feather name='check' size={20} color={colors.white} />
                     </Animated.View>
                     :
-                    <View className='h-[30px] w-[30px] bg-gray-300 rounded-lg items-center justify-center' />
+                    <View
+                        className='h-[30px] w-[30px] rounded-lg items-center justify-center'
+                        style={{ backgroundColor: preset === "dark" ? colors.gray[200] : colors.gray[300] }}
+                    />
             }
             <Text
                 className={'text-white flex-1 font-normal'}

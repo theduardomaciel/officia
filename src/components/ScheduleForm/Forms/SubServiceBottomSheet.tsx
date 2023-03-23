@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -37,9 +37,9 @@ interface FormValues {
 };
 
 const schema = z.object({
-    description: z.string().min(5, { message: 'Insira uma descrição mais detalhada com no mínimo 5 caracteres.' }).max(50, { message: 'A descrição do serviço deve ter no máximo 40 caracteres.' }),
+    description: z.string({ required_error: 'É necessário inserir uma descrição para o subserviço ser adicionado.' }),
     details: z.string(),
-    price: z.string().min(1, { message: 'É necessário inserir um valor para o serviço.' }),
+    price: z.string().default('0'),
     amount: z.string(),
 });
 
@@ -63,7 +63,7 @@ export default function SubServiceBottomSheet({ onSubmitForm, editableData }: Pr
         defaultValues: {
             description: "",
             details: "",
-            price: "",
+            price: "0",
             amount: "1",
         },
         resolver: zodResolver(schema),
@@ -81,7 +81,7 @@ export default function SubServiceBottomSheet({ onSubmitForm, editableData }: Pr
             id: editableData ? editableData.id : uuidv4(),
             description: data.description,
             details: data.details,
-            price: parseFloat(data.price),
+            price: (data.price ? parseFloat(data.price) : 0) ?? 0,
             amount: parseInt(data.amount),
             types: selectedTags.current,
         };
@@ -113,6 +113,13 @@ export default function SubServiceBottomSheet({ onSubmitForm, editableData }: Pr
                 price: editableData.price.toString(),
                 amount: editableData.amount.toString(),
             })
+        } else {
+            reset({
+                description: "",
+                details: "",
+                price: "",
+                amount: "1",
+            });
         }
     }, [editableData])
 
@@ -247,7 +254,7 @@ export default function SubServiceBottomSheet({ onSubmitForm, editableData }: Pr
                         </Label>
                         <View className='my-2 flex items-start justify-center w-full'>
                             {
-                                businessData != null && (
+                                businessData && businessData.categories && businessData.categories?.length > 0 && (
                                     <TagsSelector
                                         ref={tagsPickerRef}
                                         tags={businessData.categories ?? []}

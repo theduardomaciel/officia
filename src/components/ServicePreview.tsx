@@ -120,7 +120,6 @@ interface ServiceWithSubServicesPreviewProps {
 
 export function ServiceWithSubServicesPreview({ service, subServices, onPress }: ServiceWithSubServicesPreviewProps) {
     const [isExpanded, setIsExpanded] = useState(false);
-    console.log(subServices)
 
     const earnings = subServices && subServices?.map(subService => subService.price).reduce((a, b) => a + b, 0);
 

@@ -4,4 +4,5 @@
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">true</string>
   <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
   <string name="expo_navigation_bar_position" translatable="false">absolute</string>
+  <string name="expo_runtime_version">1.0.0</string>
 </resources>

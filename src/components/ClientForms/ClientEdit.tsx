@@ -1,7 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
-import { runOnUI } from 'react-native-reanimated';
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
@@ -10,9 +9,8 @@ import colors from 'global/colors';
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-
 // Components
-import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
+import BottomSheet from 'components/BottomSheet';
 import { ActionButton, SubActionButton } from 'components/Button';
 import Toast from 'components/Toast';
 import { ClientDeleteModal } from './ClientSelect';
@@ -24,13 +22,15 @@ import ClientDataForm, { ClientFormValues, clientSchema } from './ClientDataForm
 import type { ClientModel } from 'database/models/clientModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 
+import { scheduleServiceNotification } from 'utils/notificationHandler';
+
 interface Props {
     lastBottomSheet: string;
     client: ClientModel;
     service?: ServiceModel;
 }
 
-export default function ClientEdit({ lastBottomSheet, client }: Props) {
+export default function ClientEdit({ service, lastBottomSheet, client }: Props) {
     const [isDeleteModalVisible, setDeleteModalVisible] = React.useState(false);
 
     const showToast = (errorMessage?: string) => {
@@ -64,6 +64,9 @@ export default function ClientEdit({ lastBottomSheet, client }: Props) {
                     }
                 })
             });
+            if (service) {
+                await scheduleServiceNotification(service, service?.subServices.length, updatedClient?.name)
+            }
         } catch (error) {
             console.log(error)
         }
@@ -104,7 +107,7 @@ export default function ClientEdit({ lastBottomSheet, client }: Props) {
     };
 
     const onError: SubmitErrorHandler<ClientFormValues> = (errors, e) => {
-        console.log(errors)
+        //console.log(errors)
         showToast(Object.values(errors).map(error => error.message).join('\n'))
     }
 

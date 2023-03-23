@@ -404,9 +404,6 @@ const Section1 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Secti
 
     useImperativeHandle(ref, () => ({
         getData: () => {
-            const agreementInitialValueString = getValues("agreementInitialValue");
-            console.log(agreementInitialValue.length, "agreementInitialValue")
-
             const agreement = paymentCondition === "agreement" ? {
                 splitMethod,
                 agreementInitialValue: splitMethod === "money" ? (agreementInitialValue === "half" ?
@@ -414,9 +411,6 @@ const Section1 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Secti
                     (agreementInitialPercentage ?? "30"),
                 remainingValue,
             } : undefined;
-            console.log(agreement, "agreement")
-
-            console.warn(agreementInitialValue, agreement?.agreementInitialValue)
 
             const installments = paymentCondition === "installments" || paymentCondition === "agreement" && remainingValue === "withInstallments" ? parseInt(installmentsAmount)
                 || (parseInt(getValues("installmentsAmount").split('x')[0]) ?? 2)

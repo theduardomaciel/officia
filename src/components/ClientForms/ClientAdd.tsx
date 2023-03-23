@@ -6,20 +6,22 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { useForm, SubmitHandler, SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import colors, { primary } from 'global/colors';
+import colors from 'global/colors';
 
 // Types
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { ClientModel } from 'database/models/clientModel';
 
 // Components
-import BottomSheet, { BottomSheetActions } from 'components/BottomSheet';
+import BottomSheet from 'components/BottomSheet';
 import { ActionButton, SubActionButton } from 'components/Button';
 import Toast from 'components/Toast';
 import ClientSelect from './ClientSelect';
 
 import { database } from 'database/index.native';
 import ClientDataForm, { ClientFormValues, clientSchema } from './ClientDataForm';
+
+import { scheduleServiceNotification } from 'utils/notificationHandler';
 
 interface Props {
     service: ServiceModel;
@@ -56,6 +58,7 @@ export default function ClientAdd({ service, onSubmitForm }: Props) {
                     service.client.set(newClient)
                 })
             });
+            await scheduleServiceNotification(service, service.subServices.length, client?.name)
         } catch (error) {
             console.log(error)
         }
@@ -95,7 +98,7 @@ export default function ClientAdd({ service, onSubmitForm }: Props) {
     };
 
     const onError: SubmitErrorHandler<ClientFormValues> = (errors, e) => {
-        console.log(errors)
+        //console.log(errors)
         showToast(Object.values(errors).map(error => error.message).join('\n'))
     }
 

@@ -87,6 +87,7 @@ export default function BusinessLayout({ headerProps, children, hasDifferences, 
                 isVisible={isConfirmExitModalVisible}
                 toggleVisibility={() => setConfirmExitModalVisible(false)}
                 onExitConfirmation={() => {
+                    setConfirmExitModalVisible(false);
                     navigation.goBack();
                 }}
             />

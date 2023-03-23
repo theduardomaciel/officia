@@ -12,13 +12,16 @@ import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
-import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
+import { borderErrorStyle } from 'utils/errorBorderStyle';
 import { updateData } from 'screens/Main/Business';
 
 // Type
 import { basicInfoScheme, BasicInfoSchemeType, BusinessData, FormProps } from 'screens/Main/Business/@types';
+import { Checkbox } from 'components/Checkbox';
 
 export function BasicInfo({ control, errors }: FormProps) {
+    const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] = React.useState(false);
+
     return (
         <BusinessScrollView>
             <Controller
@@ -68,6 +71,13 @@ export function BasicInfo({ control, errors }: FormProps) {
                 )}
                 name="juridicalPerson"
             />
+            <Checkbox
+                preset='dark'
+                customKey='formality'
+                title='Não possuo uma empresa formal'
+                checked={isFormalCheckboxChecked}
+                onPress={() => setIsFormalCheckboxChecked(!isFormalCheckboxChecked)}
+            />
         </BusinessScrollView>
     )
 }
@@ -101,7 +111,7 @@ export default function BasicInfoScreen({ route }: any) {
     });
 
     const onError: SubmitErrorHandler<BasicInfoSchemeType> = (errors, e) => {
-        console.log(errors)
+        //console.log(errors)
         //setFocus(Object.keys(errors)[0] as unknown as keyof BasicInfoSchemeType)
         Toast.show({
             preset: "error",

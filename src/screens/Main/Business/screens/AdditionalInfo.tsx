@@ -18,7 +18,7 @@ import BusinessLayout, { ChangesObserver } from '../Layout';
 import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
+import { borderErrorStyle } from 'utils/errorBorderStyle';
 import { updateData } from 'screens/Main/Business';
 
 // Types
@@ -51,7 +51,7 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
     });
 
     const onError: SubmitErrorHandler<AdditionalInfoSchemeType> = (errors, e) => {
-        console.log(errors)
+        //console.log(errors)
         //setFocus(Object.keys(errors)[0] as unknown as keyof BasicInfoSchemeType)
         Toast.show({
             preset: "error",

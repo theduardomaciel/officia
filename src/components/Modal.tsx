@@ -111,7 +111,7 @@ export default function Modal({ isVisible, toggleVisibility, title, message, ico
         'worklet';
         const animations = {
             originY: withSpring(screenHeight, animProps),
-            opacity: withTiming(0.5, { duration: 400 }),
+            opacity: withTiming(0, { duration: 400 }),
         };
         const initialValues = {
             originY: values.currentOriginY,

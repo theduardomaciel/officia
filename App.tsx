@@ -1,8 +1,10 @@
 import { PortalProvider } from '@gorhom/portal';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
+
+import * as Updates from "expo-updates";
 
 // Customization
 import { useColorScheme } from 'nativewind';
@@ -22,8 +24,9 @@ import * as SplashScreen from 'expo-splash-screen';
 SplashScreen.preventAutoHideAsync();
 
 // Routes
-import Routes from 'routes';
+import Routes from 'navigation/routes';
 import { AuthProvider, useAuth } from 'context/AuthContext';
+import Modal from 'components/Modal';
 
 export default function App() {
     const { colorScheme } = useColorScheme()
@@ -35,9 +38,24 @@ export default function App() {
         AbrilFatface_400Regular
     });
 
+    const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
     const onLayoutRootView = useCallback(async () => {
         if (fontsLoaded) {
             await SplashScreen.hideAsync();
+            try {
+                /* const { isAvailable } = await Updates.checkForUpdateAsync(); */
+                const isAvailable = true;
+                if (isAvailable) {
+                    console.log("tem atualização")
+                    setIsUpdateModalVisible(true);
+                    /* 
+                     await Updates.fetchUpdateAsync();
+                    await Updates.reloadAsync();
+                    */
+                }
+            } catch (error) {
+                console.log(error)
+            }
         }
     }, [fontsLoaded]);
 
@@ -52,6 +70,18 @@ export default function App() {
                     <PortalProvider>
                         <Routes />
                         <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+                        <Modal
+                            isVisible={isUpdateModalVisible}
+                            toggleVisibility={() => setIsUpdateModalVisible(!isUpdateModalVisible)}
+                            title='Há uma nova versão disponível'
+                            message='Deseja atualizar agora?'
+                            buttons={[
+                                {
+                                    label: 'Atualizar',
+                                }
+                            ]}
+                            cancelButton
+                        />
                     </PortalProvider>
                 </SafeAreaProvider>
             </GestureHandlerRootView>

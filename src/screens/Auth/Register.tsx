@@ -37,7 +37,7 @@ export default function Register({ route, navigation }: any) {
 
     const sections = [section0BottomSheet, section1BottomSheet, section2BottomSheet];
 
-    const [newBusinessData, setNewBusinessData] = React.useState<Partial<BusinessData> | undefined>(undefined);
+    const [newBusinessData, setNewBusinessData] = React.useState<Partial<BusinessData>>({});
 
     const updateHandler = useCallback((id: number) => {
         if (sections[selectedSectionId.value] && sections[id] && id >= 0) {
@@ -93,7 +93,7 @@ export default function Register({ route, navigation }: any) {
     });
 
     const onError: SubmitErrorHandler<BasicInfoSchemeType & ContactAndAddressSchemeType> = (errors, e) => {
-        console.log(errors)
+        //console.log(errors)
         //setFocus(Object.keys(errors)[0] as unknown as keyof BasicInfoSchemeType)
         Toast.show({
             preset: "error",
@@ -110,7 +110,7 @@ export default function Register({ route, navigation }: any) {
     const submitSection1Data = section1HandleSubmit(async (data) => {
         //setNewBusinessData(prevState => ({ ...prevState, ...data }))
         const fullData = { ...newBusinessData, ...data }
-        const result = await updateData(fullData, {})
+        const result = await updateData(fullData, {}, true)
         if (result) {
             signIn(result)
         } else {
@@ -162,6 +162,7 @@ export default function Register({ route, navigation }: any) {
                     {
                         id: 0,
                         title: "Sua Empresa",
+                        onPress: () => selectedSectionId.value === 1 && updateHandler(0)
                     },
                     {
                         id: 1,
@@ -179,12 +180,17 @@ export default function Register({ route, navigation }: any) {
                 expanded={false}
                 bottomSheetHeight={"67%"}
             >
-                {/* <ImagePicker
-                    businessData={newBusinessData}
-                    onUpdate={async (updatedBusinessData) => {
-                        setNewBusinessData(prevState => ({ ...prevState, ...updatedBusinessData }))
+                <ImagePicker
+                    imageUri={newBusinessData?.logo}
+                    onUpdate={async (dataToUpdate) => {
+                        const updatedData = await updateData({ logo: dataToUpdate }, newBusinessData, true);
+                        if (updatedData) {
+                            setNewBusinessData(updatedData);
+                        }
                     }}
-                /> */}
+                    label="Adicionar logotipo da empresa"
+                    showDeleteButton
+                />
                 <BasicInfo control={section0Control} errors={section0Errors} />
                 <ActionButton onPress={submitSection0Data} preset="next" label='Próximo' />
             </SectionBottomSheet>

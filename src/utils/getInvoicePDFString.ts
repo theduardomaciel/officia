@@ -694,11 +694,15 @@ export async function getPDFString(
                             </div>` : ""}
                         </div>
                         ${materialImages && materialImages.length > 0 ? `
-                        <div>
-                            ${materialImages.map((image, index) => `
-                                <div>
-                                    <img src="${image}" alt="Imagem do material ${materials[index].name}" />
-                                    <p>Imagem do material ${materials[index].name}</p>
+                        <div class="full" style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 2.5rem; flex-wrap: wrap;">
+                            ${materialImages.map((materialImage, index) => `
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
+                                    <img
+                                        style="max-height: 125; object-fit: contain;"
+                                        src="data:image/jpeg;base64,${materialImage}"
+                                        alt="Imagem do material ${materials[index].name}" 
+                                    />
+                                    <p>${materials[index].name}</p>
                                 </div>
                             `)}
                         </div>

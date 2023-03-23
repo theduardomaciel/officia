@@ -32,7 +32,7 @@ export default function ImagePicker({ imageUri, onUpdate, showDeleteButton, labe
 
         if (result.assets) {
             const { uri } = result.assets[0];
-            console.log("Nova imagem selecionada ", uri)
+            //console.log("Nova imagem selecionada ", uri)
             onUpdate(uri)
         }
     }

@@ -18,7 +18,7 @@ import { Controller, SubmitErrorHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import formatWithMask, { MASKS } from 'utils/formatWithMask';
-import { borderErrorStyle } from 'components/ClientForms/ClientDataForm';
+import { borderErrorStyle } from 'utils/errorBorderStyle';
 import { updateData } from 'screens/Main/Business';
 
 // Type
@@ -62,7 +62,7 @@ export default function BankAccountScreen({ route, navigation }: any) {
     });
 
     const onError: SubmitErrorHandler<BankAccountSchemeType> = (errors, e) => {
-        console.log(errors)
+        //console.log(errors)
         //setFocus(Object.keys(errors)[0] as unknown as keyof BasicInfoSchemeType)
         Toast.show({
             preset: "error",

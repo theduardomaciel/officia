@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Text, TouchableOpacity, TouchableOpacityProps, useWindowDimensions, View, ViewStyle } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { FlatList, Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 import colors from "global/colors";
@@ -275,15 +275,18 @@ export default function Calendar({ style, isStatic, selectedDate, statusArray, s
                 <WeekDays invert />
             </View>
 
-            {/* <FlatList
+            <FlatList
                 data={monthDates}
                 numColumns={7}
-                keyExtractor={(item, index) => `calendar_${index}`}
+                keyExtractor={(_, index) => `calendar_${index}`}
                 renderItem={({ item, index }) => {
                     const date = item;
                     const daysBeforeToday = currentDate.getDate() + firstDayOfMonth - 1;
 
-                    const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < (isStatic && date.month === selectedDate?.month ? daysBeforeToday : remainingDaysOnLastMonth);
+                    const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < (isStatic && date.month === selectedDate?.month
+                        ? daysBeforeToday
+                        : remainingDaysOnLastMonth
+                    ) || (isStatic && currentMonth < currentDate.getMonth());
                     const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
 
                     const DATE = new Date(currentDate.getFullYear(), date.month, date.date)
@@ -306,6 +309,7 @@ export default function Calendar({ style, isStatic, selectedDate, statusArray, s
                                 setSelectedDate && setSelectedDate(date) :
                                 navigate('dayAgenda', { dateString })
                             }
+                            status={statusArray && statusArray[currentMonth][index]}
                             invert
                             activeOpacity={REMAINING_LAST && isStatic ? 1 : 0.5}
                             style={{
@@ -318,50 +322,7 @@ export default function Calendar({ style, isStatic, selectedDate, statusArray, s
                         />
                     )
                 }}
-            /> */}
-            <View className="flex-row items-center justify-between w-full flex-wrap">
-                {
-                    monthDates.map((date, index) => {
-                        const daysBeforeToday = currentDate.getDate() + firstDayOfMonth - 1;
-
-                        const REMAINING_LAST = remainingDaysOnLastMonth > 0 && index < (isStatic && date.month === selectedDate?.month ? daysBeforeToday : remainingDaysOnLastMonth);
-                        const REMAINING_NEXT = remainingDaysOnNextMonth > 0 && index >= monthDates.length - remainingDaysOnNextMonth;
-
-                        const DATE = new Date(currentDate.getFullYear(), date.month, date.date)
-                        const dateString = DATE.toISOString();
-
-                        const isEqualToSelected = date.date == selectedDate?.date && date.month == selectedDate?.month;
-                        const isToday = date.date == currentDate.getDate() && date.month == currentDate.getMonth();
-
-                        return (
-                            <DayView
-                                key={`calendar_${index}`}
-                                date={DATE}
-                                selected={selectedDate ?
-                                    (isEqualToSelected || isToday) :
-                                    isToday && index >= firstDayOfMonth && index <= lastDayOfMonth
-                                }
-                                selectedPreset={selectedDate && isEqualToSelected ? "dashed_green" : undefined}
-                                disabled={REMAINING_LAST || REMAINING_NEXT}
-                                onPress={() => isStatic ?
-                                    setSelectedDate && setSelectedDate(date) :
-                                    navigate('dayAgenda', { dateString })
-                                }
-                                status={statusArray && statusArray[currentMonth][index]}
-                                invert
-                                activeOpacity={REMAINING_LAST && isStatic ? 1 : 0.5}
-                                style={{
-                                    opacity: (REMAINING_LAST || REMAINING_NEXT) ? 0.5 : 1,
-                                    marginBottom: 5,
-                                    marginRight: 5,
-                                    width: 35,
-                                    height: 35,
-                                }}
-                            />
-                        )
-                    })
-                }
-            </View>
+            />
         </View>
     )
 }

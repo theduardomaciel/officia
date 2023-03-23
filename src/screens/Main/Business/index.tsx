@@ -8,7 +8,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
 
 // Components
-import Header from 'components/Header';
+import Header, { TabBarScreenHeader } from 'components/Header';
 
 // Data
 import { database } from 'database/index.native';
@@ -76,7 +76,7 @@ export async function updateData(dataToUpdate: Partial<BusinessData>, businessDa
     }
 }
 
-export default function Business() {
+export default function Business({ navigation }: { navigation: any }) {
     const { colorScheme } = useColorScheme();
     const { navigate } = useNavigation();
 
@@ -102,7 +102,7 @@ export default function Business() {
 
     return (
         <Container>
-            <Header title='Meu Negócio' />
+            <TabBarScreenHeader title='Meu Negócio' navigation={navigation} />
             <BusinessScrollView style={{ paddingBottom: 25, paddingTop: 4, rowGap: 20 }}>
                 <ImagePicker
                     imageUri={businessData?.logo}

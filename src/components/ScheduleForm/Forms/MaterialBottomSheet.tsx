@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from 'react';
+import { View } from "react-native";
 import { ScrollView } from 'react-native-gesture-handler';
 
 // Form
@@ -9,10 +9,7 @@ import * as z from 'zod';
 
 // Utils
 import { v4 as uuidv4 } from 'uuid';
-
-import { MaterialIcons } from "@expo/vector-icons";
 import colors from 'global/colors';
-import { useColorScheme } from 'nativewind';
 
 // Components
 import { ActionButton } from 'components/Button';
@@ -27,9 +24,9 @@ import { MaterialModel } from 'database/models/materialModel';
 import ImagePicker from 'components/ImagePicker';
 
 const schema = z.object({
-    name: z.string().max(40, { message: 'O nome do material deve ter no máximo 40 caracteres.' }).min(3, { message: 'O nome do material deve ter no mínimo 3 caracteres.' }),
+    name: z.string({ required_error: 'É necessário inserir um nome para o material ser adicionado.' }),
     description: z.string(),
-    price: z.string().min(1, { message: 'É necessário inserir um preço válido para o material.' }),
+    price: z.string().default('0'),
     amount: z.string(),
     profitMargin: z.string(),
 });
@@ -48,8 +45,6 @@ interface Props {
 }
 
 export default function MaterialBottomSheet({ onSubmitForm, editableData = undefined }: Props) {
-    const { colorScheme } = useColorScheme();
-
     const [availability, setAvailability] = useState(editableData?.availability ? "available" : "unavailable" ?? "unavailable");
     const [materialImage, setMaterialImage] = useState(editableData?.image_url ?? undefined);
 
@@ -82,8 +77,8 @@ export default function MaterialBottomSheet({ onSubmitForm, editableData = undef
             id: editableData ? editableData.id : uuidv4(),
             name: data.name,
             description: data.description,
-            price: parseFloat(data.price),
-            amount: (data.amount ? parseFloat(data.amount) : 1) ?? 1,
+            price: (data.price.length > 0 ? parseFloat(data.price) : 0),
+            amount: data.amount ? parseFloat(data.amount) : 1,
             profitMargin: (data.profitMargin ? parseFloat(data.profitMargin) : 0),
             availability: availability === "unavailable" ? false : true,
             image_url: materialImage,
@@ -99,7 +94,7 @@ export default function MaterialBottomSheet({ onSubmitForm, editableData = undef
     };
 
     const onError: SubmitErrorHandler<FormValues> = (errors, e) => {
-        console.log(errors)
+        //console.log(errors)
         showToast(Object.values(errors).map(error => error.message).join('\n'))
     }
 
@@ -252,6 +247,7 @@ export default function MaterialBottomSheet({ onSubmitForm, editableData = undef
                         <View className='flex-1'>
                             <Dropdown
                                 label='Disponibilidade'
+                                bottomSheetLabel=''
                                 bottomSheetHeight={"20%"}
                                 setSelected={setAvailability}
                                 selected={availability}

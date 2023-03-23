@@ -20,6 +20,7 @@ import { database } from 'database/index.native';
 // Types
 import type { ServiceModel } from 'database/models/serviceModel';
 import BottomSheet from 'components/BottomSheet';
+import ConfirmExitModal from 'components/Business/ConfirmExitModal';
 
 export default function ScheduleForm({ route, navigation }: any) {
     const selectedSectionId = useSharedValue(0);
@@ -78,6 +79,8 @@ export default function ScheduleForm({ route, navigation }: any) {
         }
     }
 
+    const [isConfirmExitModalVisible, setConfirmExitModalVisible] = React.useState(false);
+
     useEffect(() => {
         if (route.params?.serviceId) {
             setInitialState(route.params?.serviceId)
@@ -87,8 +90,10 @@ export default function ScheduleForm({ route, navigation }: any) {
             if (selectedSectionId.value !== 0) {
                 updateHandler(selectedSectionId.value - 1);
                 return true;
+            } else {
+                setConfirmExitModalVisible(true);
+                return true;
             }
-            return false;
         };
 
         const backHandler = BackHandler.addEventListener(
@@ -100,67 +105,82 @@ export default function ScheduleForm({ route, navigation }: any) {
     }, [])
 
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <Container>
-                <View>
-                    <Header
-                        title={route.params?.serviceId ? "Editar serviço" : "Agendamento"}
-                        returnButton
+        <>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <Container>
+                    <View>
+                        <Header
+                            title={route.params?.serviceId ? "Editar serviço" : "Agendamento"}
+                            returnButton={() => {
+                                if (selectedSectionId.value !== 0) {
+                                    updateHandler(selectedSectionId.value - 1);
+                                } else {
+                                    setConfirmExitModalVisible(true);
+                                }
+                            }}
+                        />
+                    </View>
+                    <SectionsNavigator
+                        selectedId={selectedSectionId}
+                        sections={[
+                            {
+                                id: 0,
+                                title: "Básico",
+                                onPress: () => selectedSectionId.value !== 0 && updateHandler(0)
+                            },
+                            {
+                                id: 1,
+                                title: "Detalhes",
+                                onPress: () => selectedSectionId.value !== 1 && updateHandler(1)
+                            },
+                            {
+                                id: 2,
+                                title: "Revisão",
+                                onPress: () => selectedSectionId.value !== 2 && updateHandler(2)
+                            }
+                        ]}
                     />
-                </View>
-                <SectionsNavigator
-                    selectedId={selectedSectionId}
-                    sections={[
-                        {
-                            id: 0,
-                            title: "Básico",
-                            onPress: () => selectedSectionId.value !== 0 && updateHandler(0)
-                        },
-                        {
-                            id: 1,
-                            title: "Detalhes",
-                            onPress: () => selectedSectionId.value !== 1 && updateHandler(1)
-                        },
-                        {
-                            id: 2,
-                            title: "Revisão",
-                            onPress: () => selectedSectionId.value !== 2 && updateHandler(2)
-                        }
-                    ]}
-                />
 
-                {
-                    (!route.params?.serviceId || route.params?.serviceId && initialValue) ? (
-                        <>
-                            <Section0
-                                bottomSheet={section0BottomSheet}
-                                initialValue={initialValue}
-                                ref={section0Ref}
-                                updateHandler={updateHandler}
-                            />
+                    {
+                        (!route.params?.serviceId || route.params?.serviceId && initialValue) ? (
+                            <>
+                                <Section0
+                                    bottomSheet={section0BottomSheet}
+                                    initialValue={initialValue}
+                                    ref={section0Ref}
+                                    updateHandler={updateHandler}
+                                />
 
-                            <Section1
-                                bottomSheet={section1BottomSheet}
-                                initialValue={initialValue}
-                                ref={section1Ref}
-                                updateHandler={updateHandler}
-                            />
+                                <Section1
+                                    bottomSheet={section1BottomSheet}
+                                    initialValue={initialValue}
+                                    ref={section1Ref}
+                                    updateHandler={updateHandler}
+                                />
 
-                            <Section2
-                                bottomSheet={section2BottomSheet}
-                                initialValue={initialValue}
-                                formRefs={{ section0Ref, section1Ref }}
-                            />
-                        </>
-                    ) : <Loading />
-                }
-
-                <Toast
-                    toastPosition="top"
-                    maxDragDistance={65}
-                    toastOffset={"20%"}
-                />
-            </Container>
-        </TouchableWithoutFeedback>
+                                <Section2
+                                    bottomSheet={section2BottomSheet}
+                                    initialValue={initialValue}
+                                    formRefs={{ section0Ref, section1Ref }}
+                                />
+                            </>
+                        ) : <Loading />
+                    }
+                </Container>
+            </TouchableWithoutFeedback>
+            <Toast
+                toastPosition="top"
+                maxDragDistance={65}
+                toastOffset={"20%"}
+            />
+            <ConfirmExitModal
+                isVisible={isConfirmExitModalVisible}
+                toggleVisibility={() => setConfirmExitModalVisible(false)}
+                onExitConfirmation={() => {
+                    setConfirmExitModalVisible(false);
+                    navigation.goBack();
+                }}
+            />
+        </>
     )
 }

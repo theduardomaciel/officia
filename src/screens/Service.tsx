@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useRef } from 'react';
-import { FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MaterialIcons } from "@expo/vector-icons";
@@ -45,7 +45,7 @@ interface ObservableServiceModel extends ServiceModel {
     materials: any;
 }
 
-export default function Service({ route }: any) {
+export default function Service({ route, navigation }: any) {
     const { serviceId, updated } = route.params;
 
     const [service, setService] = React.useState<ServiceModel | undefined>(undefined);
@@ -81,23 +81,17 @@ export default function Service({ route }: any) {
         //newService.observe().subscribe(setService);
         newService.subServices.observe().subscribe(setSubServices);
         newService.materials.observe().subscribe(setMaterials);
-        newService.client.observe().subscribe(newClient => {
-            setClient(newClient);
-            if (client !== undefined && service && service?.date.getTime() >= new Date().getTime() && service?.status === "scheduled") {
-                scheduleServiceNotification(newService, subServices?.length ?? 0, client?.name)
-            }
-        });
+        newService.client.observe().subscribe(setClient);
     }
 
     useFocusEffect(
         React.useCallback(() => {
             if (updated) {
-                console.log("atualizou")
+                navigation.setParams({ updated: undefined, serviceId: serviceId })
                 showUpdatedServiceToast();
             }
 
             fetchService();
-            /* return () => unsubscribe(); */
         }, [serviceId, updated])
     );
 
@@ -277,7 +271,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                 }
 
                 {
-                    subServices && subServices.length > 0 && (
+                    subServices && subServices.length > 0 ? (
                         <SubSectionWrapper
                             header={{
                                 title: "Serviços",
@@ -298,11 +292,13 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                                 }
                             </View>
                         </SubSectionWrapper>
+                    ) : subServices === undefined && (
+                        <ActivityIndicator color={colors.primary.green} size="small" />
                     )
                 }
 
                 {
-                    materials && materials.length > 0 && (
+                    materials && materials.length > 0 ? (
                         <SubSectionWrapper
                             header={{
                                 title: "Materiais",
@@ -324,6 +320,8 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
                                 }
                             </View>
                         </SubSectionWrapper>
+                    ) : subServices === undefined && (
+                        <ActivityIndicator color={colors.primary.green} size="small" />
                     )
                 }
 

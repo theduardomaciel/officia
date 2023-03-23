@@ -19,7 +19,8 @@ export class SubServiceModel extends Model {
     @json("types", sanitizeTypes) types!: Category[];
     @field("price") price!: number;
     @field("amount") amount!: number;
-    @readonly @date('created_at') createdAt!: number;
+    @field("saved") saved!: boolean;
 
+    @readonly @date('created_at') createdAt!: number;
     @relation('services', 'service_id') service!: ServiceModel;
 }

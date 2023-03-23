@@ -11,7 +11,7 @@ import colors from 'global/colors';
 
 // Components
 import Container from 'components/Container';
-import Header from 'components/Header';
+import Header, { TabBarScreenHeader } from 'components/Header';
 import Toast from 'components/Toast';
 import ServicePreview, { ServicePreviewProps } from 'components/ServicePreview';
 
@@ -89,7 +89,7 @@ export default function Home({ route, navigation }: any) {
     }, [])
 
     const [pendingServices, setPendingServices] = useState<ServiceModel[] | undefined>(undefined)
-    const [categories, setCategories] = useState<Category[] | undefined>([])
+    const [businessData, setBusinessData] = useState<BusinessData | undefined>(undefined)
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(false)
 
     const currentDate = new Date();
@@ -105,10 +105,10 @@ export default function Home({ route, navigation }: any) {
 
             const businessData = await database.localStorage.get('businessData') as BusinessData;
             if (businessData) {
-                setCategories(businessData.categories)
+                setBusinessData(businessData)
             }
         } catch (error) {
-            console.log(error)
+            //console.log(error)
             setPendingServices([])
         }
     }
@@ -117,8 +117,8 @@ export default function Home({ route, navigation }: any) {
         useCallback(() => {
             if (route?.params?.service === "created") {
                 showCreatedServiceToast()
+                navigation.setParams({ service: undefined })
             } else if (route?.params?.service === "deleted") {
-                console.log(route?.params)
                 showDeleteServiceToast();
                 navigation.setParams({ service: undefined })
             }
@@ -182,7 +182,7 @@ export default function Home({ route, navigation }: any) {
 
     return (
         <Container>
-            <Header title='Agendado'>
+            <TabBarScreenHeader navigation={navigation} businessData={businessData}>
                 <TouchableOpacity
                     activeOpacity={0.7}
                     className='flex flex-row items-center justify-center px-3 py-1 bg-gray_light-neutral bg-black dark:bg-gray-200 rounded-full'
@@ -203,7 +203,7 @@ export default function Home({ route, navigation }: any) {
                         {isCalendarExpanded ? 'Minimizar' : 'Expandir'}
                     </Text>
                 </TouchableOpacity>
-            </Header>
+            </TabBarScreenHeader>
             {
                 isCalendarExpanded && (
                     <Animated.View entering={FadeInUp.duration(235)} exiting={FadeOutUp.duration(150)} className='flex-col items-center justify-center w-full'>
@@ -226,7 +226,7 @@ export default function Home({ route, navigation }: any) {
                 <FilterView colorScheme={colorScheme} />
                 <View className='w-full pr-10'>
                     <TagsSelector
-                        tags={categories ?? []}
+                        tags={businessData?.categories ?? []}
                         onSelectTags={handleTagSelection}
                     />
                 </View>

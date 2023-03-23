@@ -22,6 +22,9 @@ export const serviceSchema = tableSchema({
         // Warranty
         { name: "warrantyPeriod", type: "number" },
         { name: "warrantyDetails", type: "string", isOptional: true },
+        // Invoice
+        { name: "invoiceValidity", type: "number", isOptional: true },
+        { name: "discountPercentage", type: "number", isOptional: true },
         // Additional
         { name: "invoice_uri", type: "string", isOptional: true },
         { name: 'created_at', type: 'number' },

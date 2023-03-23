@@ -8,7 +8,7 @@ import { useColorScheme } from 'nativewind';
 
 // Components
 import Container from 'components/Container';
-import Header from 'components/Header';
+import Header, { TabBarScreenHeader } from 'components/Header';
 import StatisticsCarousel from 'components/Statistics/Carousel';
 
 import { Empty } from 'components/StatusMessage';
@@ -36,9 +36,8 @@ interface DateWithServices {
 
 const monthsNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-export default function Overview() {
+export default function Overview({ navigation }: { navigation: any }) {
     const { colorScheme } = useColorScheme();
-    const [canScrollVertically, setCanScrollVertically] = React.useState<boolean>(true);
     const [services, setServices] = React.useState<ServiceModel[] | undefined>(undefined);
 
     async function fetchData() {
@@ -92,14 +91,14 @@ export default function Overview() {
 
     return (
         <Container>
-            <Header title='Visão Geral' />
+            <TabBarScreenHeader title='Visão Geral' navigation={navigation} />
             <GestureHandlerScrollView
                 nestedScrollEnabled // Allows scrolling inside the ScrollView
                 directionalLockEnabled // Prevents scrolling horizontally
                 className='flex flex-col w-screen self-center gap-y-5'
                 contentContainerStyle={{ alignItems: "flex-start", justifyContent: "center" }}
                 showsVerticalScrollIndicator={false}
-                scrollEnabled={canScrollVertically}
+                scrollEnabled={true}
                 disallowInterruption
             >
                 <View className='flex flex-row items-start w-full px-6'>

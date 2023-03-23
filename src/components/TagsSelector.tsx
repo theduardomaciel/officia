@@ -76,7 +76,6 @@ export const TagsSelector = forwardRef(({ tags, uniqueSelection, onClear, onSele
 
     useImperativeHandle(ref, () => ({
         clearTags: () => {
-            console.log("Limpou as tags")
             setSectionData(tags.map(tag => ({ ...tag, checked: false })));
         },
         setTags: (newTags: TagObject[]) => {

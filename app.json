@@ -20,7 +20,8 @@
             "iosDisplayInForeground": true
         },
         "updates": {
-            "fallbackToCacheTimeout": 0
+            "fallbackToCacheTimeout": 0,
+            "url": "https://u.expo.dev/9de284c1-eab2-4ed1-89d5-6b3cdb6e7597"
         },
         "assetBundlePatterns": [
             "**/*"
@@ -37,7 +38,8 @@
                 "resizeMode": "cover",
                 "image": "./assets/splash.png"
             },
-            "package": "com.theduardomaciel.officia"
+            "package": "com.theduardomaciel.officia",
+            "runtimeVersion": "1.0.0"
         },
         "androidStatusBar": {
             "translucent": true,
@@ -62,6 +64,12 @@
                     "microphonePermission": false
                 }
             ],
+            [
+                "expo-updates",
+                {
+                    "username": "meninocoiso"
+                }
+            ],
             "@notifee/react-native"
         ],
         "scheme": "officia",
@@ -72,6 +80,11 @@
             },
             "eas": {
                 "projectId": "9de284c1-eab2-4ed1-89d5-6b3cdb6e7597"
+            }
+        },
+        "ios": {
+            "runtimeVersion": {
+                "policy": "sdkVersion"
             }
         }
     }

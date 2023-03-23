@@ -17,6 +17,7 @@ export class MaterialModel extends Model {
     @field("amount") amount!: number;
     @field("profit_margin") profitMargin!: number | null;
     @field("availability") availability!: boolean;
+    @field("saved") saved!: boolean;
 
     @relation('services', 'service_id') service!: ServiceModel;
 }

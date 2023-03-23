@@ -137,7 +137,6 @@ export default function Invoice({ route, navigation }: any) {
                 })
             } */
         } catch (err) {
-            console.warn(err);
             setModalProps({
                 status: 'error',
                 data: 'Um erro desconhecido nos impediu de gerar o documento.\nCaso o problema persista, entre em contato conosco.'

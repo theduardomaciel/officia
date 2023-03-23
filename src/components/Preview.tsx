@@ -67,7 +67,7 @@ export const PreviewStatic = ({ subService, material, palette, hasBorder, paddin
                 'bg-primary-red': material?.availability === true
             })}>
                 <Text className='font-bold text-xs text-white'>
-                    {material?.availability === true ? "-" : ""}R$ {subService?.price || (material?.price)}
+                    R$ {subService?.price || (material?.price)}
                 </Text>
             </View>
         </View>
@@ -89,7 +89,7 @@ export function Preview({ material, subService, onDelete, onEdit }: PreviewProps
             swipeableRef.current.close();
         }
         onDelete();
-        console.log('deletePreService')
+        //console.log('deletePreService')
     }
 
     function editPreview() {

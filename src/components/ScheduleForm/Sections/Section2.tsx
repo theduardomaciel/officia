@@ -41,8 +41,9 @@ import type { MaterialModel } from 'database/models/materialModel';
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
 import type { Section0Props, Section0RefProps, Section1Props, Section1RefProps } from '../types';
+
+// Utils
 import { Q } from '@nozbe/watermelondb';
-import { ClientModel } from 'database/models/clientModel';
 import { scheduleServiceNotification } from 'utils/notificationHandler';
 
 interface ReviewSectionProps {
@@ -316,6 +317,8 @@ export default function Section2({ bottomSheet, formRefs, initialValue }: Sectio
 
                     return newService;
                 });
+
+                await scheduleServiceNotification(serviceOnDatabase, data.subServices.length)
 
                 //console.log("Service created successfully (with subServices and materials).")
                 navigate("home", { service: "created" });
