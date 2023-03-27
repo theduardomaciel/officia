@@ -29,14 +29,12 @@ import BottomSheet from 'components/BottomSheet';
 const schema = z.object({
     name: z.string().max(30),
     additionalInfo: z.string().max(200),
+    discount: z.string().max(3),
 });
 
-interface FormData {
-    name: string;
-    additionalInfo: string;
-}
+type SchemaType = z.infer<typeof schema>;
 
-const Section0 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Section, ref) => {
+const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
     const { colorScheme } = useColorScheme();
     const currentDate = new Date();
 
@@ -45,7 +43,7 @@ const Section0 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Secti
 
     const [date, setDate] = useState<CalendarDate | undefined>(initialValue?.service?.date ? { date: initialValue.service?.date.getDate(), month: initialValue.service?.date.getMonth() } : { date: currentDate.getDate(), month: currentDate.getMonth() });
 
-    const [time, setTime] = useState(initialValue?.service?.date ?? currentDate)
+    const [time, setTime] = useState(initialValue?.service?.date ?? undefined)
 
     const [isTimeModalVisible, setTimeModalVisible] = useState(false);
     const TimePickerModal = () => {
@@ -60,6 +58,11 @@ const Section0 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Secti
             setTime(newDate.current)
         }
 
+        const onClean = () => {
+            setTimeModalVisible(false)
+            setTime(undefined)
+        }
+
         return (
             <Modal
                 isVisible={isTimeModalVisible}
@@ -68,12 +71,17 @@ const Section0 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Secti
                 icon="calendar-today"
                 buttons={[
                     {
+                        label: "Limpar",
+                        onPress: onClean,
+                        closeOnPress: true,
+                        color: colors.primary.red
+                    },
+                    {
                         label: "Confirmar",
                         onPress: onConfirm,
                         closeOnPress: true,
                     }
                 ]}
-                cancelButton
             >
                 <View className='flex flex-1 w-full items-center justify-center'>
                     <DatePicker
@@ -90,10 +98,11 @@ const Section0 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Secti
         )
     };
 
-    const { reset, control, getValues, formState: { errors } } = useForm<FormData>({
+    const { reset, control, getValues, formState: { errors } } = useForm<SchemaType>({
         defaultValues: {
             name: initialValue?.service?.name ?? "",
             additionalInfo: (initialValue?.service?.additionalInfo ? initialValue?.service.additionalInfo : "") ?? "",
+            discount: initialValue?.service?.discountPercentage ? `${initialValue?.service?.discountPercentage?.toString()}%` : "0%",
         },
         resolver: zodResolver(schema),
         resetOptions: {
@@ -102,27 +111,19 @@ const Section0 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Secti
         }
     });
 
-    /* useEffect(() => {
-        if (initialValue) {
-            reset({
-                name: initialValue.name,
-                additionalInfo: initialValue.additionalInfo ?? "",
-            });
-            console.log(initialValue)
-            setSubServices(initialValue.subServices);
-            setMaterials(initialValue.materials);
-        }
-    }, [initialValue]); */
-
     useImperativeHandle(ref, () => ({
         getData: () => {
             const name = getValues('name');
             const additionalInfo = getValues('additionalInfo');
+            const discount = parseInt(getValues('discount').replace("%", ""));
+
+            console.log(name, additionalInfo, discount)
 
             return {
                 name,
                 subServices,
                 materials,
+                discount,
                 date,
                 time,
                 additionalInfo
@@ -134,141 +135,186 @@ const Section0 = forwardRef(({ bottomSheet, updateHandler, initialValue }: Secti
 
     return (
         <>
-            <SectionBottomSheet bottomSheet={bottomSheet} expanded={!initialValue}>
-                <Controller
-                    control={control}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label='Nome do Serviço'
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            placeholder={`Serviço ${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`}
+            <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                        label='Nome do Serviço'
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        placeholder={`Serviço ${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`}
+                    />
+                )}
+                name="name"
+            />
+
+            <SubSectionWrapper
+                header={{
+                    title: "Serviços",
+                    children: subServices && subServices?.length > 0 && <Text className='font-medium text-primary-red text-xs opacity-80'>
+                        Arraste para excluir
+                    </Text>
+                }}
+            >
+                <View className='w-full'>
+                    {
+                        subServices && subServices?.length === 0 && (
+                            <Text className='text-sm text-center text-black dark:text-white mb-6'>
+                                Nenhum serviço adicionado.
+                            </Text>
+                        )
+                    }
+                    {
+                        subServices.map((subService, index) => (
+                            <View className='mb-4' key={index.toString()}>
+                                <Preview
+                                    subService={subService}
+                                    onDelete={() => {
+                                        setSubServices((prev) => prev.filter((s) => s.id !== subService.id));
+                                    }}
+                                    onEdit={() => {
+                                        setEditableData(subService);
+                                        BottomSheet.expand("subServiceBottomSheet")
+                                    }}
+                                />
+                            </View>
+                        ))
+                    }
+                </View>
+                <View className='flex-row w-full items-center justify-between'>
+                    <View className='flex-1 mr-3'>
+                        <SubActionButton
+                            onPress={() => {
+                                setEditableData(undefined);
+                                BottomSheet.expand("subServiceBottomSheet")
+                            }}
+                            label='Adicionar serviço'
                         />
-                    )}
-                    name="name"
-                />
-
-                <SubSectionWrapper
-                    header={{
-                        title: "Serviços",
-                        children: subServices && subServices?.length > 0 && <Text className='font-medium text-primary-red text-xs opacity-80'>
-                            Arraste para excluir
-                        </Text>
-                    }}
-                >
-                    <View className='w-full'>
-                        {
-                            subServices && subServices?.length === 0 && (
-                                <Text className='text-sm text-center text-black dark:text-white mb-6'>
-                                    Nenhum serviço adicionado.
-                                </Text>
-                            )
-                        }
-                        {
-                            subServices.map((subService, index) => (
-                                <View className='mb-4' key={index.toString()}>
-                                    <Preview
-                                        subService={subService}
-                                        onDelete={() => {
-                                            setSubServices((prev) => prev.filter((s) => s.id !== subService.id));
-                                        }}
-                                        onEdit={() => {
-                                            setEditableData(subService);
-                                            BottomSheet.expand("subServiceBottomSheet")
-                                        }}
-                                    />
-                                </View>
-                            ))
-                        }
                     </View>
-                    <SubActionButton
-                        onPress={() => {
-                            setEditableData(undefined);
-                            BottomSheet.expand("subServiceBottomSheet")
-                        }}
-                        label='Adicionar serviço'
-                    />
-                </SubSectionWrapper>
+                    <View className='w-14'>
+                        <ActionButton
+                            onPress={() => {
 
-                <SubSectionWrapper
-                    header={{
-                        title: "Materiais",
-                    }}
-                >
-                    <View className='w-full'>
-                        {
-                            materials && materials?.length === 0 && (
-                                <Text className='text-sm text-center text-black dark:text-white mb-6'>
-                                    Nenhum material adicionado.
-                                </Text>
-                            )
-                        }
-                        {
-                            materials.map((material, index) => (
-                                <View className='mb-4' key={index.toString()}>
-                                    <Preview
-                                        material={material}
-                                        onDelete={() => {
-                                            setMaterials((prev) => prev.filter((m) => m.id !== material.id));
-                                        }}
-                                        onEdit={() => {
-                                            setEditableData(material);
-                                            BottomSheet.expand("materialBottomSheet");
-                                        }}
-                                    />
-                                </View>
-                            ))
-                        }
-                    </View>
-                    <SubActionButton
-                        onPress={() => {
-                            setEditableData(undefined);
-                            BottomSheet.expand("materialBottomSheet");
-                        }}
-                        label='Adicionar material'
-                    />
-                </SubSectionWrapper>
-
-                <SubSectionWrapper header={{ title: "Data" }}>
-                    <Calendar
-                        isStatic
-                        selectedDate={date}
-                        setSelectedDate={setDate}
-                        style={{ padding: 16, backgroundColor: colors.gray[600] }}
-                    />
-                </SubSectionWrapper>
-
-                <Input
-                    onPress={() => setTimeModalVisible(true)}
-                    label='Horário'
-                    editable={false}
-                    value={`${time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`}
-                />
-
-                <Controller
-                    control={control}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input
-                            label='Informações Adicionais'
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            placeholder='Ex: O serviço deve ser realizado na sala 2, no 2º andar.'
-                            textAlignVertical='top'
-                            multiline
+                            }}
+                            style={{ flex: 1, paddingTop: 6, paddingBottom: 6 }}
+                            icon="bookmark"
                         />
-                    )}
-                    name="additionalInfo"
-                />
+                    </View>
+                </View>
+            </SubSectionWrapper>
 
-                <ActionButton
-                    label='Próximo'
-                    onPress={() => updateHandler && updateHandler(1)}
-                    preset="next"
-                />
+            <SubSectionWrapper
+                header={{
+                    title: "Materiais",
+                }}
+            >
+                <View className='w-full'>
+                    {
+                        materials && materials?.length === 0 && (
+                            <Text className='text-sm text-center text-black dark:text-white mb-6'>
+                                Nenhum material adicionado.
+                            </Text>
+                        )
+                    }
+                    {
+                        materials.map((material, index) => (
+                            <View className='mb-4' key={index.toString()}>
+                                <Preview
+                                    material={material}
+                                    onDelete={() => {
+                                        setMaterials((prev) => prev.filter((m) => m.id !== material.id));
+                                    }}
+                                    onEdit={() => {
+                                        setEditableData(material);
+                                        BottomSheet.expand("materialBottomSheet");
+                                    }}
+                                />
+                            </View>
+                        ))
+                    }
+                </View>
+                <View className='flex-row w-full items-center justify-between'>
+                    <View className='flex-1 mr-3'>
+                        <SubActionButton
+                            onPress={() => {
+                                setEditableData(undefined);
+                                BottomSheet.expand("materialBottomSheet");
+                            }}
+                            label='Adicionar material'
+                        />
+                    </View>
+                    <View className='w-14'>
+                        <ActionButton
+                            onPress={() => {
 
-            </SectionBottomSheet>
+                            }}
+                            style={{ flex: 1, paddingTop: 6, paddingBottom: 6 }}
+                            icon="bookmark"
+                        />
+                    </View>
+                </View>
+            </SubSectionWrapper>
+
+            <SubSectionWrapper header={{ title: "Data" }}>
+                <Calendar
+                    isStatic
+                    selectedDate={date}
+                    setSelectedDate={setDate}
+                    style={{ padding: 16, backgroundColor: colors.gray[600] }}
+                />
+            </SubSectionWrapper>
+
+            <Input
+                label='Horário'
+                onPress={() => setTimeModalVisible(true)}
+                editable={false}
+                value={time ? `${time?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : "Indeterminado"}
+            />
+
+            <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                        label='Desconto'
+                        onFocus={() => onChange(value.toString().replace('%', ''))}
+                        onBlur={() => {
+                            if (parseInt(value) > 100) {
+                                onChange(100);
+                            }
+                            onChange(`${value}%`)
+                            onBlur();
+                        }}
+                        onChangeText={onChange}
+                        keyboardType='numeric'
+                        value={value.toString()}
+                        placeholder='0%'
+                    />
+                )}
+                name="discount"
+            />
+
+            <Controller
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                        label='Informações Adicionais'
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                        placeholder='Ex: O serviço deve ser realizado na sala 2, no 2º andar.'
+                        textAlignVertical='top'
+                        multiline
+                    />
+                )}
+                name="additionalInfo"
+            />
+
+            <ActionButton
+                label='Próximo'
+                onPress={() => updateHandler && updateHandler(1)}
+                preset="next"
+            />
 
             <TimePickerModal />
 

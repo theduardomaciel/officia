@@ -16,25 +16,20 @@ interface Props extends TextProps {
 
 export default function Label({ children, icon, CustomIcon, ...rest }: Props) {
     const { colorScheme } = useColorScheme();
+
     return (
-        <View className="flex-row items-center justify-start">
+        <View className="flex flex-row items-center justify-start" style={{ columnGap: 10, width: "100%" }}>
             {
-                (icon || CustomIcon) && (
-                    <View className="mr-2">
-                        {
-                            CustomIcon && <CustomIcon fontSize={18} color={colors.text[100]} />
-                        }
-                        {
-                            icon && <MaterialIcons
-                                name={icon.name as unknown as any}
-                                size={icon.size || 18}
-                                color={icon.color || colorScheme === "dark" ? colors.text[100] : colors.black}
-                            />
-                        }
-                    </View>
-                )
+                CustomIcon && <CustomIcon fontSize={18} color={colors.text[100]} />
             }
-            <Text className="font-semibold text-[15px] text-black dark:text-text-100" {...rest}>
+            {
+                icon && <MaterialIcons
+                    name={icon.name as unknown as any}
+                    size={icon.size || 18}
+                    color={icon.color ? icon.color : (colorScheme === "dark" ? colors.text[100] : colors.black)}
+                />
+            }
+            <Text className="flex flex-1 font-semibold text-[15px] text-black dark:text-text-100" {...rest}>
                 {children}
             </Text>
         </View>

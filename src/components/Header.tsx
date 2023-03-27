@@ -1,6 +1,7 @@
 import { TouchableOpacity, View, Text, ViewProps } from "react-native";
-import Animated, { EntryAnimationsValues, ExitAnimationsValues, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
+import clsx from "clsx";
 import { Image } from "expo-image";
 
 import { useColorScheme } from "nativewind";
@@ -121,12 +122,11 @@ const ANIM_PROPS = { damping: 100, stiffness: 1000, mass: 2, overshootClamping: 
 export function TabBarScreenHeader({ title, children, businessData, navigation }: Props) {
     const isVisible = useSharedValue(1);
 
-    const TEXTS = businessData ? [
-        `Tenha uma ótimo dia!`,
-        `${getGreeting()}, ${businessData?.fantasyName?.split(" ")[0]}.`,
-        `Seu período de avaliação acaba em\n5 dias.`,
-        ` `
-    ] : ['Tenha um ótimo dia!']
+    const TEXTS = [
+        `${getGreeting()}${businessData?.fantasyName ? ", " : ""}${businessData?.fantasyName ? businessData?.fantasyName?.split(" ")[0] : ""}!`,
+        `Tenha um ótimo dia!`,
+        `Seu período de avaliação acaba em 5 dias.`,
+    ];
     const [currentText, setCurrentText] = useState(TEXTS[0]);
 
     const animatedStyle = useAnimatedStyle(() => ({
@@ -137,28 +137,37 @@ export function TabBarScreenHeader({ title, children, businessData, navigation }
     }));
 
     useEffect(() => {
-        setInterval(() => {
-            const filteredArray = TEXTS.filter(text => text !== currentText);
-            const newText = filteredArray[Math.floor(Math.random() * filteredArray.length)]
-            if (newText) {
-                setCurrentText(newText);
-            } else {
-                setCurrentText(TEXTS[0]);
+        if (!businessData) return;
+
+        console.log("Iniciando ciclo de animações")
+        isVisible.value = withRepeat(
+            withSequence(
+                withDelay(1000, withSpring(1, ANIM_PROPS)),
+                withDelay(15000, withSpring(0, ANIM_PROPS, () => {
+                    const newIndex = Math.floor(Math.random() * TEXTS.length);
+                    console.log(newIndex)
+                    runOnJS(setCurrentText)(TEXTS[newIndex])
+                })),
+            ),
+            -1,
+            false,
+            (finished) => {
+                const resultStr = finished
+                    ? 'All repeats are completed'
+                    : 'withRepeat cancelled';
+                console.log(resultStr);
             }
-            console.log(newText)
-            isVisible.value = withSpring(1, ANIM_PROPS, () => {
-                console.log("Terminou de animar a entrada")
-                isVisible.value = withDelay(14000, withSpring(0, ANIM_PROPS, () => {
-                    console.log("Terminou de animar a saida")
-                    runOnJS(setCurrentText)(newText);
-                }))
-            });
-        }, 15000);
+        );
     }, [])
 
     return (
         <View className="flex flex-row items-center justify-between w-full">
-            <View className="flex flex-1 flex-row items-center justify-start mr-2" style={{ columnGap: 10 }}>
+            <View
+                className={clsx("flex flex-row items-center justify-start mr-2", {
+                    'flex-1': businessData ? true : false,
+                })}
+                style={{ columnGap: 10 }}
+            >
                 <TouchableOpacity
                     className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200"
                     activeOpacity={0.8}
@@ -166,8 +175,11 @@ export function TabBarScreenHeader({ title, children, businessData, navigation }
                 >
                     <MaterialIcons name="person" size={24} color={colors.text[100]} />
                 </TouchableOpacity>
-                {businessData && (
-                    <Animated.Text style={animatedStyle} className="flex flex-1 text-sm bg-red-500 text-text-100 w-full whitespace-pre-line">
+                {businessData && children && (
+                    <Animated.Text
+                        style={animatedStyle}
+                        className="flex flex-1 text-xs text-text-100 w-full whitespace-pre-line"
+                    >
                         {currentText}
                     </Animated.Text>
                 )}
@@ -180,6 +192,7 @@ export function TabBarScreenHeader({ title, children, businessData, navigation }
                 )
             }
             {children ? children : <View className="w-10 h-full" />}
+            {/* <View className="border-b-[1px] border-b-gray-200 w-screen absolute left-1/2 -bottom-2" style={{ transform: [{ translateX: -100 }] }} /> */}
         </View>
     )
 }

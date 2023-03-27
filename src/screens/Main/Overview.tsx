@@ -1,7 +1,7 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as NavigationBar from "expo-navigation-bar";
-import React, { useCallback, useEffect, useState } from 'react';
-import { SectionList, Text, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ScrollView, SectionList, Text, View } from "react-native";
 import { FlatList, ScrollView as GestureHandlerScrollView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from 'nativewind';
@@ -13,7 +13,7 @@ import StatisticsCarousel from 'components/Statistics/Carousel';
 
 import { Empty } from 'components/StatusMessage';
 import { ServiceWithSubServicesPreview } from 'components/ServicePreview';
-import { TagsSelector } from 'components/TagsSelector';
+import { TagsSelector, Tag } from 'components/TagsSelector';
 import { FilterView } from './Home';
 
 // Database
@@ -23,6 +23,13 @@ import { database } from 'database/index.native';
 // Types
 import type { ServiceModel } from 'database/models/serviceModel';
 import type { SubServiceModel } from 'database/models/subServiceModel';
+import SearchBar from 'components/SearchBar';
+import BottomSheet from 'components/BottomSheet';
+import Label from 'components/Label';
+import colors from 'global/colors';
+import { ActionButton } from 'components/Button';
+import Input from 'components/Input';
+import DateFilter from 'components/DateFilter';
 
 interface MonthWithServices {
     month: string;
@@ -89,9 +96,13 @@ export default function Overview({ navigation }: { navigation: any }) {
         return monthsWithServices;
     }, [services]);
 
+    const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+    const [typesFilter, setTypesFilter] = useState<string[] | undefined>(undefined);
+
     return (
         <Container>
             <TabBarScreenHeader title='Visão Geral' navigation={navigation} />
+            <SearchBar placeholder='Buscar por nome, cliente' />
             <GestureHandlerScrollView
                 nestedScrollEnabled // Allows scrolling inside the ScrollView
                 directionalLockEnabled // Prevents scrolling horizontally
@@ -103,17 +114,16 @@ export default function Overview({ navigation }: { navigation: any }) {
             >
                 <View className='flex flex-row items-start w-full px-6'>
                     <FilterView colorScheme={colorScheme} />
-                    {/* <View className='w-full pr-10'>
+                    <View className='w-full pr-10'>
                         <TagsSelector
                             tags={[
-                                { name: 'Datas', id: "dates" },
-                                { name: 'Tipos', id: "types" },
+                                { name: 'Datas', id: "dates", onPress: () => BottomSheet.expand('datesFilter') },
+                                { name: 'Tipos', id: "types", onPress: () => BottomSheet.expand('typesFilter') },
                             ]}
                             onClear={() => { }}
                             insertPaddingRight
-                            onSelectTags={() => { }}
                         />
-                    </View> */}
+                    </View>
                 </View>
                 <StatisticsCarousel />
                 {
@@ -132,6 +142,43 @@ export default function Overview({ navigation }: { navigation: any }) {
                     )
                 }
             </GestureHandlerScrollView>
+            <BottomSheet
+                id={"datesFilter"}
+                overDragAmount={25}
+                height={"47%"}
+            >
+                <DateFilter onSubmit={setDateFilter} />
+            </BottomSheet>
+            <BottomSheet
+                id={"typesFilter"}
+                overDragAmount={25}
+                height={"33%"}
+            >
+                <ScrollView
+                    className="flex flex-1"
+                    contentContainerStyle={{
+                        paddingLeft: 24,
+                        paddingRight: 24,
+                        paddingBottom: 12,
+                        rowGap: 25
+                    }}
+                >
+                    <Label style={{ marginBottom: 5 }}>
+                        Filtrar por categoria
+                    </Label>
+                    <View className='flex flex-1'>
+                        <Empty message='Nenhuma categoria foi encontrada.' style={{ transform: [{ scale: 0.9 }] }} />
+                    </View>
+                    <ActionButton
+                        label={`Filtrar`}
+                        icon={'filter-alt'}
+                        style={{
+                            backgroundColor: colors.primary.green
+                        }}
+                        onPress={() => { }/* handleSubmit(onSubmit, onError) */}
+                    />
+                </ScrollView>
+            </BottomSheet>
         </Container>
     )
 }

@@ -30,6 +30,12 @@ import { createChannelId } from "utils/notificationHandler";
 // Drawer Navigator
 import DrawerNavigator from "./navigators/drawerNavigator";
 
+import ProfileScreen from 'screens/Drawer/Profile';
+import ClientsScreen from 'screens/Drawer/Clients';
+import SavedItemsScreen from 'screens/Drawer/SavedItems';
+import CustomizationScreen from 'screens/Drawer/Customization';
+import SubscriptionScreen from 'screens/Drawer/Subscription';
+
 export function AppStack() {
     const { colorScheme } = useColorScheme();
     const { navigate } = useNavigation();
@@ -137,6 +143,42 @@ export function AppStack() {
                 component={Invoice}
                 options={{
                     cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
+                }}
+            />
+            {/* DRAWER SCREENS */}
+            <Stack.Screen
+                name="profile"
+                component={ProfileScreen}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+                }}
+            />
+            <Stack.Screen
+                name="clients"
+                component={ClientsScreen}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+                }}
+            />
+            <Stack.Screen
+                name="savedItems"
+                component={SavedItemsScreen}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+                }}
+            />
+            <Stack.Screen
+                name="customization"
+                component={CustomizationScreen}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+                }}
+            />
+            <Stack.Screen
+                name="subscription"
+                component={SubscriptionScreen}
+                options={{
+                    cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
                 }}
             />
         </Stack.Navigator>

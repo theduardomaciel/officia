@@ -126,11 +126,12 @@ export default function MaterialBottomSheet({ onSubmitForm, editableData = undef
             id={"materialBottomSheet"}
         >
             <View
-                className='flex flex-1 gap-y-5'
+                className='flex flex-1'
                 style={{
                     paddingLeft: 24,
                     paddingRight: 24,
-                    paddingBottom: 12
+                    paddingBottom: 12,
+                    rowGap: 20
                 }}
             >
                 <BottomSheet.Title>

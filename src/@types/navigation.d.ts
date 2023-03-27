@@ -35,7 +35,13 @@ export declare global {
             digitalSignature: BusinessScreen;
             register: {
                 email: string;
-            }
+            },
+            /* Drawer Screens */
+            profile: undefined,
+            clients: undefined,
+            savedItems: undefined,
+            customization: undefined,
+            subscriptions: undefined,
         }
     }
 }

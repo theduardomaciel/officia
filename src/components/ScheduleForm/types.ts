@@ -6,8 +6,9 @@ import type { SubServiceModel } from 'database/models/subServiceModel';
 export interface Section0Props {
     name: string;
     subServices: SubServiceModel[];
-    date: CalendarDate | undefined;
-    time: Date;
+    date: CalendarDate;
+    discount: number;
+    time: Date | undefined;
     additionalInfo: string;
     materials: MaterialModel[];
 }

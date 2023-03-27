@@ -21,9 +21,10 @@ export interface CustomInputProps extends TextInputProps {
     appendedChildren?: React.ReactNode;
     infoMessage?: string;
     onPress?: () => void;
+    disabled?: boolean;
 }
 
-const Input = forwardRef(({ label, customIcon, icon, pallette = undefined, required, multiline, onPress, appendedChildren, infoMessage, ...rest }: CustomInputProps, ref) => {
+const Input = forwardRef(({ label, customIcon, icon, pallette = undefined, required, multiline, onPress, appendedChildren, infoMessage, disabled, ...rest }: CustomInputProps, ref) => {
     const { colorScheme } = useColorScheme();
     /* const [isInfoMessageVisible, setIsInfoMessageVisible] = React.useState(false); */
 
@@ -126,7 +127,8 @@ const Input = forwardRef(({ label, customIcon, icon, pallette = undefined, requi
                 onPress ? (
                     <TouchableOpacity
                         onPress={onPress}
-                        activeOpacity={0.8}
+                        activeOpacity={disabled ? 1 : 0.8}
+                        disabled={disabled}
                     >
                         {CustomInput}
                     </TouchableOpacity>

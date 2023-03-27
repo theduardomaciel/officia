@@ -9,7 +9,6 @@ import type { ServiceModel } from "database/models/serviceModel";
 import type { SubServiceModel } from "database/models/subServiceModel";
 
 export interface Section {
-    bottomSheet: string;
     initialValue?: {
         service: ServiceModel;
         subServices: SubServiceModel[];

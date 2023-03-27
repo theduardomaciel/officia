@@ -224,12 +224,16 @@ export default function Home({ route, navigation }: any) {
             }
             <Animated.View className='flex flex-row items-start w-full pr-6' layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}>
                 <FilterView colorScheme={colorScheme} />
-                <View className='w-full pr-10'>
-                    <TagsSelector
-                        tags={businessData?.categories ?? []}
-                        onSelectTags={handleTagSelection}
-                    />
-                </View>
+                {
+                    businessData?.categories && (
+                        <View className='w-full pr-10'>
+                            <TagsSelector
+                                tags={businessData?.categories}
+                                onSelectTags={handleTagSelection}
+                            />
+                        </View>
+                    )
+                }
             </Animated.View>
             <Animated.View
                 layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}

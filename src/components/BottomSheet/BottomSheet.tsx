@@ -59,6 +59,8 @@ const BottomSheetUI = forwardRef(({
         }
     })
 
+    console.log("rerender bottomsheet")
+
     const DISMISS_TOLERANCE = 50;
 
     const gestureHandler = useAnimatedGestureHandler({

@@ -1,8 +1,8 @@
-import React, { useCallback, useId } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ColorPicker, { Panel1, Swatches, Preview, OpacitySlider, HueSlider, Panel3, BrightnessSlider } from 'reanimated-color-picker';
+import ColorPicker, { Swatches, Panel3, BrightnessSlider } from 'reanimated-color-picker';
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -22,7 +22,7 @@ import { BusinessData, Category } from 'screens/Main/Business/@types';
 import Label from 'components/Label';
 import Modal from 'components/Modal';
 import Toast from 'components/Toast';
-import Animated, { FadeOut, Layout, SlideInLeft, SlideInRight } from 'react-native-reanimated';
+import Animated, { FadeOut, Layout, SlideInLeft } from 'react-native-reanimated';
 
 const ICONS = [
     'category',
@@ -111,77 +111,21 @@ const ICONS = [
 ]
 
 export default function CategoriesScreen({ route }: any) {
-    const insets = useSafeAreaInsets();
-
     const { businessData: data }: { businessData: BusinessData } = route.params;
     const [categories, setCategories] = React.useState<BusinessData['categories']>(data.categories ?? []);
     // este estado é necessário em todas as telas pois o parâmetro de comparação tem que atualizar junto com a atualização dos dados
 
     const [categoryToEditId, setCategoryToEditId] = React.useState<string | undefined>(undefined);
+    const [hasDifferences, setHasDifferences] = React.useState(false);
 
-    const bottomSheet = useId();
     const openBottomSheet = useCallback((id?: string) => {
         if (id) {
             setCategoryToEditId(id);
         } else {
-            setNewCategoryColor(colors.primary.green);
-            setNewCategoryIcon("category");
-            setNewCategoryName("");
+            setCategoryToEditId(undefined);
         }
-        BottomSheet.expand(bottomSheet);
+        BottomSheet.expand('categoriesBottomSheet');
     }, []);
-
-    const [isColorModalVisible, setColorModalVisible] = React.useState(false);
-
-    const cachedCategoryName = React.useRef<string>("");
-    const [newCategoryName, setNewCategoryName] = React.useState<string>("");
-
-    const cachedCategoryColor = React.useRef<string>("");
-
-    const [newCategoryColor, setNewCategoryColor] = React.useState<string>(colors.primary.green);
-
-    const onSelectColor = ({ hex }: { hex: string }) => {
-        cachedCategoryColor.current = hex;
-    }
-
-    const [isIconModalVisible, setIconModalVisible] = React.useState(false);
-    const [newCategoryIcon, setNewCategoryIcon] = React.useState<string>('category');
-
-    async function handleCategory() {
-        if (cachedCategoryName.current.length > 0 || newCategoryName.length !== 0) {
-            if (categoryToEditId) {
-                setCategories((prev) => prev && prev.map((oldCategory) => oldCategory.id === categoryToEditId ?
-                    {
-                        ...oldCategory,
-                        name: cachedCategoryName.current,
-                        icon: newCategoryIcon,
-                        color: newCategoryColor,
-                    }
-                    : oldCategory
-                ))
-            } else {
-                const newCategory: Category = {
-                    id: uuidv4(),
-                    name: cachedCategoryName.current.length > 0 ? cachedCategoryName.current : newCategoryName,
-                    icon: newCategoryIcon,
-                    color: newCategoryColor
-                }
-
-                const newCategories = [...categories!, newCategory];
-                setCategories(newCategories);
-            }
-            BottomSheet.close(bottomSheet);
-            setHasDifferences(true);
-        } else {
-            Toast.show({
-                preset: 'error',
-                title: 'Opa! Algo está errado...',
-                message: 'O nome da categoria não pode estar vazio'
-            })
-        }
-    }
-
-    const [hasDifferences, setHasDifferences] = React.useState(false);
 
     const submitData = () => {
         updateData({ categories }, data);
@@ -221,12 +165,7 @@ export default function CategoriesScreen({ route }: any) {
                             setCategories(newCategories);
                             setHasDifferences(true);
                         }}
-                        onEdit={() => {
-                            setNewCategoryColor(item.color);
-                            setNewCategoryIcon(item.icon);
-                            setNewCategoryName(item.name);
-                            openBottomSheet(item.id);
-                        }}
+                        onEdit={() => openBottomSheet(item.id)}
                     />
                 )}
                 style={{
@@ -235,87 +174,168 @@ export default function CategoriesScreen({ route }: any) {
             />
 
             <BottomSheet
-                id={bottomSheet}
+                id={'categoriesBottomSheet'}
                 height={"49%"}
             >
-                <BottomSheet.Title>
-                    {categoryToEditId ? "Editar categoria" : "Adicionar categoria"}
-                </BottomSheet.Title>
-                <View
-                    className="flex flex-1"
-                    style={{
-                        paddingTop: 24,
-                        paddingLeft: 24,
-                        paddingRight: 24,
-                        paddingBottom: 12 + insets.bottom + 10,
-                        rowGap: 25
-                    }}
-                >
-                    <Input
-                        label='Nome'
-                        pallette='dark'
-                        onChangeText={(text) => cachedCategoryName.current = text}
-                        onEndEditing={() => setNewCategoryName(cachedCategoryName.current)}
-                        defaultValue={newCategoryName}
-                        placeholder={'Ex: Elétrico, Hidráulico, etc.'}
-                    />
-                    <TouchableOpacity
-                        activeOpacity={0.75}
-                        className='flex-row w-full items-center justify-between'
-                        onPress={() => setColorModalVisible(true)}
-                    >
-                        <View style={{ flex: 1 }}>
-                            <Label style={{ marginRight: 10 }}>
-                                Cor
-                            </Label>
-                            <Text className="text-sm leading-4 text-text-200">
-                                Escolha uma cor para a categoria
-                            </Text>
-                        </View>
-                        <View
-                            className='rounded-full w-10 h-10'
-                            style={{
-                                backgroundColor: newCategoryColor || "red"
-                            }}
-                        />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        activeOpacity={0.75}
-                        className='flex-row w-full items-center justify-between'
-                        onPress={() => setIconModalVisible(true)}
-                    >
-                        <View style={{ flex: 1 }}>
-                            <Label style={{ marginRight: 10 }}>
-                                Ícone
-                            </Label>
-                            <Text className="text-sm leading-4 text-text-200">
-                                Escolha um ícone para a categoria
-                            </Text>
-                        </View>
-                        <View className='w-10 h-10 flex items-center justify-center'>
-                            <MaterialIcons name={newCategoryIcon as unknown as any} size={32} color={colors.white} />
-                        </View>
-                    </TouchableOpacity>
-                    {
-                        categoryToEditId ? (
-                            <ActionButton
-                                label={"Editar categoria"}
-                                icon={"edit"}
-                                style={{ backgroundColor: colors.primary.blue }}
-                                onPress={handleCategory}
-                            />
-                        ) : (
-                            <ActionButton
-                                label={'Adicionar categoria'}
-                                icon={'add'}
-                                style={{ backgroundColor: colors.primary.green }}
-                                onPress={handleCategory}
-                            />
-                        )
-                    }
-                </View>
+                <CategoryForm
+                    categoryToEditId={categoryToEditId}
+                    categories={categories}
+                    setCategories={setCategories}
+                    setHasDifferences={setHasDifferences}
+                />
             </BottomSheet>
+        </BusinessLayout>
+    )
+}
 
+interface CategoryFormProps {
+    categoryToEditId?: string;
+    categories: BusinessData['categories'];
+    setCategories: React.Dispatch<React.SetStateAction<BusinessData['categories']>>;
+    setHasDifferences: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+function CategoryForm({ categoryToEditId, categories, setCategories, setHasDifferences }: CategoryFormProps) {
+    const insets = useSafeAreaInsets();
+
+    const [isColorModalVisible, setColorModalVisible] = React.useState(false);
+    const [isIconModalVisible, setIconModalVisible] = React.useState(false);
+
+    const cachedCategoryName = React.useRef<string>("");
+    const [newCategoryName, setNewCategoryName] = React.useState<string>("");
+
+    const cachedCategoryColor = React.useRef<string>("");
+    const [newCategoryColor, setNewCategoryColor] = React.useState<string>(colors.primary.green);
+
+    const onSelectColor = ({ hex }: { hex: string }) => {
+        cachedCategoryColor.current = hex;
+    }
+
+    const [newCategoryIcon, setNewCategoryIcon] = React.useState<string>('category');
+
+    async function handleCategory() {
+        if (cachedCategoryName.current.length > 0 || newCategoryName.length !== 0) {
+            if (categoryToEditId) {
+                setCategories((prev) => prev && prev.map((oldCategory) => oldCategory.id === categoryToEditId ?
+                    {
+                        ...oldCategory,
+                        name: newCategoryName,
+                        icon: newCategoryIcon,
+                        color: newCategoryColor,
+                    }
+                    : oldCategory
+                ))
+            } else {
+                const newCategory: Category = {
+                    id: uuidv4(),
+                    name: cachedCategoryName.current.length > 0 ? cachedCategoryName.current : newCategoryName,
+                    icon: newCategoryIcon,
+                    color: newCategoryColor
+                }
+
+                const newCategories = [...categories!, newCategory];
+                setCategories(newCategories);
+            }
+            BottomSheet.close('categoriesBottomSheet');
+            setHasDifferences(true);
+        } else {
+            Toast.show({
+                preset: 'error',
+                title: 'Opa! Algo está errado...',
+                message: 'O nome da categoria não pode estar vazio'
+            })
+        }
+    }
+
+    useEffect(() => {
+        if (categoryToEditId) {
+            const categoryToEdit = categories && categories.find(category => category.id === categoryToEditId);
+            if (categoryToEdit) {
+                setNewCategoryName(categoryToEdit.name);
+                setNewCategoryIcon(categoryToEdit.icon);
+                setNewCategoryColor(categoryToEdit.color);
+            }
+        }
+    }, [categoryToEditId, categories])
+
+    return (
+        <>
+            <BottomSheet.Title>
+                {categoryToEditId ? "Editar categoria" : "Adicionar categoria"}
+            </BottomSheet.Title>
+            <View
+                className="flex flex-1"
+                style={{
+                    paddingTop: 24,
+                    paddingLeft: 24,
+                    paddingRight: 24,
+                    paddingBottom: 12 + insets.bottom + 10,
+                    rowGap: 25
+                }}
+            >
+                <Input
+                    label='Nome'
+                    pallette='dark'
+                    onChangeText={(text) => cachedCategoryName.current = text}
+                    onEndEditing={() => setNewCategoryName(cachedCategoryName.current)}
+                    defaultValue={newCategoryName}
+                    placeholder={'Ex: Elétrico, Hidráulico, etc.'}
+                />
+                <TouchableOpacity
+                    activeOpacity={0.75}
+                    className='flex-row w-full items-center justify-between'
+                    onPress={() => setColorModalVisible(true)}
+                >
+                    <View style={{ flex: 1 }}>
+                        <Label style={{ marginRight: 10 }}>
+                            Cor
+                        </Label>
+                        <Text className="text-sm leading-4 text-text-200">
+                            Escolha uma cor para a categoria
+                        </Text>
+                    </View>
+                    <View
+                        className='rounded-full w-10 h-10'
+                        style={{
+                            backgroundColor: newCategoryColor || "red"
+                        }}
+                    />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    activeOpacity={0.75}
+                    className='flex-row w-full items-center justify-between'
+                    onPress={() => setIconModalVisible(true)}
+                >
+                    <View style={{ flex: 1 }}>
+                        <Label style={{ marginRight: 10 }}>
+                            Ícone
+                        </Label>
+                        <Text className="text-sm leading-4 text-text-200">
+                            Escolha um ícone para a categoria
+                        </Text>
+                    </View>
+                    <View className='w-10 h-10 flex items-center justify-center'>
+                        <MaterialIcons name={newCategoryIcon as unknown as any} size={32} color={colors.white} />
+                    </View>
+                </TouchableOpacity>
+                {
+                    categoryToEditId ? (
+                        <ActionButton
+                            label={"Editar categoria"}
+                            icon={"edit"}
+                            style={{ backgroundColor: colors.primary.blue }}
+                            onPress={handleCategory}
+                        />
+                    ) : (
+                        <ActionButton
+                            label={'Adicionar categoria'}
+                            icon={'add'}
+                            style={{ backgroundColor: colors.primary.green }}
+                            onPress={handleCategory}
+                        />
+                    )
+                }
+            </View>
             <Modal
                 isVisible={isIconModalVisible}
                 toggleVisibility={() => setIconModalVisible(false)}
@@ -384,7 +404,7 @@ export default function CategoriesScreen({ route }: any) {
                     </ColorPicker>
                 </View>
             </Modal>
-        </BusinessLayout>
+        </>
     )
 }
 

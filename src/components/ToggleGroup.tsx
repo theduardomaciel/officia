@@ -1,31 +1,30 @@
 import React, { Dispatch, forwardRef, memo, SetStateAction, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { TouchableOpacity, View, Text, TextInput, TextInputProps } from "react-native";
+import { TouchableOpacity, View, Text, TextInput, TextInputProps, TouchableOpacityProps } from "react-native";
 
 import colors from "global/colors";
 
 import Input from "./Input";
 import { Controller } from "react-hook-form";
 
-interface ToggleProps {
+interface ToggleProps extends TouchableOpacityProps {
     item: {
         label: string;
         value: string;
     };
-    updateState: Dispatch<SetStateAction<any>> | (() => void);
     applyMarginRight?: boolean;
     isSelected?: boolean;
 };
 
-function Toggle({ item, updateState, isSelected, applyMarginRight }: ToggleProps) {
+function Toggle({ item, isSelected, applyMarginRight, ...rest }: ToggleProps) {
     return (
         <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => updateState(item.value)}
             className="flex flex-1 flex-row items-center justify-center py-4 bg-black dark:bg-gray-300 border-opacity-40 rounded-lg border-primary-green"
             style={{
                 borderWidth: isSelected ? 1 : 0,
                 marginRight: applyMarginRight ? 10 : 0,
             }}
+            {...rest}
         >
             <Text className='text-sm text-center text-white' style={{
                 fontWeight: isSelected ? "600" : "400",
@@ -53,15 +52,21 @@ const ToggleGroup = React.memo(({ data, selected, updateState, children }: Toggl
         <View className="flex-row w-full items-center justify-between">
             <View className="flex-row items-center justify-between flex-1">
                 {
-                    data.map((item, index) => (
-                        <Toggle
-                            key={index.toString()}
-                            item={item}
-                            updateState={updateState}
-                            isSelected={selected === item.value}
-                            applyMarginRight={index !== data.length - 1}
-                        />
-                    ))
+                    data.map((item, index) => {
+                        const update = useCallback(() => {
+                            updateState(item.value);
+                        }, []);
+
+                        return (
+                            <Toggle
+                                key={index.toString()}
+                                item={item}
+                                onPress={update}
+                                isSelected={selected === item.value}
+                                applyMarginRight={index !== data.length - 1}
+                            />
+                        )
+                    })
                 }
             </View>
             {children}
@@ -73,8 +78,6 @@ export default ToggleGroup;
 
 interface ToggleGroupWithManualValueProps {
     data: DataProps[];
-    selected: string | null;
-    setSelected: (value: any) => void;
     control: any;
     manualValue?: {
         inputProps: TextInputProps;
@@ -88,16 +91,29 @@ interface ToggleGroupWithManualValueProps {
     name: string;
 }
 
-export const ToggleGroupWithManualValue = memo(({ data, selected, setSelected, control, manualValue, name }: ToggleGroupWithManualValueProps) => {
-    const inputRef = useRef<TextInput>(null); // usamos o useRef para acessar o input manualmente, removendo o foco ao apertar em outro botão
+export interface ToggleGroupWithManualValueRef {
+    reset: () => void;
+    getSelected: () => string | null;
+}
 
+export const ToggleGroupWithManualValue = forwardRef(({ defaultValue, data, control, manualValue, name }: ToggleGroupWithManualValueProps, ref) => {
+    const inputRef = useRef<TextInput>(null); // usamos o useRef para acessar o input manualmente, removendo o foco ao apertar em outro botão
+    const [selected, setSelected] = useState<string | null>(defaultValue ?? data[0].value);
+    //console.log(selected, defaultValue, data[0].value);
+
+    useImperativeHandle(ref, () => ({
+        reset: () => {
+            setSelected(null);
+            inputRef.current?.blur();
+        },
+        getSelected: () => selected
+    }));
+
+    /* No caso de troca de tipo no parente, atualizamos o estado para o primeiro valor ou o valor padrão, caso exista */
     /* useEffect(() => {
-        if (selected === null) {
-            setTimeout(() => {
-                inputRef.current?.focus();
-            }, 10);
-        }
-    }, [selected]) */
+        console.log("useEffect");
+        setSelected(defaultValue ?? data[0].value);
+    }, [data]); */
 
     return (
         <View className="flex-row w-full items-center justify-between" key={`${name}_container`}>
@@ -107,8 +123,8 @@ export const ToggleGroupWithManualValue = memo(({ data, selected, setSelected, c
                         <Toggle
                             key={index.toString()}
                             item={item}
-                            updateState={(value) => {
-                                setSelected(value)
+                            onPress={() => {
+                                setSelected(item.value)
                                 inputRef.current?.blur();
                             }}
                             isSelected={selected === item.value}

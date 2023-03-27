@@ -46,7 +46,7 @@ export const ActionButton = ({ onPress, label, icon, isLoading, disabled, style,
                                 <Text className='font-bold text-white text-base'>
                                     {label}
                                 </Text>
-                            ) : (
+                            ) : label && (
                                 <Label>
                                     {label}
                                 </Label>

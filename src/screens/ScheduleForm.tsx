@@ -21,6 +21,7 @@ import { database } from 'database/index.native';
 import type { ServiceModel } from 'database/models/serviceModel';
 import BottomSheet from 'components/BottomSheet';
 import ConfirmExitModal from 'components/Business/ConfirmExitModal';
+import SectionBottomSheet from 'components/ScheduleForm/SectionBottomSheet';
 
 export default function ScheduleForm({ route, navigation }: any) {
     const selectedSectionId = useSharedValue(0);
@@ -144,19 +145,13 @@ export default function ScheduleForm({ route, navigation }: any) {
                     {
                         (!route.params?.serviceId || route.params?.serviceId && initialValue) ? (
                             <>
-                                <Section0
-                                    bottomSheet={section0BottomSheet}
-                                    initialValue={initialValue}
-                                    ref={section0Ref}
-                                    updateHandler={updateHandler}
-                                />
+                                <SectionBottomSheet bottomSheet={section0BottomSheet} expanded={!initialValue}>
+                                    <Section0 initialValue={initialValue} ref={section0Ref} updateHandler={updateHandler} />
+                                </SectionBottomSheet>
 
-                                <Section1
-                                    bottomSheet={section1BottomSheet}
-                                    initialValue={initialValue}
-                                    ref={section1Ref}
-                                    updateHandler={updateHandler}
-                                />
+                                <SectionBottomSheet bottomSheet={section1BottomSheet}>
+                                    <Section1 initialValue={initialValue} ref={section1Ref} updateHandler={updateHandler} />
+                                </SectionBottomSheet>
 
                                 <Section2
                                     bottomSheet={section2BottomSheet}

@@ -1,7 +1,8 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import clsx from 'clsx';
 
-import { Text, TouchableOpacity, FlatList, LayoutAnimation, TouchableOpacityProps, View } from 'react-native';
+import { Text, LayoutAnimation, View } from 'react-native';
+import { FlatList, TouchableOpacity } from 'react-native-gesture-handler';
 
 import { useColorScheme } from 'nativewind';
 import { MaterialIcons } from "@expo/vector-icons"
@@ -12,7 +13,7 @@ import { Category } from 'screens/Main/Business/@types';
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
-type PartialCategory = PartialBy<Category, 'icon' | 'color'>;
+type PartialCategory = PartialBy<Category, 'icon' | 'color'> & { onPress?: () => void };
 
 export type TagObject = PartialCategory & {
     checked?: boolean;
@@ -24,14 +25,13 @@ type TagSectionProps = {
     insertPaddingRight?: boolean;
     pallette?: "dark";
     height?: number;
-    onSelectTags: (tags: TagObject[]) => void;
+    onSelectTags?: (tags: TagObject[]) => void;
     onClear?: () => void;
 }
 
 interface TagProps extends TagObject {
     children?: React.ReactNode;
     pallette?: TagSectionProps['pallette'];
-    onPress?: TouchableOpacityProps['onPress'];
 }
 
 export const Tag = ({ onPress, children, pallette, checked, icon, name, color }: TagProps) => {
@@ -42,11 +42,11 @@ export const Tag = ({ onPress, children, pallette, checked, icon, name, color }:
             onPress={onPress}
             activeOpacity={onPress ? 0.75 : 1}
             className={clsx('bg-black dark:bg-gray-200 rounded-full h-full flex-row px-4 py-1 mr-2 items-center justify-center', {
-                'bg-black dark:bg-gray-300': pallette === "dark",
+                'bg-black dark:bg-gray-300 border border-text-200': pallette === "dark",
             })}
             style={{
-                ...(checked && { borderWidth: 1, borderColor: color || colors.gray[300] }),
-                columnGap: 5
+                ...(checked && { borderWidth: 1, borderLeftColor: color || colors.gray[300], borderRightColor: color || colors.gray[300], borderTopColor: color || colors.gray[300], borderBottomColor: color || colors.gray[300] }),
+                columnGap: 5,
             }}
         >
             {
@@ -68,11 +68,6 @@ export interface TagsSelectorRef {
 export const TagsSelector = forwardRef(({ tags, uniqueSelection, onClear, onSelectTags, insertPaddingRight, pallette, height }: TagSectionProps, ref) => {
     const { colorScheme } = useColorScheme();
     const [sectionData, setSectionData] = useState<TagObject[]>(tags);
-    /* .map(tag => ({ ...tag, checked: false })) */
-
-    useEffect(() => {
-        setSectionData(tags);
-    }, [tags])
 
     useImperativeHandle(ref, () => ({
         clearTags: () => {
@@ -96,7 +91,7 @@ export const TagsSelector = forwardRef(({ tags, uniqueSelection, onClear, onSele
                 key={item.id}
                 pallette={pallette}
                 {...item}
-                onPress={() => {
+                onPress={item.onPress ? item.onPress : () => {
                     let updatedSectionData = sectionData
 
                     if (uniqueSelection) {
@@ -112,15 +107,20 @@ export const TagsSelector = forwardRef(({ tags, uniqueSelection, onClear, onSele
 
                     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
-                    onSelectTags(updatedSectionData.filter(tag => tag.checked === true)) // Passa os dados atualizados para o componente pai
+                    onSelectTags && onSelectTags(updatedSectionData.filter(tag => tag.checked === true)) // Passa os dados atualizados para o componente pai
                     updateTagsData(updatedSectionData) // Atualiza os dados do componente
                 }}
             >
                 {
-                    onClear ? <MaterialIcons name="expand-more" size={18} color={colorScheme === "dark" ? colors.text[100] : colors.white} /> : (
-                        item.checked ?
-                            <MaterialIcons name="remove" size={18} color={colorScheme === "dark" ? colors.text[100] : colors.white} /> :
-                            <MaterialIcons name="add" size={18} color={colorScheme === "dark" ? colors.text[100] : colors.white} />
+                    (!uniqueSelection || uniqueSelection && item.checked) && (
+                        <MaterialIcons
+                            name={onClear ? "expand-more" :
+                                uniqueSelection && item.checked ? "check" :
+                                    !uniqueSelection && item.checked ? "remove" :
+                                        "add"}
+                            size={18}
+                            color={colorScheme === "dark" ? colors.text[100] : colors.white}
+                        />
                     )
                 }
             </Tag>
@@ -129,7 +129,7 @@ export const TagsSelector = forwardRef(({ tags, uniqueSelection, onClear, onSele
 
     return (
         <FlatList
-            style={{ flex: 1 }}
+            style={{ flex: 1, zIndex: 5 }}
             contentContainerStyle={[
                 {
                     display: "flex",
@@ -137,7 +137,7 @@ export const TagsSelector = forwardRef(({ tags, uniqueSelection, onClear, onSele
                     alignItems: "center",
                     paddingRight: insertPaddingRight ? 48 : 0,
                 },
-                height ? { height: height } : { height: "100%" }
+                height ? { height: height } : { height: "100%" },
             ]}
             ListFooterComponent={onClear ? (
                 <TouchableOpacity className='flex items-center justify-center mr-4'>

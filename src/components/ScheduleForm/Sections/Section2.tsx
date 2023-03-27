@@ -85,6 +85,7 @@ export const WarrantyReview = ({ value }: { value?: string }) => (
 );
 
 interface Section2Props extends Section {
+    bottomSheet: string;
     formRefs: {
         section0Ref: React.RefObject<Section0RefProps>;
         section1Ref: React.RefObject<Section1RefProps>;
@@ -132,7 +133,14 @@ export default function Section2({ bottomSheet, formRefs, initialValue }: Sectio
     }
 
     const onSubmit = useCallback(async () => {
-        const serviceDate = data?.date ? new Date(currentDate.getFullYear(), data.date.month, data.date.date, data.time.getHours(), data.time.getMinutes(), data.time.getSeconds()) : currentDate;
+        const serviceDate = data?.date ? new Date(
+            currentDate.getFullYear(),
+            data.date.month,
+            data.date.date,
+            data.time?.getHours() ?? 0,
+            data.time?.getMinutes() ?? 0,
+            data.time?.getSeconds() ?? 0
+        ) : currentDate;
 
         if (data) {
             setLoading(true)
@@ -140,6 +148,7 @@ export default function Section2({ bottomSheet, formRefs, initialValue }: Sectio
                 name: data.name || `Serviço n.0${data.serviceId}-${currentDate.getFullYear()}`,
                 date: serviceDate,
                 status: 'scheduled',
+                discountPercentage: data.discount,
                 additionalInfo: data.additionalInfo,
                 paymentCondition: data.agreement && data.agreement.remainingValue === "afterCompletion" ? "agreement" : data.installments ? "installments" : "cash",
                 paymentMethods: data.checkedPaymentMethods,
@@ -156,6 +165,7 @@ export default function Section2({ bottomSheet, formRefs, initialValue }: Sectio
                         service.name = formattedData.name;
                         service.date = formattedData.date;
                         service.status = formattedData.status;
+                        service.discountPercentage = formattedData.discountPercentage;
                         service.additionalInfo = formattedData.additionalInfo;
                         service.paymentCondition = formattedData.paymentCondition;
                         service.paymentMethods = formattedData.paymentMethods;
@@ -375,9 +385,17 @@ export default function Section2({ bottomSheet, formRefs, initialValue }: Sectio
                                     header: { title: "Hora" },
                                     style: { flex: 1 },
                                 }}
-                                value={`${data.time?.getHours()}:${data.time?.getMinutes()}${data.time.getMinutes() < 10 ? '0' : ''}`}
+                                value={data.time ? `${data.time?.getHours()}:${data.time?.getMinutes()}${data.time.getMinutes() < 10 ? '0' : ''}` : "Indeterminado"}
                             />
                         </View>
+
+                        <ReviewSection
+                            wrapperProps={{
+                                header: { title: "Desconto", icon: "money-off" },
+                                style: { flex: 1 },
+                            }}
+                            value={data.discount ? `${data.discount}%` : "Nenhum"}
+                        />
 
                         <ReviewSection
                             wrapperProps={{
