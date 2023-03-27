@@ -32,7 +32,7 @@ export interface SubSectionWrapperProps {
 
 export const SubSectionWrapper = React.memo(({ header, children, style, preset }: SubSectionWrapperProps) => {
     return (
-        <View className='w-full flex-1 flex-col items-start justify-start' style={[{ rowGap: 10 }, style]}>
+        <View className='w-full flex-1 flex-col items-start justify-start' style={[{ rowGap: preset === "subSection" ? 0 : 10 }, style]}>
             <View className='flex-1 flex-row items-center justify-between' style={{ marginBottom: preset === "smallMargin" ? 0 : 10 }}>
                 <View className="flex-1 flex-col items-start justify-start">
                     <Label

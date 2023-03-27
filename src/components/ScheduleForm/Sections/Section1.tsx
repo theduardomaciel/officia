@@ -129,157 +129,159 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
     return (
         <>
             <SubSectionWrapper header={{ title: "Condições de Pagamento", icon: "credit-card" }}>
-                <View className='flex-col w-full' style={{ rowGap: 10 }}>
-                    <ToggleGroup
-                        data={[
-                            {
-                                label: 'à vista',
-                                value: 'cash',
-                            },
-                            {
-                                label: 'parcelado',
-                                value: 'installments',
-                            },
-                            {
-                                label: "acordo",
-                                value: 'agreement',
-                            }
-                        ]}
-                        selected={paymentCondition}
-                        updateState={setPaymentCondition}
-                    />
-                    {
-                        paymentCondition === "agreement" && (
-                            <ToggleGroup
-                                data={[
-                                    {
-                                        label: '%',
-                                        value: 'percentage',
-                                    },
-                                    {
-                                        label: 'R$',
-                                        value: 'money',
-                                    },
-                                ]}
-                                selected={splitMethod}
-                                updateState={setSplitMethod}
-                            />
-                        )
-                    }
-                </View>
-                {
-                    paymentCondition === "agreement" && (
-                        splitMethod === "percentage" ? (
-                            <SubSectionWrapper header={{ title: `Qual o percentual do acordo?` }} preset="subSection">
-                                <ToggleGroupWithManualValue
-                                    key={"agreementInitialPercentage"}
+                <View className='flex flex-1' style={{ rowGap: 20 }}>
+                    <View className='flex-col w-full' style={{ rowGap: 10 }}>
+                        <ToggleGroup
+                            data={[
+                                {
+                                    label: 'à vista',
+                                    value: 'cash',
+                                },
+                                {
+                                    label: 'parcelado',
+                                    value: 'installments',
+                                },
+                                {
+                                    label: "acordo",
+                                    value: 'agreement',
+                                }
+                            ]}
+                            selected={paymentCondition}
+                            updateState={setPaymentCondition}
+                        />
+                        {
+                            paymentCondition === "agreement" && (
+                                <ToggleGroup
                                     data={[
                                         {
-                                            label: '30%',
-                                            value: '30%',
+                                            label: '%',
+                                            value: 'percentage',
                                         },
                                         {
-                                            label: '50%',
-                                            value: '50%',
+                                            label: 'R$',
+                                            value: 'money',
                                         },
                                     ]}
-                                    ref={agreementInitialPercentageRef}
-                                    defaultValue={initialValue?.service?.discountPercentage ? `${initialValue?.service?.discountPercentage}%` : "50%"}
+                                    selected={splitMethod}
+                                    updateState={setSplitMethod}
+                                />
+                            )
+                        }
+                    </View>
+                    {
+                        paymentCondition === "agreement" && (
+                            splitMethod === "percentage" ? (
+                                <SubSectionWrapper header={{ title: `Qual o percentual do acordo?` }} preset="subSection">
+                                    <ToggleGroupWithManualValue
+                                        key={"agreementInitialPercentage"}
+                                        data={[
+                                            {
+                                                label: '30%',
+                                                value: '30%',
+                                            },
+                                            {
+                                                label: '50%',
+                                                value: '50%',
+                                            },
+                                        ]}
+                                        ref={agreementInitialPercentageRef}
+                                        defaultValue={initialValue?.service?.discountPercentage ? `${initialValue?.service?.discountPercentage}%` : "50%"}
+                                        manualValue={{
+                                            inputProps: {
+                                                placeholder: "Outro (%)",
+                                                keyboardType: "number-pad"
+                                            },
+                                            maxValue: 100,
+                                            unit: {
+                                                label: '%',
+                                                position: "end"
+                                            }
+                                        }}
+                                        control={control}
+                                        name="agreementInitialPercentage"
+                                    />
+                                </SubSectionWrapper>
+                            ) : <SubSectionWrapper header={{ title: `Qual o valor inicial a ser pago com o acordo?` }} preset="subSection">
+                                <ToggleGroupWithManualValue
+                                    key={"agreementInitialValue"}
+                                    data={[
+                                        {
+                                            label: 'metade',
+                                            value: 'half',
+                                        },
+                                    ]}
+                                    ref={agreementInitialValueRef}
+                                    defaultValue={initialValue?.service?.agreementInitialValue as SplitMethod ?? '50'}
                                     manualValue={{
                                         inputProps: {
-                                            placeholder: "Outro (%)",
+                                            placeholder: "Outro (R$)",
+                                            keyboardType: "number-pad",
+                                        },
+                                        unit: {
+                                            label: 'R$ ',
+                                            position: "start"
+                                        }
+                                    }}
+                                    control={control}
+                                    name="agreementInitialValue"
+                                />
+                            </SubSectionWrapper>
+                        )
+                    }
+                    {
+                        paymentCondition === "agreement" && (
+                            <SubSectionWrapper header={{ title: "Como o valor restante será pago?" }} preset="subSection">
+                                <ToggleGroup
+                                    data={[
+                                        {
+                                            label: 'após a conclusão',
+                                            value: 'afterCompletion',
+                                        },
+                                        {
+                                            label: 'em parcelas',
+                                            value: 'withInstallments',
+                                        },
+                                    ]}
+                                    selected={remainingValue}
+                                    updateState={setRemainingValue}
+                                />
+                            </SubSectionWrapper>
+                        )
+                    }
+                    {
+                        (paymentCondition === "installments" || paymentCondition === "agreement" && remainingValue === "withInstallments") && (
+                            <SubSectionWrapper header={{ title: "Em quantas parcelas o valor será dividido?" }} preset="subSection">
+                                <ToggleGroupWithManualValue
+                                    key={"installmentsAmount"}
+                                    data={[
+                                        {
+                                            label: '2x',
+                                            value: '2x',
+                                        },
+                                        {
+                                            label: '3x',
+                                            value: '3x',
+                                        },
+                                    ]}
+                                    ref={installmentsAmountRef}
+                                    defaultValue={initialValue?.service?.installmentsAmount ? (`${initialValue?.service?.installmentsAmount}x`) : "2x"}
+                                    manualValue={{
+                                        inputProps: {
+                                            placeholder: "Outro (parcelas)",
                                             keyboardType: "number-pad"
                                         },
-                                        maxValue: 100,
                                         unit: {
-                                            label: '%',
+                                            label: 'x',
                                             position: "end"
                                         }
                                     }}
                                     control={control}
-                                    name="agreementInitialPercentage"
+                                    name="installmentsAmount"
                                 />
                             </SubSectionWrapper>
-                        ) : <SubSectionWrapper header={{ title: `Qual o valor inicial a ser pago com o acordo?` }} preset="subSection">
-                            <ToggleGroupWithManualValue
-                                key={"agreementInitialValue"}
-                                data={[
-                                    {
-                                        label: 'metade',
-                                        value: 'half',
-                                    },
-                                ]}
-                                ref={agreementInitialValueRef}
-                                defaultValue={initialValue?.service?.agreementInitialValue as SplitMethod ?? '50'}
-                                manualValue={{
-                                    inputProps: {
-                                        placeholder: "Outro (R$)",
-                                        keyboardType: "number-pad",
-                                    },
-                                    unit: {
-                                        label: 'R$ ',
-                                        position: "start"
-                                    }
-                                }}
-                                control={control}
-                                name="agreementInitialValue"
-                            />
-                        </SubSectionWrapper>
-                    )
-                }
-                {
-                    paymentCondition === "agreement" && (
-                        <SubSectionWrapper header={{ title: "Como o valor restante será pago?" }} preset="subSection">
-                            <ToggleGroup
-                                data={[
-                                    {
-                                        label: 'após a conclusão',
-                                        value: 'afterCompletion',
-                                    },
-                                    {
-                                        label: 'em parcelas',
-                                        value: 'withInstallments',
-                                    },
-                                ]}
-                                selected={remainingValue}
-                                updateState={setRemainingValue}
-                            />
-                        </SubSectionWrapper>
-                    )
-                }
-                {
-                    (paymentCondition === "installments" || paymentCondition === "agreement" && remainingValue === "withInstallments") && (
-                        <SubSectionWrapper header={{ title: "Em quantas parcelas o valor será dividido?" }} preset="subSection">
-                            <ToggleGroupWithManualValue
-                                key={"installmentsAmount"}
-                                data={[
-                                    {
-                                        label: '2x',
-                                        value: '2x',
-                                    },
-                                    {
-                                        label: '3x',
-                                        value: '3x',
-                                    },
-                                ]}
-                                ref={installmentsAmountRef}
-                                defaultValue={initialValue?.service?.installmentsAmount ? (`${initialValue?.service?.installmentsAmount}x`) : "2x"}
-                                manualValue={{
-                                    inputProps: {
-                                        placeholder: "Outro (parcelas)",
-                                        keyboardType: "number-pad"
-                                    },
-                                    unit: {
-                                        label: 'x',
-                                        position: "end"
-                                    }
-                                }}
-                                control={control}
-                                name="installmentsAmount"
-                            />
-                        </SubSectionWrapper>
-                    )
-                }
+                        )
+                    }
+                </View>
             </SubSectionWrapper>
 
             <SubSectionWrapper
