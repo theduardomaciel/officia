@@ -19,8 +19,8 @@ import { updateData } from 'screens/Main/Business';
 import { basicInfoScheme, BasicInfoSchemeType, BusinessData, FormProps } from 'screens/Main/Business/@types';
 import { Checkbox } from 'components/Checkbox';
 
-export function BasicInfo({ control, errors }: FormProps) {
-    const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] = React.useState(false);
+export function BasicInfo({ control, errors, setValue, getValues }: FormProps & { setValue: (name: any, value: any) => void, getValues: () => any }) {
+    const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] = React.useState(getValues().juridicalPerson === '');
 
     return (
         <BusinessScrollView>
@@ -53,30 +53,37 @@ export function BasicInfo({ control, errors }: FormProps) {
                 name="socialReason"
                 rules={{ maxLength: 80 }}
             />
-            <Controller
-                control={control}
-                render={({ field: { onChange, onBlur, value } }) => (
-                    <Input
-                        label='CNPJ'
-                        value={value}
-                        onBlur={onBlur}
-                        onChangeText={value => {
-                            const { masked } = formatWithMask({ text: value, mask: MASKS.BRL_CNPJ });
-                            onChange(masked)
-                        }}
-                        maxLength={18}
-                        keyboardType='numeric'
-                        style={!!errors.juridicalPerson && borderErrorStyle}
+            {
+                !isFormalCheckboxChecked && (
+                    <Controller
+                        control={control}
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <Input
+                                label='CNPJ'
+                                value={value}
+                                onBlur={onBlur}
+                                onChangeText={value => {
+                                    const { masked } = formatWithMask({ text: value, mask: MASKS.BRL_CNPJ });
+                                    onChange(masked)
+                                }}
+                                maxLength={18}
+                                keyboardType='numeric'
+                                style={!!errors.juridicalPerson && borderErrorStyle}
+                            />
+                        )}
+                        name="juridicalPerson"
                     />
-                )}
-                name="juridicalPerson"
-            />
+                )
+            }
             <Checkbox
                 preset='dark'
                 customKey='formality'
                 title='Não possuo uma empresa formal'
                 checked={isFormalCheckboxChecked}
-                onPress={() => setIsFormalCheckboxChecked(!isFormalCheckboxChecked)}
+                onPress={() => {
+                    setIsFormalCheckboxChecked(!isFormalCheckboxChecked);
+                    setValue && setValue('juridicalPerson', '');
+                }}
             />
         </BusinessScrollView>
     )
@@ -95,7 +102,7 @@ export default function BasicInfoScreen({ route }: any) {
 
     const [hasDifferences, setHasDifferences] = React.useState(false);
 
-    const { handleSubmit, control, formState: { errors }, getValues, watch, setFocus } = useForm<BasicInfoSchemeType>({
+    const { handleSubmit, control, formState: { errors }, getValues, watch, setValue } = useForm<BasicInfoSchemeType>({
         mode: 'onSubmit',
         defaultValues: {
             fantasyName: "",
@@ -141,7 +148,7 @@ export default function BasicInfoScreen({ route }: any) {
                 currentData={screenData}
                 watch={watch}
             >
-                <BasicInfo control={control} errors={errors} />
+                <BasicInfo control={control} errors={errors} setValue={setValue} getValues={getValues} />
             </ChangesObserver>
         </BusinessLayout>
     )

@@ -163,11 +163,6 @@ export default function ScheduleForm({ route, navigation }: any) {
                     }
                 </Container>
             </TouchableWithoutFeedback>
-            <Toast
-                toastPosition="top"
-                maxDragDistance={65}
-                toastOffset={"20%"}
-            />
             <ConfirmExitModal
                 isVisible={isConfirmExitModalVisible}
                 toggleVisibility={() => setConfirmExitModalVisible(false)}

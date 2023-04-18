@@ -32,8 +32,6 @@ interface ChangesObserverProps {
 export function ChangesObserver({ children, watch, currentData, setHasDifferences }: ChangesObserverProps) {
     useEffect(() => {
         const subscription = watch((value) => {
-            console.log('value', value)
-            console.log('currentData', currentData)
             setHasDifferences(JSON.stringify(currentData) !== JSON.stringify(value))
         });
         return () => subscription.unsubscribe();
@@ -78,11 +76,6 @@ export default function BusinessLayout({ headerProps, children, hasDifferences, 
             />
             {children}
             <SaveButton hasDifferences={hasDifferences} submitData={submitData} />
-            <Toast
-                toastPosition='top'
-                toastOffset='14%'
-                autoDismissDelay={3000}
-            />
             <ConfirmExitModal
                 isVisible={isConfirmExitModalVisible}
                 toggleVisibility={() => setConfirmExitModalVisible(false)}

@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	--custom-500: black;
+}
+.dark {
+	--custom-500: white;
+}

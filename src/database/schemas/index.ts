@@ -4,13 +4,15 @@ import { serviceSchema } from "./serviceSchema";
 import { subServiceSchema } from "./subServiceSchema";
 import { materialSchema } from "./materialSchema";
 import { clientSchema } from "./clientSchema";
+import { projectSchema } from "./projectSchema";
 
 export const schemas = appSchema({
-    version: 20,
-    tables: [
-        serviceSchema,
-        subServiceSchema,
-        materialSchema,
-        clientSchema,
-    ]
-})
+	version: 24,
+	tables: [
+		serviceSchema,
+		subServiceSchema,
+		materialSchema,
+		clientSchema,
+		projectSchema,
+	],
+});

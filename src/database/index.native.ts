@@ -7,12 +7,19 @@ import { ServiceModel } from "./models/serviceModel";
 import { SubServiceModel } from "./models/subServiceModel";
 import { MaterialModel } from "./models/materialModel";
 import { ClientModel } from "./models/clientModel";
+import { ProjectModel } from "./models/projectModel";
 
 const adapter = new SQLiteAdapter({
-    schema: schemas,
+	schema: schemas,
 });
 
 export const database = new Database({
-    adapter,
-    modelClasses: [ServiceModel, SubServiceModel, MaterialModel, ClientModel],
+	adapter,
+	modelClasses: [
+		ServiceModel,
+		SubServiceModel,
+		MaterialModel,
+		ClientModel,
+		ProjectModel,
+	],
 });

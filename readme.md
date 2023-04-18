@@ -1,8 +1,9 @@
-#  Additional Steps
+# Additional Steps
 
 ## Android
+
 1. ~~Enable Hermes through `android/gradle.properties`:~~
-~~> hermesEnabled=true~~
+   ~~> hermesEnabled=true~~
 
 2. Update Kotlin version, through `android/build.gradle`, to the following version (or newer) for WatermelonDB compatibility:
 
@@ -11,6 +12,7 @@
     ```
 
 3. Add permission to PDF files reading, through `android/app/src/main/AndroidManifest.xml`:
+
     ```xml
     <code>
         ...
@@ -34,19 +36,31 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     ```
 
-5. Change keyboard behavior
-    `android:windowSoftInputMode="adjustResize"`
+5. Add (or check) ProGuard exception rules
+
+    ```xml
+    -keep class com.swmansion.reanimated.** { *; }
+    -keep class com.shopify.reactnative.skia.** { *; }
+    ```
+
+6. Check in `android/app/src/main/res/mipmap-anydpi-v26` if the following style is added to both `ic_launcher.xml` and `ic_launcher_round.xml`:
+    ```xml
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
+    ```
 
 ### Customization
 
 1. Update xml styles through `android/app/src/main/res/values/styles.xml`, for:
 
     > Translucent navigation bar
+
     ```xml
         <resources>
         <!-- Base application theme. -->
@@ -62,6 +76,7 @@
     ```
 
     > Date picker customization
+
     ```xml
         <style name="DatePickerTheme" parent="DatePickerBaseTheme">
             <item name="android:colorControlNormal">#6CBE45</item>

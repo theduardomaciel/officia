@@ -1,528 +1,693 @@
-import { manipulateAsync } from 'expo-image-manipulator';
+import { manipulateAsync } from "expo-image-manipulator";
 
 // Types
-import type { ClientModel } from 'database/models/clientModel';
-import type { MaterialModel } from 'database/models/materialModel';
-import type { ServiceModel } from 'database/models/serviceModel';
-import type { SubServiceModel } from 'database/models/subServiceModel';
+import type { ClientModel } from "database/models/clientModel";
+import type { MaterialModel } from "database/models/materialModel";
+import type { ServiceModel } from "database/models/serviceModel";
+import type { SubServiceModel } from "database/models/subServiceModel";
 
-import type { BusinessData } from 'screens/Main/Business/@types';
+import type { BusinessData } from "screens/Main/Business/@types";
 
 interface Props {
-    data: BusinessData;
-    service: ServiceModel;
-    subServices?: SubServiceModel[];
-    materials?: MaterialModel[];
-    client?: ClientModel;
+	data: BusinessData;
+	service: ServiceModel;
+	subServices?: SubServiceModel[];
+	materials?: MaterialModel[];
+	client?: ClientModel;
 }
 
 export interface Config {
-    showLogo: boolean;
-    showInvoiceName: boolean;
-    showDigitalSignature: boolean;
-    showSubtotals: boolean;
-    showSubServicesDetails: boolean;
-    showMaterialsDetails: boolean;
-    showMaterialsImages: boolean;
+	showLogo: boolean;
+	showInvoiceName: boolean;
+	showDigitalSignature: boolean;
+	showSubtotals: boolean;
+	showSubServicesDetails: boolean;
+	showMaterialsDetails: boolean;
+	showMaterialsImages: boolean;
 }
 
 // Data
-export const getPaymentCondition = (service: ServiceModel) => service.installmentsAmount ? `${service.installmentsAmount} parcelas`
-    : service.agreementInitialValue ? `${service.splitMethod === "percentage" ? `${service.agreementInitialValue}%` : `R% ${service.agreementInitialValue}`} antecipado e o valor restante ${!service.installmentsAmount ? "após a conclusão do serviço" : `dividido em ${service.installmentsAmount} parcelas`}`
-        : "À vista";
+export const getPaymentCondition = (
+	paymentCondition: string,
+	splitValue?: string | null,
+	splitRemaining?: string | null
+) =>
+	paymentCondition === "card"
+		? `${splitValue?.replace("%", "")} parcelas`
+		: paymentCondition === "agreement" && splitValue?.includes("%")
+		? `${
+				paymentCondition === "agreement" && splitValue?.includes("%")
+					? splitValue
+					: splitValue.includes("/")
+					? splitValue
+					: `R% ${splitValue}`
+		  } antecipado e o valor restante ${
+				splitRemaining === "remaining"
+					? "após a conclusão do serviço"
+					: `dividido em ${splitRemaining?.replace(
+							" x",
+							""
+					  )} parcelas`
+		  }`
+		: "À vista";
 
 export async function getPDFString(
-    data: BusinessData,
-    service: ServiceModel,
-    subServices: SubServiceModel[],
-    materials: MaterialModel[],
-    client: ClientModel,
-    config: Config
+	data: BusinessData,
+	service: ServiceModel,
+	subServices: SubServiceModel[],
+	materials: MaterialModel[],
+	client: ClientModel,
+	validity: string,
+	config: Config
 ) {
-    const servicesTypes = subServices?.map(subService => subService.types).flat();
+	const servicesTypes = subServices
+		?.map((subService) => subService.types)
+		.flat();
 
-    const subServicesTotal = subServices && subServices?.map(subService => subService.price * subService.amount).reduce((a, b) => a + b, 0);
-    const materialsTotal = materials && materials?.map(material => material.price * material.amount).reduce((a, b) => a + b, 0);
+	const subServicesTotal =
+		subServices &&
+		subServices
+			?.map((subService) => subService.price * subService.amount)
+			.reduce((a, b) => a + b, 0);
+	const materialsTotal =
+		materials &&
+		materials
+			?.map((material) => material.price * material.amount)
+			.reduce((a, b) => a + b, 0);
 
-    const serviceDateIn30Days = new Date();
-    serviceDateIn30Days.setDate(serviceDateIn30Days.getDate() + 30);
+	const serviceDateAfterValidity = new Date();
+	serviceDateAfterValidity.setDate(
+		serviceDateAfterValidity.getDate() + parseInt(validity)
+	);
 
-    const title = config.showInvoiceName ? `Orçamento - ${service?.name}` : "Orçamento";
+	const title = config.showInvoiceName
+		? `Orçamento - ${service?.name}`
+		: "Orçamento";
 
-    const image = data.logo ? await manipulateAsync(data.logo!, [], { base64: true }) : null;
-    const digitalSignature = data.digitalSignatureUri ? await manipulateAsync(data.digitalSignatureUri!, [], { base64: true }) : null;
+	const image = data.logo
+		? await manipulateAsync(data.logo!, [], { base64: true })
+		: null;
+	const digitalSignature = data.digitalSignatureUri
+		? await manipulateAsync(data.digitalSignatureUri!, [], { base64: true })
+		: null;
 
-    const materialImages = await Promise.all(materials?.map(async material => {
-        if (material.image_url) {
-            const image = await manipulateAsync(material.image_url, [], { base64: true });
-            return image.base64;
-        }
-    }));
+	const materialImages = await Promise.all(
+		materials?.map(async (material) => {
+			if (material.image_url) {
+				const image = await manipulateAsync(material.image_url, [], {
+					base64: true,
+				});
+				return image.base64;
+			}
+		})
+	);
 
-    const splitGeocodedAddress = data.geocodedAddress?.split(", ");
+	const splitGeocodedAddress = data.geocodedAddress?.split(", ");
 
-    const geocodedAddressBeforeStreetNumber = splitGeocodedAddress ? [splitGeocodedAddress[0], splitGeocodedAddress[1]]?.join(", ") : null;
-    const geocodedAddressAfterStreetNumber = splitGeocodedAddress ? splitGeocodedAddress.slice(2).join(", ") : null;
+	const geocodedAddressBeforeStreetNumber = splitGeocodedAddress
+		? [splitGeocodedAddress[0], splitGeocodedAddress[1]]?.join(", ")
+		: null;
+	const geocodedAddressAfterStreetNumber = splitGeocodedAddress
+		? splitGeocodedAddress.slice(2).join(", ")
+		: null;
 
-    const html = `
+	const html = `
     <html>
 
     <head>
         <meta charset="utf-8">
         <title>${title}</title>
         <style>
-            :root {
-                font-size: 40%;
-                /* 1rem = 10px */
+			:root {
+				font-size: 40%;
+				/* 1rem = 10px */
 
-                --text-100: #C4C4C4;
-                --text-200: #A1A1AA;
+				--title: #27272a;
+				--title-2: var(--title);
 
-                --gray-100: '#666666';
-                --gray-200: '#333333';
-                --gray-300: '#292929';
-                --gray-400: '#27272A';
-                --gray-500: '#1E1F20';
-                --gray-600: "#1C1B1F";
+				--text: #000000; /* bg-000000 */
+				--text-light: #666666; /* bg-100 */
 
-                --gap: 2.5rem;
-            }
+				--background-dark: #c4c4c4;
+				--background: #e9e9e9;
 
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-                font-family: sans-serif;
-                font-style: normal;
-                font-size: 1.8rem;
-            }
+				--gap: 2.5rem;
+			}
 
-            html {
-                background: white;
-                cursor: default;
-            }
+			[data-theme="blue"] {
+				--title: #ffffff;
 
-            body {
-                box-sizing: border-box;
-                margin: 0 auto;
-                overflow: hidden;
-                overflow-y: scroll;
+				--text: #000000; /* bg-000000 */
+				--text-light: #666666; /* bg-100 */
 
-                display: flex;
-                flex-direction: column;
-                padding: 3.5rem;
-            }
+				--background-dark: #3b7ac7;
+				--background: #809fff;
+				--title-2: var(--background-dark);
+			}
 
-            body,
-            main,
-            section {
-                gap: var(--gap);
-            }
+			[data-theme="green"] {
+				--title: #ffffff;
 
-            @media print {
-                body {
-                    print-color-adjust: exact;
-                    -webkit-print-color-adjust: exact;
-                }
-            }
+				--text: #000000; /* bg-000000 */
+				--text-light: #666666; /* bg-100 */
 
-            header {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: start;
-                gap: var(--gap);
-                width: 100%;
-            }
+				--background-dark: #6cbe45;
+				--background: #7feb4c;
+				--title-2: var(--background-dark);
+			}
 
-            header h1 {
-                font-size: 2.8rem;
-            }
+			[data-theme="yellow"] {
+				--title: #ffffff;
 
-            h1 {
-                font: bold 100% sans-serif;
-                text-align: right;
-                text-transform: uppercase;
-            }
+				--text: #000000; /* bg-000000 */
+				--text-light: #666666; /* bg-100 */
 
-            header .logo_mark {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                width: 100%;
-                height: fit-content;
-            }
+				--background-dark: #e6f242;
+				--background: #fffd80;
+				--title-2: var(--background-dark);
+			}
 
-            .full {
-                width: 100%;
-            }
+			[data-theme="purple"] {
+				--title: #ffffff;
 
-            header .row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 1rem;
-            }
+				--text: #000000; /* bg-000000 */
+				--text-light: #666666; /* bg-100 */
 
-            header address {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                justify-content: flex-start;
-                gap: 0.75rem;
-            }
+				--background-dark: #753bc7;
+				--background: #b780ff;
+				--title-2: var(--background-dark);
+			}
 
-            main {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                width: 100%;
-            }
+			[data-theme="red"] {
+				--title: #ffffff;
 
-            main #main_header {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                width: 100%;
+				--text: #000000; /* bg-000000 */
+				--text-light: #666666; /* bg-100 */
 
-                background: linear-gradient(90deg, #C4C4C4 0%, #C4C4C4 52.81%, rgba(196, 196, 196, 0) 100%);
-                border-radius: 1px;
-                gap: 1rem;
-                padding: 1.5rem var(--gap);
-            }
+				--background-dark: #c73b3b;
+				--background: #ff80a0;
+				--title-2: var(--background-dark);
+			}
 
-            main #main_header p:nth-child(1) {
-                font-weight: 700;
-                font-size: 2.8rem;
-                line-height: 150%;
-                color: var(--gray-600);
-            }
+			[data-theme="orange"] {
+				--title: #ffffff;
 
-            main #main_header p:nth-child(2) {
-                font-weight: 400;
-                font-size: 1.2rem;
-                line-height: 150%;
-                color: var(--text-200);
-            }
+				--text: #000000; /* bg-000000 */
+				--text-light: #666666; /* bg-100 */
 
-            .row {
-                display: flex;
-                flex-direction: row;
-                align-items: flex-start;
-                justify-content: space-between;
-                gap: 1rem;
-            }
+				--background-dark: #c76e3b;
+				--background: #ffa680;
+				--title-2: var(--background-dark);
+			}
 
-            #basic_info .column {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                justify-content: flex-start;
-                max-width: 65%;
-            }
+			[data-theme="orange"] {
+				--title: #ffffff;
 
-            .section_title {
-                font-weight: 700;
-                font-size: 1.8rem;
-                line-height: 150%;
-                color: var(--gray-600);
-            }
+				--text: #000000; /* bg-000000 */
+				--text-light: #666666; /* bg-100 */
 
-            .section_description {
-                font-weight: 400;
-                font-size: 1.8rem;
-                line-height: 125%;
-                color: var(--gray-500);
-            }
+				--background-dark: #c76e3b;
+				--background: #ffa680;
+				--title-2: var(--background-dark);
+			}
 
-            section {
-                display: flex;
-                flex-direction: column;
-            }
+			[data-theme="pink"] {
+				--title: #ffffff;
 
-            section header {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: flex-start;
-                gap: 1rem;
-                width: 100%;
-                padding: 1rem var(--gap);
-                background-color: var(--text-100);
-                border-radius: 1px;
-            }
+				--text: #000000; /* bg-000000 */
+				--text-light: #666666; /* bg-100 */
 
-            section header p {
-                display: flex;
-                font-style: normal;
-                font-weight: 700;
-                font-size: 1.8rem;
-                line-height: 150%;
-                color: var(--gray-200);
-            }
+				--background-dark: #c73bbe;
+				--background: #ea80ff;
+				--title-2: var(--background-dark);
+			}
 
-            .table_header .description {
-                flex: 1;
-            }
+			* {
+				margin: 0;
+				padding: 0;
+				/* outline: 1px solid rgba(255, 0, 0, 0.1); */
+				box-sizing: border-box;
+				font-family: sans-serif;
+				font-style: normal;
+				font-size: 1.8rem;
+			}
 
-            .table_header .quantity {
-                width: 10rem;
-                justify-content: flex-end;
-            }
+			html {
+				background: white;
+				cursor: default;
+			}
 
-            .table_header .price {
-                width: 15rem;
-                justify-content: flex-end;
-            }
+			body {
+				box-sizing: border-box;
+				margin: 0 auto;
+				overflow: hidden;
+				overflow-y: scroll;
 
-            .table_header .total {
-                width: 10rem;
-                justify-content: flex-end;
-            }
+				display: flex;
+				flex-direction: column;
+				padding: 3.5rem;
+			}
 
-            .sub_sectionHeader {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: flex-start;
-                gap: 1rem;
-                width: 100%;
-                padding: 1rem var(--gap);
-                background-color: #E9E9E9;
-                border-radius: 1px;
-            }
+			body,
+			main,
+			section {
+				gap: var(--gap);
+			}
 
-            .sub_sectionHeader p {
-                display: flex;
-                font-style: normal;
-                font-weight: 600;
-                font-size: 1.8rem;
-                line-height: 150%;
-                color: var(--gray-300);
-            }
+			@media print {
+				body {
+					print-color-adjust: exact;
+					-webkit-print-color-adjust: exact;
+				}
+			}
 
-            table {
-                width: 100%;
-                padding-inline: 2.5rem;
-                border-spacing: 0 2rem;
-                margin-block: -2rem;
-            }
+			header {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: start;
+				gap: var(--gap);
+				width: 100%;
+			}
 
-            table td {
-                vertical-align: top;
-            }
+			header h1 {
+				font-size: 2.8rem;
+			}
 
-            table td h3 {
-                font-style: normal;
-                font-weight: 700;
-                font-size: 1.8rem;
-                line-height: 150%;
-                color: var(--gray-200);
-            }
+			h1 {
+				font: bold 100% sans-serif;
+				text-align: right;
+				text-transform: uppercase;
+				color: var(--title-2);
+			}
 
-            table td h4 {
-                font-style: normal;
-                font-weight: 500;
-                font-size: 1.6rem;
-                color: var(--gray-100);
-            }
+			header .logo_mark {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				gap: 1rem;
+				width: 100%;
+			}
 
-            table td.quantity p,
-            table td.price p {
-                font-weight: 500;
-                font-size: 1.8rem;
-                color: var(--gray-100);
-            }
+			header .logo_mark img {
+				height: 6rem;
+			}
 
-            table td.total p {
-                font-weight: 600;
-                font-size: 1.8rem;
-                color: var(--gray-200);
-            }
+			.full {
+				width: 100%;
+			}
 
-            table td:not(:nth-child(1)) {
-                justify-content: flex-end;
-                text-align: end;
-            }
+			header .row {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				gap: 1rem;
+			}
 
-            /* Arrumar o espaçamento extra do header */
-            table td:nth-child(3) {
-                padding-right: 1rem;
-            }
+			header address {
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+				justify-content: flex-start;
+				gap: 0.75rem;
+			}
 
-            table td:nth-child(2) {
-                padding-right: 2rem;
-            }
+			/* .contacts p {
+				color: var(--title-2);
+			}
 
-            table td:nth-child(1) {
-                padding-right: 3rem;
-            }
+			.contacts svg path {
+				fill: var(--title-2);
+			} */
 
-            .line {
-                display: flex;
-                width: 100%;
-                height: 1px;
-                background-color: var(--text-100);
-            }
+			main {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				width: 100%;
+			}
 
-            .subsection {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-                gap: 1.5rem;
-            }
+			main #main_header {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				gap: 1rem;
+				width: 100%;
 
-            .subtotal {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                width: 37.5rem;
-                padding: 1rem var(--gap);
-                background-color: #E9E9E9;
-                border-radius: 1px;
-                align-self: flex-end;
-            }
+				background: linear-gradient(
+					90deg,
+					var(--background-dark) 0%,
+					var(--background-dark) 52.81%,
+					rgba(196, 196, 196, 0) 100%
+				);
+				border-radius: 1px;
+				gap: 1rem;
+				padding: 1.5rem var(--gap);
+			}
 
-            .subtotal p {
-                font-weight: 600;
-                font-size: 1.8rem;
-                line-height: 150%;
-                color: var(--gray-200);
-            }
+			main #main_header p:nth-child(1) {
+				font-weight: 700;
+				font-size: 2.8rem;
+				line-height: 150%;
+				color: var(--title);
+			}
 
-            .earnings_total {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                width: 100%;
-                padding: 1rem var(--gap);
-                background-color: #E9E9E9;
-                border-radius: 1px;
-            }
+			main #main_header p:nth-child(2) {
+				font-weight: 400;
+				font-size: 1.2rem;
+				line-height: 150%;
+				color: var(--background);
+				opacity: 50%;
+			}
 
-            .earnings_total p {
-                font-weight: 700;
-                font-size: 1.8rem;
-                line-height: 150%;
-                color: var(--gray-300);
-            }
+			.row {
+				display: flex;
+				flex-direction: row;
+				align-items: flex-start;
+				justify-content: space-between;
+				gap: 1rem;
+			}
 
-            .payment_info {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                justify-content: flex-start;
-                gap: 1rem;
-                padding: 1rem;
-                width: fit-content;
-                text-align: left;
-                background-color: #E9E9E9;
-                border-radius: 1px;
-            }
+			#basic_info .column {
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+				justify-content: flex-start;
+				max-width: 65%;
+			}
 
-            .payment_info p {
-                font-weight: 400;
-                font-size: 1.8rem;
-                color: var(--gray-300);
-            }
+			.section_title {
+				font-weight: 700;
+				font-size: 1.8rem;
+				line-height: 150%;
+				color: var(--text);
+			}
 
-            .payment_info span {
-                font-weight: bold;
-            }
+			.section_description {
+				font-weight: 400;
+				font-size: 1.8rem;
+				line-height: 125%;
+				color: var(--text);
+			}
 
-            #date {
-                font-style: normal;
-                font-weight: 700;
-                font-size: 1.8rem;
-                line-height: 150%;
-                color: var(--gray-600);
-            }
+			section {
+				display: flex;
+				flex-direction: column;
+			}
 
-            .signature {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 1rem;
+			section header {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: flex-start;
+				gap: 1rem;
+				width: 100%;
+				padding: 1rem var(--gap);
+				background-color: var(--background-dark);
+				border-radius: 1px;
+			}
 
-                margin-top: 10rem;
-            }
+			section header p {
+				display: flex;
+				font-style: normal;
+				font-weight: 700;
+				font-size: 1.8rem;
+				line-height: 150%;
+				color: var(--title);
+			}
 
-            .signature .info {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            }
+			.description {
+				display: flex;
+				flex: 1;
+			}
 
-            .signature div .line{
-                width: 150%;
-                min-width: 20rem;
-                height: 1px;
-                margin-top: -2rem;
-                z-index: 10;
-                background-color: black;
-            }
+			.quantity {
+				width: 10rem;
+				display: flex;
+				justify-content: flex-end;
+			}
 
-            .signature .info p:nth-child(1) {
-                font-style: normal;
-                font-weight: 700;
-                font-size: 1.8rem;
-                line-height: 150%;
-                color: black;
-                text-transform: uppercase;
-            }
+			.price {
+				width: 15rem;
+				display: flex;
+				justify-content: flex-end;
+			}
 
-            .signature .info p:nth-child(2) {
-                font-style: normal;
-                font-weight: 400;
-                font-size: 1.6rem;
-                line-height: 150%;
-            }
+			.total {
+				width: 10rem;
+				display: flex;
+				justify-content: flex-end;
+			}
 
-            footer {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: space-between;
-                width: 100%;
-                gap: var(--gap);
-                margin-top: 5rem;
-            }
-        </style>
+			.sub_sectionHeader {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: flex-start;
+				gap: 1rem;
+				width: 100%;
+				padding: 1rem var(--gap);
+				background-color: var(--background);
+				border-radius: 1px;
+			}
+
+			.sub_sectionHeader p {
+				display: flex;
+				font-style: normal;
+				font-weight: 600;
+				font-size: 1.8rem;
+				line-height: 150%;
+				color: var(--title);
+			}
+
+			.item_row {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				gap: 1rem;
+				width: 100%;
+				padding: 1rem var(--gap);
+
+				vertical-align: top;
+			}
+
+			.item_row .description {
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+				justify-content: flex-start;
+			}
+
+			.item_row .info {
+				display: flex;
+				flex-direction: row;
+				gap: 1rem;
+
+				font-weight: 500;
+				color: var(--text-light);
+			}
+
+			.item_row h3 {
+				font-style: normal;
+				font-weight: 700;
+				font-size: 1.8rem;
+				line-height: 150%;
+				color: var(--text);
+			}
+
+			.item_row h4 {
+				font-style: normal;
+				font-weight: 500;
+				font-size: 1.6rem;
+				color: var(--text-light);
+			}
+
+			.quantity p,
+			.price p {
+				font-weight: 500;
+				font-size: 1.8rem;
+				color: var(--text-light);
+			}
+
+			.total p {
+				font-weight: 700;
+				font-size: 1.8rem;
+				color: var(--title-2);
+			}
+
+			.item_row:not(:nth-child(1)) {
+				justify-content: flex-end;
+				text-align: end;
+			}
+
+			.line {
+				display: flex;
+				width: 100%;
+				height: 1px;
+				background-color: var(--text-light);
+				opacity: 50%;
+			}
+
+			.subsection {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: flex-start;
+				gap: 1.5rem;
+			}
+
+			.subtotal {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				gap: 1rem;
+				width: 37.5rem;
+				padding: 1rem var(--gap);
+				background-color: var(--background);
+				border-radius: 1px;
+				align-self: flex-end;
+			}
+
+			.subtotal p {
+				font-weight: 600;
+				font-size: 1.8rem;
+				line-height: 150%;
+				color: var(--title);
+			}
+
+			.earnings_total {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				gap: 1rem;
+				width: 100%;
+				padding: 1rem var(--gap);
+				background-color: var(--background);
+				border-radius: 1px;
+			}
+
+			.earnings_total p {
+				font-weight: 700;
+				font-size: 1.8rem;
+				line-height: 150%;
+				color: var(--title);
+			}
+
+			.payment_info {
+				display: flex;
+				flex-direction: column;
+				align-items: flex-start;
+				justify-content: flex-start;
+				gap: 1rem;
+				padding: 1rem;
+				width: fit-content;
+				text-align: left;
+				background-color: var(--background);
+				border-radius: 1px;
+			}
+
+			.payment_info p {
+				font-weight: 400;
+				font-size: 1.8rem;
+				color: var(--title);
+			}
+
+			.payment_info span {
+				font-weight: bold;
+			}
+
+			.signature {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 1rem;
+
+				margin-top: 10rem;
+			}
+
+			.signature .info {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+			}
+
+			.signature div:nth-child(1) {
+				width: 65%;
+				height: 1px;
+				background-color: black;
+			}
+
+			.signature .info p:nth-child(1) {
+				font-style: normal;
+				font-weight: 700;
+				font-size: 1.8rem;
+				line-height: 150%;
+				color: black;
+				text-transform: uppercase;
+			}
+
+			.signature .info p:nth-child(2) {
+				font-style: normal;
+				font-weight: 400;
+				font-size: 1.6rem;
+				line-height: 150%;
+			}
+
+			footer {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: space-between;
+				width: 100%;
+				gap: var(--gap);
+				margin-top: 5rem;
+			}
+		</style>
     </head>
 
     <body>
         <header>
             <div class="logo_mark">
-                ${data.logo && config.showLogo ? `
+                ${
+					data.logo && config.showLogo
+						? `
                     <img
                         style="max-height: 125; object-fit: contain;"
                         src="data:image/jpeg;base64,${image!.base64}"
                     />
-                ` : ""}
+                `
+						: ""
+				}
                     <h1>${data.fantasyName}</h1>
             </div>
             <div class="row full">
                 <address style="width: 50%;">
                     <p>${data.juridicalPerson}</p>
-                    <p>${data.geocodedAddress ? `${geocodedAddressBeforeStreetNumber}${data.address ? `, ${data.address}` : ""}, ${geocodedAddressAfterStreetNumber}` : data.address ? data.address : ""} </p>
+                    <p>${
+						data.geocodedAddress
+							? `${geocodedAddressBeforeStreetNumber}${
+									data.address ? `, ${data.address}` : ""
+							  }, ${geocodedAddressAfterStreetNumber}`
+							: data.address
+							? data.address
+							: ""
+					} </p>
                     <p>    
                         CEP ${data.postalCode}
                     </p>
                 </address>
                 <address>
-                    ${data.email ? `<div class="row">
+                    ${
+						data.email
+							? `<div class="row">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <mask id="mask0_998_1654" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
                                 width="24" height="24">
@@ -535,7 +700,9 @@ export async function getPDFString(
                             </g>
                         </svg>
                         <p>${data.email}</p>
-                    </div>` : ""}
+                    </div>`
+							: ""
+					}
                     <div class="row">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <mask id="mask0_998_1669" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
@@ -550,7 +717,9 @@ export async function getPDFString(
                         </svg>
                         <p>${data.phone}</p>
                     </div>
-                    ${data.phone2 ? `<div class="row">
+                    ${
+						data.phone2
+							? `<div class="row">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <mask id="mask0_998_1669" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
                                 width="24" height="24">
@@ -564,7 +733,8 @@ export async function getPDFString(
                         </svg>
                         <p>${data.phone2}</p>
                     </div>`
-            : ""}
+							: ""
+					}
                 </address>
             </div>
         </header>
@@ -577,144 +747,238 @@ export async function getPDFString(
 
             <section class="full">
                 <div class="row">
-                    ${service?.client && service.client.id ? `
+                    ${
+						service?.client && service.client.id
+							? `
                     <div class="column">
                         <p class="section_title">Cliente: ${client?.name}</p>
-                        ${client?.address && `<p class="section_description">${client?.address}</p>`}
+                        ${
+							client?.address &&
+							`<p class="section_description">${client?.address}</p>`
+						}
                     </div>`
-            : ""}
+							: ""
+					}
                     <div class="column">
                         <p class="section_title">Data e horário da visita técnica</p>
-                        <p class="section_description">${service.date.toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            })} - ${service.date.toLocaleTimeString('pt-BR', {
-                hour: '2-digit',
-                minute: '2-digit'
-            })}</p >
+                        <p class="section_description">${service.date.toLocaleDateString(
+							"pt-BR",
+							{
+								day: "2-digit",
+								month: "2-digit",
+								year: "numeric",
+							}
+						)} - ${service.date.toLocaleTimeString("pt-BR", {
+		hour: "2-digit",
+		minute: "2-digit",
+	})}</p >
                     </div>
                 </div>
             </section>
 
             <section class="full">
-                <header class="table_header">
-                    <p class="description">Descrição</p>
-                    <p class="quantity">Qtd.</p>
-                    <p class="price">Preço Unitário</p>
-                    <p class="total">Total</p>
-                </header>
-                
-                ${subServices && subServices.length > 0 ? `
-                        <div class="subsection">
-                            <div class="sub_sectionHeader">
-                                <p>Serviços</p>
-                            </div>
-                            <table class="full">
-                                <colgroup>
-                                    <col style="flex: 1;">
-                                    <col style="width: 10rem;">
-                                    <col style="width: 15rem;">
-                                    <col style="width: 10rem;">
-                                </colgroup>
-
-                                <tbody>
-                                   ${subServices.map(subService => `
-                                        <tr>
-                                            <td>
-                                                <h3>${subService.description}</h3>
-                                                ${subService.details ? config.showSubServicesDetails ? `
-                                                    <h4>${subService.details}</h4>
-                                                ` : ""
-                    : ""}
-                                            </td>
-                                            <td class="quantity">
-                                                <p>${subService.amount}</p>
-                                            </td>
-                                            <td class="price">
-                                                <p>R$ ${subService.price}</p>
-                                            </td>
-                                            <td class="total">
-                                                <p>R$ ${subService.price * subService.amount}</p>
-                                            </td>
-                                        </tr>
-                                        `).toString().split(',').join('')}
-                                </tbody>
-                            </table>
-                            <div class="line"></div>
-                            ${config.showSubtotals ? `<div class="subtotal">
-                                <p>Subtotal</p>
-                                <p>R$ ${subServicesTotal}</p>
-                            </div>` : ""}
-                        </div>            
-                    `
-            : ""}
-
-                ${materials && materials.length > 0 ? `
-                        <div class="subsection">
-                            <div class="sub_sectionHeader">
-                                <p>Materiais</p>
-                            </div>
-                            <table class="full">
-                                <colgroup>
-                                    <col style="flex: 1;">
-                                    <col style="width: 10rem;">
-                                    <col style="width: 15rem;">
-                                    <col style="width: 10rem;">
-                                </colgroup>
-
-                                <tbody>
-                                   ${materials.map((material, index) => `
-                                        <tr>
-                                            <td>
-                                                <h3>${material.name}</h3>
-                                                ${material.description ? config.showMaterialsDetails && `
-                                                    <h4>${material.description}</h4>
-                                                ` : ""
-                }
-                                            </td>
-                                            <td class="quantity">
-                                                <p>${material.amount}</p>
-                                            </td>
-                                            <td class="price">
-                                                <p>R$ ${material.price}</p>
-                                            </td>
-                                            <td class="total">
-                                                <p>R$ ${material.price * material.amount}</p>
-                                            </td>
-                                        </tr>
-                                        `).toString().split(',').join('')}
-
-                                </tbody>
-                            </table>
-                            <div class="line"></div>
-                            ${config.showSubtotals ? `<div class="subtotal">
-                                <p>Subtotal</p>
-                                <p>R$ ${materialsTotal}</p>
-                            </div>` : ""}
-                        </div>
-                        ${materialImages && materialImages.length > 0 ? `
-                        <div class="full" style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 2.5rem; flex-wrap: wrap;">
-                            ${materialImages.map((materialImage, index) => `
-                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
-                                    <img
-                                        style="max-height: 125; object-fit: contain;"
-                                        src="data:image/jpeg;base64,${materialImage}"
-                                        alt="Imagem do material ${materials[index].name}" 
-                                    />
-                                    <p>${materials[index].name}</p>
+				<header class="table_header">
+					<p class="description">Descrição</p>
+					<p class="quantity">Qtd.</p>
+					<p class="price">Preço Unitário</p>
+					<p class="total">Total</p>
+				</header>
+				<div class="subsection">
+					<div class="sub_sectionHeader">
+						<p>Serviços</p>
+					</div>
+					${
+						subServices && subServices.length > 0
+							? subServices.map(
+									(subService) => `
+                            <div class="full">
+                                <div class="item_row">
+                                    <div
+                                        style="
+                                            display: flex;
+                                            flex-direction: row;
+                                            align-items: center;
+                                            justify-content: flex-start;
+                                            gap: 2.5rem;
+                                        "
+                                    >
+                                        <div class="description">
+                                            <h3>${subService.description}</h3>
+                                            ${
+												subService.details
+													? `<h4>${subService.details}</h4>`
+													: ""
+											}
+                                        </div>
+                                    </div>
+                                    <div class="info">
+                                        <div class="quantity">
+                                            <p>${subService.amount}</p>
+                                        </div>
+                                        <div class="price">
+                                            <p>${
+												subService.price &&
+												subService.price > 0
+													? `R$ ${subService.price}`
+													: "-"
+											}</p>
+                                        </div>
+                                        <div class="total">
+                                            <p>${
+												subService.price &&
+												subService.price > 0
+													? `R$ ${
+															subService.price *
+															subService.amount
+													  }`
+													: "-"
+											}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            `)}
-                        </div>
-                        ` : ""}
-                    `
-            : ""}
+                            </div>
+                            `
+							  )
+							: ""
+					}
+                                    }
+					<div class="line"></div>
+					<div class="subtotal">
+						<p>Subtotal</p>
+						<p>R$ ${subServicesTotal}</p>
+					</div>
+				</div>
 
-            </section>
+                /* MATERIAIS */
+
+                <div class="subsection">
+					<div class="sub_sectionHeader">
+						<p>Materiais</p>
+					</div>
+					${
+						materials && materials.length > 0
+							? materials.map(
+									(material, index) => `
+                            <div class="full">
+                                <div class="item_row">
+                                    <div
+                                        style="
+                                            display: flex;
+                                            flex-direction: row;
+                                            align-items: center;
+                                            justify-content: flex-start;
+                                            gap: 2.5rem;
+                                        "
+                                    >
+                                        ${
+											material.image_url
+												? `
+                                                <img
+                                                    src="${materialImages[index]}"
+                                                    style="
+                                                        height: 100%;
+                                                        max-width: 10rem;
+                                                        min-height: 10rem;
+                                                        object-fit: contain;
+                                                        border-radius: 1rem;
+                                                    "
+                                                />
+                                            `
+												: ""
+										}
+                                        <div class="description">
+                                            <h3>${material.name}</h3>
+                                            ${
+												material.description
+													? `<h4>${material.description}</h4>`
+													: ""
+											}
+                                        </div>
+                                    </div>
+                                    <div class="info">
+                                        <div class="quantity">
+                                            <p>${material.amount}</p>
+                                        </div>
+                                        <div class="price">
+                                            <p>${
+												material.price &&
+												material.price > 0
+													? `R$ ${material.price}`
+													: "-"
+											}</p>
+                                        </div>
+                                        <div class="total">
+                                            <p>${
+												material.price &&
+												material.price > 0
+													? `R$ ${
+															material.price *
+															material.amount
+													  }`
+													: "-"
+											}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            `
+							  )
+							: ""
+					}
+                                    }
+					<div class="line"></div>
+					<div class="subtotal">
+						<p>Subtotal</p>
+						<p>R$ ${materialsTotal}</p>
+					</div>
+				</div>
+			</section>
+
+			<div class="earnings_total">
+				<p>Total</p>
+				<p>R$ ${materialsTotal + subServicesTotal}</p>
+			</div>
+
+			<section class="full">
+				<header>
+					<p>Pagamento</p>
+				</header>
+				<div class="row">
+					<div class="column">
+						<p class="section_title">Condições de Pagamento</p>
+						<p class="section_description">
+							Acordo de 50% e o valor restante após a conclusão
+						</p>
+					</div>
+					<div class="column">
+						<p class="section_title">Meios de Pagamento</p>
+						<p class="section_description">
+							Transferência bancária, dinheiro ou pix
+						</p>
+					</div>
+				</div>
+				<div
+					class="row"
+					style="justify-content: flex-start; gap: var(--gap)"
+				>
+					<div class="payment_info">
+						<p><span>Conta Corrente:</span> 63945-5</p>
+						<p><span>Agência:</span> 6101</p>
+						<p><span>Banco:</span> Itaú</p>
+					</div>
+					<div class="payment_info">
+						<p><span>PIX:</span> andserv.maceio@gmail.com</p>
+					</div>
+				</div>
+			</section>
 
             <div class="earnings_total">
                 <p>Total</p>
-                <p>R$ ${subServicesTotal ? subServicesTotal : 0 + (materialsTotal ? materialsTotal : 0)}</p>
+                <p>R$ ${
+					subServicesTotal
+						? subServicesTotal
+						: 0 + (materialsTotal ? materialsTotal : 0)
+				}</p>
             </div>
 
             <section class="full">
@@ -724,23 +988,49 @@ export async function getPDFString(
                 <div class="row">
                     <div class="column">
                         <p class="section_title">Condições de Pagamento</p>
-                        <p class="section_description">${getPaymentCondition(service)}</p>
+                        <p class="section_description">${getPaymentCondition(
+							service.paymentCondition,
+							service.splitValue,
+							service.splitRemaining
+						)}</p>
                     </div>
-                    ${service.paymentMethods.length > 0 ? `<div class="column">
+                    ${
+						service.paymentMethods.length > 0
+							? `<div class="column">
                         <p class="section_title">Meios de Pagamento</p>
-                        <p class="section_description">${service.paymentMethods.join(", ")}</p>
-                    </div>` : ""}
+                        <p class="section_description">${service.paymentMethods.join(
+							", "
+						)}</p>
+                    </div>`
+							: ""
+					}
                 </div>
-                ${data.pixKey || data.bank ? `<div class="row" style="justify-content: flex-start; gap: var(--gap);">
-                    ${data.bank && data.bankAccountType && data.account && data.agency ? `<div class="payment_info">
+                ${
+					data.pixKey ||
+					(data.bank &&
+						data.bankAccountType &&
+						data.account &&
+						data.agency)
+						? `<div class="row" style="justify-content: flex-start; gap: var(--gap);">
+                    ${
+						data.bank
+							? `<div class="payment_info">
                         <p><span>Conta Corrente:</span> ${data.account}</p>
                         <p><span>Agência:</span> ${data.agency}</p>
                         <p><span>Banco:</span> ${data.bank}</p>
-                    </div>` : ""}
-                    ${data.pixKey ? `<div class="payment_info">
+                    </div>`
+							: ""
+					}
+                    ${
+						data.pixKey
+							? `<div class="payment_info">
                         <p><span>PIX:</span> ${data.pixKey}</p>
-                    </div>` : ""}
-                </div>` : ""}
+                    </div>`
+							: ""
+					}
+                </div>`
+						: ""
+				}
             </section>
 
             <section class="full">
@@ -750,48 +1040,70 @@ export async function getPDFString(
                 <div class="row">
                     <div class="column" style="min-width: 25%;">
                         <p class="section_title">Período de Garantia</p>
-                        <p class="section_description">${service.warrantyPeriod} dias</p>
+                        <p class="section_description">${
+							service.warrantyPeriod
+						} dias</p>
                     </div>
-                    ${service.warrantyDetails && `
+                    ${
+						service.warrantyDetails &&
+						`
                         <div class="column">
                         <p class="section_title">Condições da Garantia</p>
                         <p class="section_description">${service.warrantyDetails}</p>
                         </div>
-                    `}
+                    `
+					}
                 </div>
             </section>
 
-            ${service.additionalInfo && service.additionalInfo.length > 0 && `<section class="full">
+            ${
+				service.additionalInfo &&
+				service.additionalInfo.length > 0 &&
+				`<section class="full">
                 <header>
                     <p>Garantia</p>
                 </header>
                 <div class="row">
                     <div class="column" style="min-width: 25%;">
                         <p class="section_title">Período de Garantia</p>
-                        <p class="section_description">${service.warrantyPeriod} dias</p>
+                        <p class="section_description">${
+							service.warrantyPeriod
+						} dias</p>
                     </div>
-                    ${service.warrantyDetails && `
+                    ${
+						service.warrantyDetails &&
+						`
                         <div class="column">
                         <p class="section_title">Condições da Garantia</p>
                         <p class="section_description">${service.warrantyDetails}</p>
                         </div>
-                    `}
+                    `
+					}
                 </div>
-            </section>`}
+            </section>`
+			}
 
-            <p id="date">${data.geocodedAddress ? `${data.geocodedAddress.split(", ")[3]},` : ""} ${new Date().toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            })}</p>
+            <p id="date">${
+				data.geocodedAddress
+					? `${data.geocodedAddress.split(", ")[3]},`
+					: ""
+			} ${new Date().toLocaleDateString("pt-BR", {
+		day: "2-digit",
+		month: "2-digit",
+		year: "numeric",
+	})}</p>
 
             <div class="signature">
-                ${data.digitalSignatureUri && config.showDigitalSignature ? `
+                ${
+					data.digitalSignatureUri && config.showDigitalSignature
+						? `
                     <img
                         style="width: 100%; height: 50; object-fit: contain; filter: invert(); z-index: -1; margin-bottom: -2rem;"
                         src="data:image/png;base64,${digitalSignature!.base64}"
                     />
-                ` : ""}
+                `
+						: ""
+				}
                 <div class="line"></div>
                 <div class="info">
                     <p>${data.fantasyName}</p>
@@ -807,27 +1119,55 @@ export async function getPDFString(
                 <div class="row full">
                     <div class="column" style="min-width: 25%;">
                         <p class="section_title">Validade do orçamento</p>
-                        <p class="section_description">${serviceDateIn30Days.toLocaleDateString('pt-BR', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            })}</p>
+                        <p class="section_description">${serviceDateAfterValidity.toLocaleDateString(
+							"pt-BR",
+							{
+								day: "numeric",
+								month: "long",
+								year: "numeric",
+							}
+						)}</p>
                     </div>
 
-                    ${servicesTypes.length > 0 ? `<div class="column" style="min-width: 25%;">
+                    ${
+						servicesTypes.length > 0
+							? `<div class="column" style="min-width: 25%;">
                         <p class="section_title">Categorias</p>
-                        <p class="section_description">${servicesTypes?.map(type => type.name).join(", ")}</p>
-                    </div>` : ""}
+                        <p class="section_description">${servicesTypes
+							?.map((type) => type.name)
+							.join(", ")}</p>
+                    </div>`
+							: ""
+					}
                 </div>
 
                 <div class="full" style="display: flex; height: 1px; background-color: var(--text-100);">
 
                 </div>
+
+                ${
+					image
+						? `<img
+					src="${image?.base64}"
+					style="
+						width: 100vw;
+						height: 100vh;
+						object-fit: contain;
+						z-index: -1;
+						position: absolute;
+						top: 50%;
+						left: 50%;
+						transform: translate(-50%, -50%);
+						opacity: 0.05;
+					"
+				/>`
+						: ""
+				}
             </footer>
         </main>
     </body>
 
     </html>
-    `
-    return html;
+    `;
+	return html;
 }
