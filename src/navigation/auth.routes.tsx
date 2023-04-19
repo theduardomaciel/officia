@@ -8,8 +8,9 @@ import colors from "global/colors";
 
 // Screens
 import Login from "screens/Auth/Login";
-import Register from "screens/Auth/Register";
+import Register from "screens/Auth/Register/index";
 import BusinessRegister from "screens/Auth/BusinessRegister";
+import SubscriptionScreen from "screens/Drawer/Subscription";
 
 const Stack = createStackNavigator();
 
@@ -50,6 +51,14 @@ export function AuthStack() {
 					headerShown: false,
 					cardStyleInterpolator:
 						CardStyleInterpolators.forFadeFromBottomAndroid,
+				}}
+			/>
+			<Stack.Screen
+				name="subscription"
+				component={SubscriptionScreen}
+				options={{
+					cardStyleInterpolator:
+						CardStyleInterpolators.forHorizontalIOS,
 				}}
 			/>
 		</Stack.Navigator>

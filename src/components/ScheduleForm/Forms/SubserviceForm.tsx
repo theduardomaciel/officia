@@ -6,7 +6,6 @@ import colors from "global/colors";
 
 // Form
 import { zodResolver } from "@hookform/resolvers/zod";
-import { borderErrorStyle } from "utils/errorBorderStyle";
 import {
 	Controller,
 	SubmitErrorHandler,
@@ -21,8 +20,8 @@ import { v4 as uuidv4 } from "uuid";
 // Components
 import { ActionButton } from "components/Button";
 import BottomSheet from "components/BottomSheet";
-import Input from "components/Input";
 import Label from "components/Label";
+import Input, { borderErrorStyle } from "components/Input";
 import {
 	TagObject,
 	TagsSelector,

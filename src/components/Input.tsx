@@ -4,8 +4,8 @@ import {
 	TextInputProps,
 	View,
 	TouchableOpacity,
-	TouchableWithoutFeedback,
 	Alert,
+	ViewStyle,
 } from "react-native";
 
 import { useColorScheme } from "nativewind";
@@ -22,6 +22,7 @@ import {
 } from "@expo/vector-icons";
 
 export interface CustomInputProps extends TextInputProps {
+	children?: React.ReactNode;
 	label?: string;
 	icon?: {
 		name: string;
@@ -30,10 +31,10 @@ export interface CustomInputProps extends TextInputProps {
 			| "MaterialCommunityIcons"
 			| "FontAwesome5" /* | "Entypo" | "Feather" | "FontAwesome" | "Ionicons"  | "AntDesign" | "Octicons" | "Zocial" | "SimpleLineIcons" | "Foundation" | "EvilIcons" | undefined */;
 	};
+	labelChildren?: React.ReactNode;
 	customIcon?: any;
 	pallette?: "dark" | "disabled";
 	required?: boolean;
-	children?: React.ReactNode;
 	infoMessage?: string;
 	onPress?: () => void;
 	disabled?: boolean;
@@ -47,6 +48,7 @@ const Input = forwardRef(
 			icon,
 			pallette = undefined,
 			required,
+			labelChildren,
 			multiline,
 			onPress,
 			children,
@@ -73,7 +75,7 @@ const Input = forwardRef(
 				)}
 				textAlignVertical={multiline ? "top" : "center"}
 				multiline={multiline}
-				editable={pallette !== "disabled"}
+				editable={pallette !== "disabled" && !onPress}
 				placeholderTextColor={
 					colorScheme === "dark" ? colors.text[200] : colors.white
 				}
@@ -88,15 +90,13 @@ const Input = forwardRef(
 			/>
 		);
 
-		console.log(onPress, label);
-
 		return (
 			<View
 				className="flex-col align-top justify-start"
 				style={{ rowGap: 8 }}
 			>
 				{label && (
-					<View className="flex-row w-full items-start justify-between">
+					<View className="flex-row w-full items-center justify-between">
 						<View className="flex-1 flex-row items-center justify-start">
 							{customIcon ? (
 								<View className="mr-3">{customIcon}</View>
@@ -162,20 +162,7 @@ const Input = forwardRef(
 								color={colors.text[100]}
 							/>
 						)}
-						{/* {
-                            isInfoMessageVisible && (
-                                <TouchableWithoutFeedback
-                                    className="w-screen h-screen absolute top-0 left-0 right-0 bottom-0 bg-red-500 z-30"
-                                    onPress={() => setIsInfoMessageVisible(false)}
-                                >
-                                    <View className="absolute top-0 right-0 z-10 w-64 p-2 bg-white dark:bg-gray-600 rounded-lg shadow-lg">
-                                        <Text className="text-xs text-black dark:text-text-100">
-                                            {infoMessage}
-                                        </Text>
-                                    </View>
-                                </TouchableWithoutFeedback>
-                            )
-                        } */}
+						{labelChildren && labelChildren}
 					</View>
 				)}
 				{onPress ? (
@@ -198,3 +185,10 @@ const Input = forwardRef(
 );
 
 export default Input;
+
+export const borderErrorStyle = {
+	borderColor: colors.red,
+	borderWidth: 1,
+	borderTopColor: colors.red,
+	borderBottomColor: colors.red,
+} as ViewStyle;

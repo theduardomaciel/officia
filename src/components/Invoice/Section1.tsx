@@ -13,7 +13,7 @@ import { SubSectionWrapper } from "components/ScheduleForm/SubSectionWrapper";
 import { ActionButton } from "components/Button";
 
 // Utils
-import { getPaymentCondition } from "utils/getInvoicePDFString";
+import { getPaymentCondition } from "utils/pdfHandler";
 import { InvoiceSectionProps } from "./@types";
 import colors from "global/colors";
 

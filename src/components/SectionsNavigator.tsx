@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Dimensions } from "react-native";
 import { SharedValue } from "react-native-gesture-handler/lib/typescript/handlers/gestures/reanimatedWrapper";
 import Animated, {
 	Extrapolate,
+	FadeOutDown,
 	interpolate,
 	interpolateColor,
 	useAnimatedStyle,
@@ -23,8 +24,13 @@ export function SectionsNavigator({ sections, selectedId }: Props) {
 	const windowWidth = Dimensions.get("window").width - MARGIN_SIZE * 2 * 2;
 	const lineWidth = windowWidth / sections.length;
 
+	console.log(selectedId.value);
+
 	return (
-		<View className="flex-row w-full items-center justify-between mt-5">
+		<Animated.View
+			className="flex-row w-full items-center justify-between mt-5"
+			layout={FadeOutDown}
+		>
 			{sections.map((section, index) => {
 				const lineAnimationStyle = useAnimatedStyle(() => {
 					const inputRange = [index - 1, index, index + 1];
@@ -99,6 +105,6 @@ export function SectionsNavigator({ sections, selectedId }: Props) {
 					</TouchableOpacity>
 				);
 			})}
-		</View>
+		</Animated.View>
 	);
 }

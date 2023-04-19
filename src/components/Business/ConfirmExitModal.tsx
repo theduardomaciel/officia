@@ -1,24 +1,31 @@
 import Modal from "components/Modal";
 import colors from "global/colors";
 
-interface Props {
+export interface ConfirmExitModalProps {
 	isVisible: boolean;
 	toggleVisibility: () => void;
 	onExitConfirmation: () => void;
+	title?: string;
+	message?: string;
 }
 
 export default function ConfirmExitModal({
 	isVisible,
 	toggleVisibility,
 	onExitConfirmation,
-}: Props) {
+	title,
+	message,
+}: ConfirmExitModalProps) {
 	return (
 		<Modal
 			isVisible={isVisible}
 			toggleVisibility={toggleVisibility}
-			title="Você tem alterações não salvas."
+			title={title ?? "Você tem alterações não salvas."}
 			icon="warning"
-			message="Tem certeza que deseja sair sem salvar? As alterações serão perdidas."
+			message={
+				message ??
+				"Tem certeza que deseja sair sem salvar? As alterações serão perdidas."
+			}
 			buttons={[
 				{
 					label: "Sair",

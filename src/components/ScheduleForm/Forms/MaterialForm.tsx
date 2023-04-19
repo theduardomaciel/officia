@@ -20,13 +20,11 @@ import colors from "global/colors";
 import { ActionButton } from "components/Button";
 import BottomSheet from "components/BottomSheet";
 import Dropdown from "components/Dropdown";
-import Input from "components/Input";
+import Input, { borderErrorStyle } from "components/Input";
 import Toast from "components/Toast";
 import ImagePicker from "components/ImagePicker";
 
-// Utils
-import { borderErrorStyle } from "utils/errorBorderStyle";
-
+// Types
 import type { MaterialModel } from "database/models/materialModel";
 
 const schema = z.object({

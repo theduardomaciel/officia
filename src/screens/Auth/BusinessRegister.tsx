@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect } from "react";
-import { BackHandler, TouchableOpacity, View, Text } from "react-native";
-import { useSharedValue, withSpring } from "react-native-reanimated";
+import { TouchableOpacity, View, Text } from "react-native";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
@@ -9,7 +8,6 @@ import colors from "global/colors";
 import Container from "components/Container";
 import Toast from "components/Toast";
 import ImagePicker from "components/ImagePicker";
-import BottomSheet from "components/BottomSheet";
 import SectionBottomSheet from "components/ScheduleForm/SectionBottomSheet";
 import { SectionsNavigator } from "components/SectionsNavigator";
 
@@ -28,60 +26,62 @@ import {
 	contactAndAddressScheme,
 	ContactAndAddressSchemeType,
 } from "screens/Main/Business/@types";
+
 import { updateData } from "screens/Main/Business";
 
-import { useAuth } from "context/AuthContext";
+// Hooks
+import useBackHandler from "hooks/useBackHandler";
+import useUpdateHandler from "hooks/useUpdateHandler";
 
-export default function BusinessRegister({ route, navigation }: any) {
-	const { email } = route.params;
-	const { signIn } = useAuth();
-	const selectedSectionId = useSharedValue(0);
-
-	const section0BottomSheet = "registerSection0BottomSheet";
-	const section1BottomSheet = "registerSection1BottomSheet";
-	const section2BottomSheet = "registerSection2BottomSheet";
-
+export default function BusinessRegister({ navigation }: any) {
 	const sections = [
-		section0BottomSheet,
-		section1BottomSheet,
-		section2BottomSheet,
+		"registerSection0BottomSheet",
+		"registerSection1BottomSheet",
+		"registerSection2BottomSheet",
 	];
 
 	const [newBusinessData, setNewBusinessData] = React.useState<
 		Partial<BusinessData>
 	>({});
 
-	const updateHandler = useCallback((id: number) => {
-		if (sections[selectedSectionId.value] && sections[id] && id >= 0) {
-			BottomSheet.close(sections[selectedSectionId.value]);
-			selectedSectionId.value = withSpring(id, {
-				damping: 100,
-				stiffness: 400,
-			});
-			BottomSheet.expand(sections[id]);
-		} else {
+	const HEADERS = [
+		{
+			title: "Vamos começar com o básico.",
+			subtitle:
+				"Insira os dados básicos que caracterizam o seu negócio como ele é.",
+		},
+		{
+			title: "Seus clientes precisam de dados.",
+			subtitle:
+				"Insira as informações que serão exibidas para elevar a confiabilidade de sua empresa.",
+		},
+		/* {
+			title: "Quanto mais clareza, melhor.",
+			subtitle:
+				"Insira alguns dos seus dados de pagamento para que seus clientes esteja informados.",
+		}, */
+	];
+
+	const {
+		updateHandler,
+		selectedSection,
+		selectedSectionId,
+		Header,
+		BackButton,
+	} = useUpdateHandler(sections, HEADERS, () => navigation.goBack());
+
+	const { ConfirmExitModal } = useBackHandler(
+		() => {
+			if (selectedSection !== 0) {
+				return true;
+			} else {
+				return false;
+			}
+		},
+		() => {
 			navigation.goBack();
 		}
-	}, []);
-
-	useEffect(() => {
-		const backAction = () => {
-			if (selectedSectionId.value !== 0) {
-				updateHandler(selectedSectionId.value - 1);
-				return true;
-			}
-			return false;
-		};
-
-		const backHandler = BackHandler.addEventListener(
-			"hardwareBackPress",
-			backAction
-		);
-
-		BottomSheet.expand(section0BottomSheet);
-
-		return () => backHandler.remove();
-	}, []);
+	);
 
 	const {
 		handleSubmit: section0HandleSubmit,
@@ -105,7 +105,7 @@ export default function BusinessRegister({ route, navigation }: any) {
 	} = useForm<ContactAndAddressSchemeType>({
 		mode: "onSubmit",
 		defaultValues: {
-			email: email ?? undefined,
+			email: undefined,
 		},
 		resetOptions: {
 			keepDirtyValues: true, // user-interacted input will be retained
@@ -148,37 +148,12 @@ export default function BusinessRegister({ route, navigation }: any) {
 		}
 	}, onError);
 
+	const BOTTOM_SHEET_HEIGHT = "67%";
+
 	return (
 		<Container style={{ rowGap: 10 }}>
-			<View className="w-full flex-col items-center justify-center">
-				<TouchableOpacity
-					className="flex-row bg-gray-200 items-center justify-center rounded-sm p-[5px]"
-					style={{ columnGap: 5 }}
-					onPress={() =>
-						selectedSectionId.value >= 0 &&
-						updateHandler(selectedSectionId.value - 1)
-					}
-				>
-					<MaterialIcons
-						name="arrow-back"
-						size={14}
-						color={colors.white}
-					/>
-					<Text className="text-white text-sm">Voltar</Text>
-				</TouchableOpacity>
-			</View>
-
-			<View
-				className="flex-col items-center justify-center"
-				style={{ rowGap: 10 }}
-			>
-				<Text className="font-logoRegular leading-[95%] text-4xl text-white text-center w-5/6">
-					Vamos começar com o básico.
-				</Text>
-				<Text className="text-white text-sm font-semibold text-center">
-					Insira os dados básicos que caracterizam sua empresa.
-				</Text>
-			</View>
+			<BackButton isEnabled={selectedSectionId.value >= 0} />
+			<Header />
 
 			<SectionsNavigator
 				selectedId={selectedSectionId}
@@ -197,25 +172,10 @@ export default function BusinessRegister({ route, navigation }: any) {
 			/>
 
 			<SectionBottomSheet
-				bottomSheet={section0BottomSheet}
-				expanded={false}
-				bottomSheetHeight={"67%"}
+				bottomSheet={sections[0]}
+				expanded={true}
+				bottomSheetHeight={BOTTOM_SHEET_HEIGHT}
 			>
-				<ImagePicker
-					imageUri={newBusinessData?.logo}
-					onUpdate={async (dataToUpdate) => {
-						const updatedData = await updateData(
-							{ logo: dataToUpdate },
-							newBusinessData,
-							true
-						);
-						if (updatedData) {
-							setNewBusinessData(updatedData);
-						}
-					}}
-					label="Adicionar logotipo da empresa"
-					showDeleteButton
-				/>
 				<BasicInfo
 					control={section0Control}
 					errors={section0Errors}
@@ -230,9 +190,9 @@ export default function BusinessRegister({ route, navigation }: any) {
 			</SectionBottomSheet>
 
 			<SectionBottomSheet
-				bottomSheet={section1BottomSheet}
+				bottomSheet={sections[1]}
 				expanded={false}
-				bottomSheetHeight={"67%"}
+				bottomSheetHeight={BOTTOM_SHEET_HEIGHT}
 			>
 				<ContactAndAddress
 					control={section1Control}
@@ -253,6 +213,11 @@ export default function BusinessRegister({ route, navigation }: any) {
 					label="Concluir"
 				/>
 			</SectionBottomSheet>
+
+			<ConfirmExitModal
+				title="Você tem certeza que deseja voltar?"
+				message="Será necessário inserir os dados de Seu Negócio novamente para concluir o cadastro."
+			/>
 		</Container>
 	);
 }

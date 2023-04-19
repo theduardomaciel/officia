@@ -35,7 +35,7 @@ import {
 	RemainingValue,
 	SplitMethod,
 	WarrantyPeriod,
-} from "../types";
+} from "../@types";
 
 const schema = z.object({
 	splitInitialValue: z.string().max(10),

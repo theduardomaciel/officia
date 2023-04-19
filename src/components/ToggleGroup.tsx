@@ -37,7 +37,7 @@ function Toggle({ item, isSelected, applyMarginRight, ...rest }: ToggleProps) {
 	return (
 		<TouchableOpacity
 			activeOpacity={0.6}
-			className="flex flex-1 flex-row items-center justify-center py-4 bg-black dark:bg-gray-300 border-opacity-40 rounded-lg border-primary-green"
+			className="flex flex-1 flex-row items-center justify-center py-4 bg-black dark:bg-gray-300 border-opacity-40 rounded-lg border-primary"
 			style={{
 				borderWidth: isSelected ? 1 : 0,
 				marginRight: applyMarginRight ? 10 : 0,

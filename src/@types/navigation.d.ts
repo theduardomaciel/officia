@@ -43,7 +43,7 @@ export declare global {
 			clients: undefined;
 			catalog: undefined;
 			customization: undefined;
-			subscriptions: undefined;
+			subscription: undefined;
 			/* Drawer Menu Screens */
 			manageData: undefined;
 		}

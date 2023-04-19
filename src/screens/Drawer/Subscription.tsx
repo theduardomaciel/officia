@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, ViewStyle } from "react-native";
 import { RectButton } from "react-native-gesture-handler";
 import Animated, {
 	useAnimatedStyle,
@@ -18,6 +18,7 @@ import Logo from "src/assets/logo_gradient.svg";
 // Components
 import Container, { BusinessScrollView } from "components/Container";
 import Header from "components/Header";
+import { cn } from "utils";
 
 const SPRING_CONFIG = {
 	damping: 20,
@@ -138,11 +139,7 @@ export default function SubscriptionScreen() {
 							/>
 						)}
 					</View>
-					<Plan
-						title="Plano Básico"
-						isActual
-						description={`• Anúncios \n• Agendamento de serviços, com inserção de materiais e seleção de cliente \n• Geração de documentos com base nos serviços agendados \n• Marca d’água em documentos`}
-					/>
+					<BasicPlan />
 					<Plan
 						title="Plano Plus"
 						description={`• Todas as funcionalidades do Plano Básico
@@ -227,13 +224,16 @@ interface Plan {
 	title: string;
 	description: string;
 	isActual?: boolean;
+	style?: ViewStyle;
 }
 
-const Plan = ({ title, description, isActual }: Plan) => {
+const Plan = ({ title, description, isActual, style }: Plan) => {
 	return (
 		<View
-			className="flex-col items-start justify-start p-4 rounded border border-gray-200 bg-gray-500 w-full"
-			style={{ rowGap: 10 }}
+			className={
+				"flex-col items-start justify-start p-4 rounded border border-gray-200 bg-gray-500 w-full"
+			}
+			style={[{ rowGap: 10 }, style]}
 		>
 			<View
 				className="flex-row items-center justify-start"
@@ -259,3 +259,12 @@ const Plan = ({ title, description, isActual }: Plan) => {
 		</View>
 	);
 };
+
+export const BasicPlan = ({ style }: { style?: ViewStyle }) => (
+	<Plan
+		title="Plano Básico"
+		isActual
+		style={style}
+		description={`• Anúncios \n• Agendamento de serviços, com inserção de materiais e seleção de cliente \n• Geração de documentos com base nos serviços agendados \n• Marca d’água em documentos`}
+	/>
+);

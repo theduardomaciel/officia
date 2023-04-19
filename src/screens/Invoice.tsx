@@ -36,7 +36,7 @@ import type { BusinessData } from "./Main/Business/@types";
 // PDF
 import FileViewer from "react-native-file-viewer";
 
-import { getPDFString } from "utils/getInvoicePDFString";
+import { getPDFString } from "utils/pdfHandler";
 import BottomSheet from "components/BottomSheet";
 import Section1, { Section0Handles } from "components/Invoice/Section0";
 import Section2 from "components/Invoice/Section1";

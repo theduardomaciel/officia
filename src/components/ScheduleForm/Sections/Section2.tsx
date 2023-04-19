@@ -39,12 +39,12 @@ import type {
 	Section0RefProps,
 	Section1Props,
 	Section1RefProps,
-} from "../types";
+} from "../@types";
 
 // Utils
 import { Q } from "@nozbe/watermelondb";
 import { scheduleServiceNotification } from "utils/notificationHandler";
-import { getPaymentCondition } from "utils/getInvoicePDFString";
+import { getPaymentCondition } from "utils/pdfHandler";
 
 interface ReviewSectionProps {
 	wrapperProps: SubSectionWrapperProps;

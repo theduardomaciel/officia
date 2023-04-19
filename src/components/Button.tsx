@@ -40,6 +40,8 @@ export const ActionButton = ({
 	style,
 	preset,
 }: Props) => {
+	const { className, ...rest } = textProps || {};
+
 	return (
 		<TouchableOpacity
 			activeOpacity={isLoading ? 1 : 0.8}
@@ -73,8 +75,10 @@ export const ActionButton = ({
 						))}
 					{label && preset === "next" ? (
 						<Text
-							className="font-bold text-white text-base"
-							{...textProps}
+							className={
+								className ?? "font-bold text-white text-base"
+							}
+							{...rest}
 						>
 							{label}
 						</Text>

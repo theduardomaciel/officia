@@ -18,7 +18,7 @@ import { ActionButton } from "components/Button";
 
 // Utils
 import { InvoiceSectionProps } from "./@types";
-import { Config, getPaymentCondition } from "utils/getInvoicePDFString";
+import { Config, getPaymentCondition } from "utils/pdfHandler";
 
 export interface Section0Handles {
 	getValidity(): string;
