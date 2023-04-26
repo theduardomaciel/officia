@@ -1,11 +1,11 @@
 // Types
 import type { CalendarDate } from "components/Calendar";
 import type { MaterialModel } from "database/models/materialModel";
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { ProductModel } from "database/models/productModel";
 
 export interface Section0Props {
 	name: string;
-	subServices: SubServiceModel[];
+	products: ProductModel[];
 	date: CalendarDate;
 	discount: number;
 	time: Date | undefined;

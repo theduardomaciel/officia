@@ -30,11 +30,11 @@ import {
 import Toast from "components/Toast";
 
 // Types
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { ProductModel } from "database/models/productModel";
 import type { BusinessData, Category } from "screens/Main/Business/@types";
 
 import { database } from "database/index.native";
-import { toggleSubServiceBookmark } from "components/CatalogView";
+import { toggleProductBookmark } from "components/CatalogView";
 
 interface FormValues {
 	description: string;
@@ -54,11 +54,11 @@ const schema = z.object({
 });
 
 interface Props {
-	onSubmitForm?: (data: SubServiceModel) => void;
-	editableData?: SubServiceModel;
+	onSubmitForm?: (data: ProductModel) => void;
+	editableData?: ProductModel;
 }
 
-export default function SubServiceForm({ onSubmitForm, editableData }: Props) {
+export default function ProductForm({ onSubmitForm, editableData }: Props) {
 	const [businessData, setBusinessData] = React.useState<
 		BusinessData | null | undefined
 	>(null);
@@ -96,7 +96,7 @@ export default function SubServiceForm({ onSubmitForm, editableData }: Props) {
 	);
 
 	const onSubmit: SubmitHandler<FormValues> = (data) => {
-		const newSubService = {
+		const newProduct = {
 			id: editableData ? editableData.id : uuidv4(),
 			description: data.description,
 			details: data.details,
@@ -105,13 +105,13 @@ export default function SubServiceForm({ onSubmitForm, editableData }: Props) {
 			types: selectedTags.current,
 			saved: bookmark,
 		};
-		//console.log(newSubService)
+		//console.log(newProduct)
 
 		if (
 			(bookmark && !editableData) ||
 			(editableData?.saved === false && bookmark)
 		) {
-			// If the service is being added to the saved items, we mark it as such.
+			// If the order is being added to the saved items, we mark it as such.
 			Toast.show({
 				preset: "success",
 				title: "Serviço adicionado aos Itens Salvos.",
@@ -119,7 +119,7 @@ export default function SubServiceForm({ onSubmitForm, editableData }: Props) {
 					"Você poderá acessá-lo a qualquer momento nos Itens Salvos após o agendamento.",
 			});
 		} else if (editableData?.saved === true && !bookmark) {
-			// If the service is being removed from the saved items, we mark it as such.
+			// If the order is being removed from the saved items, we mark it as such.
 			Toast.show({
 				preset: "success",
 				title: "Serviço removido dos Itens Salvos.",
@@ -130,10 +130,9 @@ export default function SubServiceForm({ onSubmitForm, editableData }: Props) {
 			Toast.hide();
 		}
 
-		BottomSheet.close("subServiceBottomSheet");
+		BottomSheet.close("subOrderBottomSheet");
 
-		onSubmitForm &&
-			onSubmitForm(newSubService as unknown as SubServiceModel);
+		onSubmitForm && onSubmitForm(newProduct as unknown as ProductModel);
 		reset();
 	};
 

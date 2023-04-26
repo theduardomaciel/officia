@@ -32,10 +32,10 @@ export const projectSchema = tableSchema({
 		{ name: "defaultAdditionalInfo", type: "string", isOptional: true },
 		{ name: "defaultWarrantyDetails", type: "string", isOptional: true },
 
-		{ name: "service_id", type: "string", isIndexed: true },
+		{ name: "order_id", type: "string", isIndexed: true },
 		{ name: "client_id", type: "string", isIndexed: true },
 		{ name: "material_id", type: "string", isIndexed: true },
-		{ name: "subService_id", type: "string", isIndexed: true },
+		{ name: "subOrder_id", type: "string", isIndexed: true },
 
 		{ name: "created_at", type: "number" },
 	],

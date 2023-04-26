@@ -3,8 +3,8 @@ import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite";
 
 import { schemas } from "./schemas";
 
-import { ServiceModel } from "./models/serviceModel";
-import { SubServiceModel } from "./models/subServiceModel";
+import { OrderModel } from "./models/orderModel";
+import { ProductModel } from "./models/productModel";
 import { MaterialModel } from "./models/materialModel";
 import { ClientModel } from "./models/clientModel";
 import { ProjectModel } from "./models/projectModel";
@@ -16,8 +16,8 @@ const adapter = new SQLiteAdapter({
 export const database = new Database({
 	adapter,
 	modelClasses: [
-		ServiceModel,
-		SubServiceModel,
+		OrderModel,
+		ProductModel,
 		MaterialModel,
 		ClientModel,
 		ProjectModel,

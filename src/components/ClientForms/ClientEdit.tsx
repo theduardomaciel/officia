@@ -23,21 +23,17 @@ import ClientDataForm, {
 
 // Types
 import type { ClientModel } from "database/models/clientModel";
-import type { ServiceModel } from "database/models/serviceModel";
+import type { OrderModel } from "database/models/orderModel";
 
-import { scheduleServiceNotification } from "utils/notificationHandler";
+import { scheduleOrderNotification } from "utils/notificationHandler";
 
 interface Props {
 	lastBottomSheet: string;
 	client: ClientModel;
-	service?: ServiceModel;
+	order?: OrderModel;
 }
 
-export default function ClientEdit({
-	service,
-	lastBottomSheet,
-	client,
-}: Props) {
+export default function ClientEdit({ order, lastBottomSheet, client }: Props) {
 	const [isDeleteModalVisible, setDeleteModalVisible] = React.useState(false);
 
 	const showToast = (errorMessage?: string) => {
@@ -71,11 +67,11 @@ export default function ClientEdit({
 					}
 				});
 			});
-			if (service) {
-				await scheduleServiceNotification(
-					service,
-					service?.subServices.length,
-					updatedClient?.name
+			if (order) {
+				await scheduleOrderNotification(
+					order,
+					order?.products.length,
+					uporderient?.name
 				);
 			}
 		} catch (error) {

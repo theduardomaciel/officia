@@ -11,7 +11,7 @@ import Dropdown from "components/Dropdown";
 import Input, { borderErrorStyle } from "components/Input";
 import Toast from "components/Toast";
 
-import BusinessLayout, { ChangesObserver } from "../Layout";
+import BusinessLayout from "../Layout";
 
 // Form
 import { Controller, SubmitErrorHandler, useForm } from "react-hook-form";
@@ -26,11 +26,11 @@ import {
 	BankAccountSchemeType,
 	BusinessData,
 } from "screens/Main/Business/@types";
-import { SubSectionWrapper } from "components/ScheduleForm/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
 
 type PIX_TYPE = "unselected" | "juridicalPerson" | "email" | "phone" | "random";
 
-export default function BankAccountScreen({ route, navigation }: any) {
+export default function PaymentsScreen({ route, navigation }: any) {
 	const { businessData: data }: { businessData: BusinessData } = route.params;
 	const [businessData, setBusinessData] = React.useState<BusinessData>(data);
 	const screenData = {

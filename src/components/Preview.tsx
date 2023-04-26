@@ -7,7 +7,7 @@ import clsx from "clsx";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
-import { SubServiceModel } from "database/models/subServiceModel";
+import { ProductModel } from "database/models/productModel";
 import { MaterialModel } from "database/models/materialModel";
 
 // Tyoes
@@ -28,7 +28,7 @@ const Category = ({ category }: { category: Category }) => (
 );
 
 interface PreviewStatic {
-	subService?: SubServiceModel;
+	product?: ProductModel;
 	material?: MaterialModel;
 	palette?: "light";
 	hasBorder?: boolean;
@@ -38,13 +38,13 @@ interface PreviewStatic {
 
 export const PreviewStatic = ({
 	onPress,
-	subService,
+	product,
 	material,
 	palette,
 	hasBorder,
 	padding,
 }: PreviewStatic) => {
-	if (!subService && !material) return null;
+	if (!product && !material) return null;
 
 	return (
 		<TouchableOpacity
@@ -61,18 +61,18 @@ export const PreviewStatic = ({
 		>
 			<View className="flex-1 flex-col items-start justify-center gap-y-2 mr-3">
 				<Text className="font-bold text-[15px] leading-none text-white">
-					{subService?.description || material?.name}
+					{product?.description || material?.name}
 				</Text>
 				<View className="flex-row">
-					{subService?.types && subService.types.length > 0 && (
+					{product?.types && product.types.length > 0 && (
 						<Category
 							category={
-								subService.types?.length > 1
+								product.types?.length > 1
 									? ({
 											icon: "build",
 											name: "Várias categorias",
 									  } as Category)
-									: subService.types[0]
+									: product.types[0]
 							}
 						/>
 					)}
@@ -86,18 +86,18 @@ export const PreviewStatic = ({
 						</Text>
 					)}
 					<Text className="text-white text-xs">
-						(x{subService?.amount || material?.amount})
+						(x{product?.amount || material?.amount})
 					</Text>
 				</View>
 			</View>
 			<View
 				className={clsx("px-3 py-1 rounded-full", {
-					"bg-primary": subService?.price || material?.price,
+					"bg-primary": product?.price || material?.price,
 					"bg-primary-red": material?.availability === true,
 				})}
 			>
 				<Text className="font-bold text-xs text-white">
-					R$ {subService?.price || material?.price}
+					R$ {product?.price || material?.price}
 				</Text>
 			</View>
 		</TouchableOpacity>
@@ -106,17 +106,12 @@ export const PreviewStatic = ({
 
 interface PreviewProps {
 	material?: MaterialModel;
-	subService?: SubServiceModel;
+	product?: ProductModel;
 	onDelete: () => void;
 	onEdit: () => void;
 }
 
-export function Preview({
-	material,
-	subService,
-	onDelete,
-	onEdit,
-}: PreviewProps) {
+export function Preview({ material, product, onDelete, onEdit }: PreviewProps) {
 	const swipeableRef = useRef<any>(null);
 
 	function deletePreview() {
@@ -124,7 +119,7 @@ export function Preview({
 			swipeableRef.current.close();
 		}
 		onDelete();
-		//console.log('deletePreService')
+		//console.log('deletePreOrder')
 	}
 
 	function editPreview() {
@@ -132,7 +127,7 @@ export function Preview({
 			swipeableRef.current.close();
 		}
 		onEdit();
-		//console.log('editPreService')
+		//console.log('editPreOrder')
 	}
 
 	return (
@@ -161,7 +156,7 @@ export function Preview({
 				/>
 			)}
 		>
-			<PreviewStatic material={material} subService={subService} />
+			<PreviewStatic material={material} product={product} />
 		</Swipeable>
 	);
 }

@@ -10,7 +10,7 @@ import Modal, { ModalProps } from "components/Modal";
 import Input, { borderErrorStyle } from "components/Input";
 import ToggleGroup from "components/ToggleGroup";
 import Toast from "components/Toast";
-import { SubSectionWrapper } from "components/ScheduleForm/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
 import { ActionButton } from "components/Button";
 
 // Form
@@ -34,15 +34,9 @@ export const personalDataScheme = z.object({
 		})
 		.min(15, "É necessário inserir um número de telefone válido.")
 		.max(15, "É necessário inserir um número de telefone válido."),
-	cpf: z
-		.string({
-			required_error: "É necessário inserir um número de CPF válido.",
-		})
-		.min(14, "É necessário inserir um número de CPF válido.")
-		.max(14, "É necessário inserir um número de CPF válido."),
 });
 
-export type PersonalDataSchemeType = z.infer<typeof personalDataScheme>;
+type PersonalDataSchemeInputsType = z.infer<typeof personalDataScheme>;
 
 const isAdult = (birthDate: Date) => {
 	const today = new Date();
@@ -57,11 +51,11 @@ const isAdult = (birthDate: Date) => {
 const genderOptions = [
 	{
 		label: "Masculino",
-		value: "masculine",
+		value: "male",
 	},
 	{
 		label: "Feminino",
-		value: "feminine",
+		value: "female",
 	},
 	{
 		label: "Outro",
@@ -69,13 +63,13 @@ const genderOptions = [
 	},
 ];
 
-interface SchemeType extends PersonalDataSchemeType {
+export interface PersonalDataSchemeType extends PersonalDataSchemeInputsType {
 	birthDate: Date | undefined;
 	gender: GENDER | null;
 }
 
 interface Props {
-	onSubmit: (data: SchemeType) => void;
+	onSubmit: (data: PersonalDataSchemeType) => void;
 }
 
 export default function RegisterSection0({ onSubmit }: Props) {
@@ -207,34 +201,11 @@ export default function RegisterSection0({ onSubmit }: Props) {
 					updateState={setGender}
 				/>
 			</SubSectionWrapper>
-			<Controller
-				control={control}
-				render={({ field: { onChange, onBlur, value } }) => (
-					<Input
-						label="CPF"
-						placeholder=""
-						onBlur={onBlur}
-						onChangeText={(value) => {
-							const { masked } = formatWithMask({
-								text: value,
-								mask: MASKS.BRL_CPF,
-							});
-							onChange(masked);
-						}}
-						value={value}
-						style={!!errors.cpf && borderErrorStyle}
-						keyboardType="number-pad"
-						maxLength={14}
-						pallette="dark"
-					/>
-				)}
-				name="cpf"
-			/>
 
 			<Text className="text-gray-100 text-sm text-left">
-				O seu CPF é necessário para verificar a sua identidade e evitar
-				fraudes. Nós respeitamos a sua privacidade e não compartilhamos
-				nenhum dado pessoal com terceiros.
+				Todos os dados pessoais obtidos são utilizados somente para a
+				criação de sua conta. Nós respeitamos a sua privacidade e não
+				compartilhamos nenhum dado pessoal com terceiros.
 			</Text>
 
 			<ActionButton

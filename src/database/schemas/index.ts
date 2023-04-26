@@ -1,7 +1,7 @@
 import { appSchema } from "@nozbe/watermelondb";
 
-import { serviceSchema } from "./serviceSchema";
-import { subServiceSchema } from "./subServiceSchema";
+import { orderSchema } from "./orderSchema";
+import { productSchema } from "./productSchema";
 import { materialSchema } from "./materialSchema";
 import { clientSchema } from "./clientSchema";
 import { projectSchema } from "./projectSchema";
@@ -9,8 +9,8 @@ import { projectSchema } from "./projectSchema";
 export const schemas = appSchema({
 	version: 24,
 	tables: [
-		serviceSchema,
-		subServiceSchema,
+		orderSchema,
+		productSchema,
 		materialSchema,
 		clientSchema,
 		projectSchema,

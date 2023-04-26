@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
 	View,
 	Text,
@@ -6,8 +6,10 @@ import {
 	ActivityIndicator,
 	useWindowDimensions,
 } from "react-native";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NetInfo from "@react-native-community/netinfo";
+import { MOBILE_TOKEN } from "@env";
 
 // Visuals
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -31,7 +33,7 @@ import Animated, {
 
 // Authentication
 import { api } from "lib/axios";
-import { Account, AuthData, useAuth } from "context/AuthContext";
+import { Account, useAuth } from "context/AuthContext";
 
 const QUOTES = [
 	{
@@ -49,18 +51,22 @@ const validateEmail = async (email: string) => {
 		);
 
 	try {
-		const response = await api.get(`/account?email=${email}`);
-		console.log(response, response.status);
+		const response = await api.get(`/accounts?email=${email}`, {
+			headers: {
+				Authorization: `Bearer ${MOBILE_TOKEN}`,
+			},
+		});
 
-		if (response.status === 200) {
+		if (response.data) {
 			return {
 				status: "account_already_exists",
-				data: response.data[0],
+				data: response.data,
 			}; // Account already exists
 		} else {
 			return { status: !!isValid };
 		}
 	} catch (error: any) {
+		console.log(error);
 		if (error.response && error.response.data.statusCode === 404) {
 			return { status: !!isValid };
 		} else {
@@ -75,8 +81,9 @@ const validateEmail = async (email: string) => {
 };
 
 const SPRING_CONFIG = {
-	damping: 100,
-	stiffness: 100,
+	damping: 10,
+	mass: 0.1,
+	stiffness: 25,
 };
 
 export default function Login({ navigation }: any) {
@@ -89,10 +96,7 @@ export default function Login({ navigation }: any) {
 		return {
 			transform: [
 				{
-					translateY: withSpring(viewPosition.value, {
-						damping: 10,
-						stiffness: 100,
-					}),
+					translateY: withSpring(viewPosition.value, SPRING_CONFIG),
 				},
 			],
 		};
@@ -283,15 +287,30 @@ export default function Login({ navigation }: any) {
 
 function LoginBottomSheet({ account }: { account?: Account }) {
 	const { signIn } = useAuth();
-	const [status, setStatus] = useState<"error" | undefined>(undefined);
+
+	const [status, setStatus] = useState<
+		"error" | "serverError" | "pending" | undefined
+	>(undefined);
 	const [isPasswordHidden, setIsPasswordHidden] = useState(true);
 	const [password, setPassword] = useState("");
 
 	async function checkLogin() {
-		if (password === account?.password) {
-			signIn({ email: account.email, password: account.password });
-		} else {
-			setStatus("error");
+		setStatus("pending");
+		if (!account) return setStatus("serverError");
+		try {
+			console.log("logging in", account.email, account.password);
+			await signIn({
+				email: account.email,
+				password: password,
+			});
+			BottomSheet.close("loginBottomSheet");
+		} catch (error: any) {
+			console.log(error);
+			if (error.code === 401) {
+				setStatus("error");
+			} else {
+				setStatus("serverError");
+			}
 		}
 	}
 
@@ -313,7 +332,7 @@ function LoginBottomSheet({ account }: { account?: Account }) {
 				<View className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-200 mr-4">
 					<MaterialIcons
 						name="person"
-						size={24}
+						size={28}
 						color={colors.text[100]}
 					/>
 				</View>
@@ -331,6 +350,13 @@ function LoginBottomSheet({ account }: { account?: Account }) {
 				onChangeText={setPassword}
 				secureTextEntry={isPasswordHidden}
 				autoCapitalize="none"
+				labelChildren={
+					status === "error" && (
+						<Text className="text-right text-xs text-red opacity-80">
+							A senha inserida está incorreta.
+						</Text>
+					)
+				}
 			>
 				<TouchableOpacity
 					className="p-2 absolute right-2 top-[12.5%]"
@@ -351,18 +377,19 @@ function LoginBottomSheet({ account }: { account?: Account }) {
 				label="Entrar"
 				textProps={{
 					style: {
-						fontFamily: "Raleway_600SemiBold",
+						fontFamily: "AbrilFatface_400Regular",
 					},
 				}}
 				style={{
-					opacity: password.length < 1 ? 0.5 : 1,
+					opacity: password?.length < 1 ? 0.5 : 1,
 				}}
-				disabled={password.length < 1}
+				isLoading={status === "pending"}
+				disabled={password?.length < 1 || status === "pending"}
 				onPress={checkLogin}
 			/>
-			{status === "error" && (
-				<Text className="w-full text-center text-red">
-					A senha inserida está incorreta.
+			{status === "serverError" && (
+				<Text className="text-center text-xs text-red opacity-80">
+					Um erro inesperado ocorreu. Tente novamente mais tarde.
 				</Text>
 			)}
 			<View
@@ -375,7 +402,7 @@ function LoginBottomSheet({ account }: { account?: Account }) {
 					borderColor: colors.gray[100],
 				}}
 			/>
-			<TouchableOpacity>
+			<TouchableOpacity activeOpacity={0.7}>
 				<Text className="w-full text-center text-xs text-gray-100">
 					Esqueceu sua senha?
 				</Text>

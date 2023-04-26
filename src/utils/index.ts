@@ -1,6 +1,5 @@
-import { ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
+export function CustomException(code: number, message?: string) {
+	const error = new Error(message) as any;
+	error.code = code;
+	return error;
 }

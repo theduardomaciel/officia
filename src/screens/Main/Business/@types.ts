@@ -1,18 +1,22 @@
-import { Control, FieldErrors } from "react-hook-form";
 import { z } from "zod";
 
 export interface FormProps {
-	control: Control<any>;
-	setValue?: (name: any, value: any) => void;
-	errors: FieldErrors<any>;
+	onSubmit: (data: any) => void;
+	onChange?: (data: any) => void;
+	defaultValues?: Partial<BusinessData>;
 }
 
 /* ============ Form Validation */
 
 export const basicInfoScheme = z.object({
-	fantasyName: z
+	name: z
 		.string({ required_error: "O nome da empresa deve ser informado." })
 		.max(50, "O nome da empresa deve ter no máximo 50 caracteres."),
+	socialReason: z
+		.string({
+			required_error: "A razão social da empresa deve ser informada.",
+		})
+		.max(80, "A razão social deve ter no máximo 80 caracteres."),
 	juridicalPerson: z
 		.string()
 		.optional()
@@ -26,14 +30,13 @@ export const basicInfoScheme = z.object({
 			},
 			{ message: "O CNPJ inserido não é válido." }
 		),
-	socialReason: z
-		.string({
-			required_error: "A razão social da empresa deve ser informada.",
-		})
-		.max(80, "A razão social deve ter no máximo 80 caracteres."),
 });
 
-export type BasicInfoSchemeType = z.infer<typeof basicInfoScheme>;
+type BasicInfoSchemeInputsType = z.infer<typeof basicInfoScheme>;
+
+export interface BasicInfoSchemeType extends BasicInfoSchemeInputsType {
+	segments: string[];
+}
 
 /*  */
 
@@ -42,52 +45,88 @@ export const additionalInfoScheme = z.object({
 	defaultWarrantyDetails: z.string().optional(),
 });
 
-export type AdditionalInfoSchemeType = z.infer<typeof additionalInfoScheme>;
+type AdditionalInfoSchemeInputsType = z.infer<typeof additionalInfoScheme>;
+
+export interface AdditionalInfoSchemeType
+	extends AdditionalInfoSchemeInputsType {
+	defaultOrderString: "service" | "order";
+	defaultProductString: "service" | "product";
+	digitalSignature_url?: string;
+}
 
 /*  */
 
-export const contactAndAddressScheme = z.object({
+type DAYS =
+	| "monday"
+	| "tuesday"
+	| "wednesday"
+	| "thursday"
+	| "friday"
+	| "saturday"
+	| "sunday";
+
+export const serviceScheme = z.object({
+	businessModel: z.string().optional(),
+	agenda: z
+		.string()
+		.optional()
+		.default("sunday,monday,tuesday,wednesday,thursday,friday,saturday"),
+	autoHolidayUnavailability: z.boolean().default(false).optional(),
+	busyAmount: z.number().default(1).optional(),
+	unavailableAmount: z.number().default(3).optional(),
+	serviceZoneCountries: z.string().optional(),
+	serviceZoneStates: z.string().optional(),
+	serviceZoneCities: z.string().optional(),
+});
+
+export type OrderSchemeType = z.infer<typeof serviceScheme>;
+
+/*  */
+
+export const contactScheme = z.object({
 	email: z
 		.string({ required_error: "O e-mail inserido não é válido." })
 		.email({ message: "O e-mail inserido não é válido." }),
-	phone: z
+	phone1: z
 		.string({ required_error: "O telefone não pode estar vazio." })
 		.min(15, { message: "O telefone inserido não é válido." }),
 	phone2: z.string().optional(),
+	website: z.string().optional(),
+	socialMedia: z.string().optional(),
+});
+
+export type ContactSchemeType = z.infer<typeof contactScheme>;
+
+/*  */
+
+export const brandingScheme = z.object({
+	logo_url: z.string().optional(),
+	banner_url: z.string().optional(),
+	primaryColor: z.string().optional(),
+	secondaryColor: z.string().optional(),
+	marketplaceData: z.string().optional(),
+});
+
+export type BrandingSchemeType = z.infer<typeof brandingScheme>;
+
+/*  */
+
+export const addressScheme = z.object({
 	address: z.string().optional(),
-	postalCode: z
-		.string({ required_error: "O CEP não pode estar vazio." })
-		.min(9, { message: "O CEP inserido não é válido." }),
 });
 
-export type ContactAndAddressSchemeType = z.infer<
-	typeof contactAndAddressScheme
->;
+export type AddressSchemeType = z.infer<typeof addressScheme>;
 
 /*  */
 
-export const bankAccountScheme = z.object({
-	agency: z.string().optional(),
-	account: z.string().optional(),
-	accountHolder: z.string().optional(),
-	pixKey: z.string().optional(),
+export const paymentsScheme = z.object({
+	defaultPaymentMethods: z.string().optional(),
+	currency: z.string().optional(),
+	bankAccount: z.string().optional(),
+	pix: z.string().optional(),
 });
 
-export type BankAccountSchemeType = z.infer<typeof bankAccountScheme>;
-
-/*  */
-
-export const socialMediaScheme = z.object({
-	site: z.string().optional(),
-	facebook: z.string().optional(),
-	instagram: z.string().optional(),
-	twitter: z.string().optional(),
-	whatsAppBusiness: z.string().optional(),
-	youtube: z.string().optional(),
-	tiktok: z.string().optional(),
-});
-
-export type SocialMediaSchemeType = z.infer<typeof socialMediaScheme>;
+export type PaymentsSchemeType = z.infer<typeof paymentsScheme>;
 
 /*  */
 
@@ -100,16 +139,10 @@ export type Category = {
 
 export type BusinessData = BasicInfoSchemeType &
 	AdditionalInfoSchemeType &
-	ContactAndAddressSchemeType &
-	BankAccountSchemeType &
-	SocialMediaSchemeType & {
-		logo?: string;
-		geocodedAddress?: string;
-		digitalSignatureUri?: string;
-		bank?: string;
-		bankPixType?: string;
-		bankAccountType?: string;
-		categories?: Category[];
-		invoiceUri?: string;
-		documentsColor?: string;
+	OrderSchemeType &
+	ContactSchemeType &
+	BrandingSchemeType &
+	AddressSchemeType &
+	PaymentsSchemeType & {
+		categories: Category[];
 	};

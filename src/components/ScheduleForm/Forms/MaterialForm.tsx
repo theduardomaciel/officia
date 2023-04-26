@@ -115,7 +115,7 @@ export default function MaterialForm({
 			(bookmark && !editableData) ||
 			(editableData?.saved === false && bookmark)
 		) {
-			// If the service is being added to the saved items, we mark it as such.
+			// If the order is being added to the saved items, we mark it as such.
 			Toast.show({
 				preset: "success",
 				title: "Material adicionado aos Itens Salvos.",
@@ -123,7 +123,7 @@ export default function MaterialForm({
 					"Você poderá acessá-lo a qualquer momento nos Itens Salvos após o agendamento.",
 			});
 		} else if (editableData?.saved === true && !bookmark) {
-			// If the service is being removed from the saved items, we mark it as such.
+			// If the order is being removed from the saved items, we mark it as such.
 			Toast.show({
 				preset: "success",
 				title: "Material removido dos Itens Salvos.",

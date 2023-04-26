@@ -7,7 +7,7 @@ import colors from "global/colors";
 import SearchBar from "components/SearchBar";
 import Modal from "./Modal";
 import { Preview, PreviewStatic } from "components/Preview";
-import { SubSectionWrapper } from "components/ScheduleForm/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
 import { Empty } from "./StatusMessage";
 
 // Database
@@ -16,13 +16,13 @@ import { Q } from "@nozbe/watermelondb";
 
 // Types
 import type { MaterialModel } from "database/models/materialModel";
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { ProductModel } from "database/models/productModel";
 
 interface Props {
 	palette?: "dark";
 	type?: "material" | "sub_service";
-	onEdit?: (subService?: SubServiceModel, material?: MaterialModel) => void;
-	onSelect?: (subService?: SubServiceModel, material?: MaterialModel) => void;
+	onEdit?: (product?: ProductModel, material?: MaterialModel) => void;
+	onSelect?: (product?: ProductModel, material?: MaterialModel) => void;
 }
 
 export default function CatalogView({
@@ -32,24 +32,24 @@ export default function CatalogView({
 	palette,
 }: Props) {
 	const [materials, setMaterials] = useState<MaterialModel[]>([]);
-	const [subServices, setSubServices] = useState<SubServiceModel[]>([]);
+	const [products, setProducts] = useState<ProductModel[]>([]);
 
 	const [itemToDelete, setItemToDelete] = useState<
 		| undefined
 		| {
 				type: "material" | "sub_service";
-				item: SubServiceModel | MaterialModel;
+				item: ProductModel | MaterialModel;
 		  }
 	>(undefined);
 
 	useEffect(() => {
 		async function getSavedItems() {
 			await database
-				.get<SubServiceModel>("sub_services")
+				.get<ProductModel>("sub_orders")
 				.query(Q.where("saved", true))
 				.observe()
-				.subscribe((subServices: SubServiceModel[]) => {
-					setSubServices(subServices);
+				.subscribe((products: ProductModel[]) => {
+					setProducts(products);
 				});
 
 			await database
@@ -63,15 +63,15 @@ export default function CatalogView({
 		getSavedItems();
 	}, []);
 
-	async function deleteSubService(subService: SubServiceModel) {
-		await subService.destroyPermanently();
+	async function deleteProduct(product: ProductModel) {
+		await product.destroyPermanently();
 	}
 
 	async function deleteMaterial(material: MaterialModel) {
 		await material.destroyPermanently();
 	}
 
-	const HAS_CONTENT = subServices.length > 0 || materials.length > 0;
+	const HAS_CONTENT = products.length > 0 || materials.length > 0;
 
 	return (
 		<>
@@ -94,24 +94,24 @@ export default function CatalogView({
 			{type === "sub_service" ||
 				(!type && (
 					<SubSectionWrapper header={{ title: "Serviços" }}>
-						{subServices && subServices.length > 0 ? (
-							subServices.map((subService) =>
+						{products && products.length > 0 ? (
+							products.map((product) =>
 								onEdit ? (
 									<Preview
-										subService={subService}
-										onEdit={() => onEdit(subService)}
+										product={product}
+										onEdit={() => onEdit(product)}
 										onDelete={() =>
 											setItemToDelete({
 												type: "sub_service",
-												item: subService,
+												item: product,
 											})
 										}
 									/>
 								) : (
 									<PreviewStatic
-										subService={subService}
+										product={product}
 										onPress={() =>
-											onSelect && onSelect(subService)
+											onSelect && onSelect(product)
 										}
 										hasBorder
 									/>
@@ -178,8 +178,8 @@ export default function CatalogView({
 									itemToDelete?.item as MaterialModel
 								);
 							} else {
-								deleteSubService(
-									itemToDelete?.item as SubServiceModel
+								deleteProduct(
+									itemToDelete?.item as ProductModel
 								);
 							}
 						},
@@ -210,24 +210,24 @@ export async function updateMaterial(
 	});
 }
 
-export async function updateSubService(
-	oldSubService: SubServiceModel,
-	subService: SubServiceModel
+export async function updateProduct(
+	oldProduct: ProductModel,
+	product: ProductModel
 ) {
 	await database.write(async () => {
-		await oldSubService.update((old) => {
-			old.description = subService.description;
-			old.details = subService.details;
-			old.price = subService.price;
-			old.amount = subService.amount;
-			old.types = subService.types;
+		await oldProduct.update((old) => {
+			old.description = product.description;
+			old.details = product.details;
+			old.price = product.price;
+			old.amount = product.amount;
+			old.types = product.types;
 		});
 	});
 }
 
-export async function toggleSubServiceBookmark(subService: SubServiceModel) {
+export async function toggleProductBookmark(product: ProductModel) {
 	await database.write(async () => {
-		await subService.update((old) => {
+		await product.update((old) => {
 			old.saved = !old.saved;
 		});
 	});

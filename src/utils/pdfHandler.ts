@@ -3,15 +3,15 @@ import { manipulateAsync } from "expo-image-manipulator";
 // Types
 import type { ClientModel } from "database/models/clientModel";
 import type { MaterialModel } from "database/models/materialModel";
-import type { ServiceModel } from "database/models/serviceModel";
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { OrderModel } from "database/models/orderModel";
+import type { ProductModel } from "database/models/productModel";
 
 import type { BusinessData } from "screens/Main/Business/@types";
 
 interface Props {
 	data: BusinessData;
-	service: ServiceModel;
-	subServices?: SubServiceModel[];
+	order: OrderModel;
+	products?: ProductModel[];
 	materials?: MaterialModel[];
 	client?: ClientModel;
 }
@@ -21,7 +21,7 @@ export interface Config {
 	showInvoiceName: boolean;
 	showDigitalSignature: boolean;
 	showSubtotals: boolean;
-	showSubServicesDetails: boolean;
+	showProductsDetails: boolean;
 	showMaterialsDetails: boolean;
 	showMaterialsImages: boolean;
 }
@@ -53,21 +53,19 @@ export const getPaymentCondition = (
 
 export async function getPDFString(
 	data: BusinessData,
-	service: ServiceModel,
-	subServices: SubServiceModel[],
+	order: OrderModel,
+	products: ProductModel[],
 	materials: MaterialModel[],
 	client: ClientModel,
 	validity: string,
 	config: Config
 ) {
-	const servicesTypes = subServices
-		?.map((subService) => subService.types)
-		.flat();
+	const ordersTypes = products?.map((product) => product.types).flat();
 
-	const subServicesTotal =
-		subServices &&
-		subServices
-			?.map((subService) => subService.price * subService.amount)
+	const productsTotal =
+		products &&
+		products
+			?.map((product) => product.price * product.amount)
 			.reduce((a, b) => a + b, 0);
 	const materialsTotal =
 		materials &&
@@ -81,7 +79,7 @@ export async function getPDFString(
 	);
 
 	const title = config.showInvoiceName
-		? `Orçamento - ${service?.name}`
+		? `Orçamento - ${order?.name}`
 		: "Orçamento";
 
 	const image = data.logo
@@ -742,13 +740,13 @@ export async function getPDFString(
         <main>
             <header id="main_header">
                 <p>${title}</p>
-                <p>#${service?.id}</p>
+                <p>#${order?.id}</p>
             </header>
 
             <section class="full">
                 <div class="row">
                     ${
-						service?.client && service.client.id
+						order?.client && order.client.id
 							? `
                     <div class="column">
                         <p class="section_title">Cliente: ${client?.name}</p>
@@ -761,14 +759,14 @@ export async function getPDFString(
 					}
                     <div class="column">
                         <p class="section_title">Data e horário da visita técnica</p>
-                        <p class="section_description">${service.date.toLocaleDateString(
+                        <p class="section_description">${order.date.toLocaleDateString(
 							"pt-BR",
 							{
 								day: "2-digit",
 								month: "2-digit",
 								year: "numeric",
 							}
-						)} - ${service.date.toLocaleTimeString("pt-BR", {
+						)} - ${order.date.toLocaleTimeString("pt-BR", {
 		hour: "2-digit",
 		minute: "2-digit",
 	})}</p >
@@ -788,9 +786,9 @@ export async function getPDFString(
 						<p>Serviços</p>
 					</div>
 					${
-						subServices && subServices.length > 0
-							? subServices.map(
-									(subService) => `
+						products && products.length > 0
+							? products.map(
+									(product) => `
                             <div class="full">
                                 <div class="item_row">
                                     <div
@@ -803,33 +801,33 @@ export async function getPDFString(
                                         "
                                     >
                                         <div class="description">
-                                            <h3>${subService.description}</h3>
+                                            <h3>${product.description}</h3>
                                             ${
-												subService.details
-													? `<h4>${subService.details}</h4>`
+												product.details
+													? `<h4>${product.details}</h4>`
 													: ""
 											}
                                         </div>
                                     </div>
                                     <div class="info">
                                         <div class="quantity">
-                                            <p>${subService.amount}</p>
+                                            <p>${product.amount}</p>
                                         </div>
                                         <div class="price">
                                             <p>${
-												subService.price &&
-												subService.price > 0
-													? `R$ ${subService.price}`
+												product.price &&
+												product.price > 0
+													? `R$ ${product.price}`
 													: "-"
 											}</p>
                                         </div>
                                         <div class="total">
                                             <p>${
-												subService.price &&
-												subService.price > 0
+												product.price &&
+												product.price > 0
 													? `R$ ${
-															subService.price *
-															subService.amount
+															product.price *
+															product.amount
 													  }`
 													: "-"
 											}</p>
@@ -845,7 +843,7 @@ export async function getPDFString(
 					<div class="line"></div>
 					<div class="subtotal">
 						<p>Subtotal</p>
-						<p>R$ ${subServicesTotal}</p>
+						<p>R$ ${productsTotal}</p>
 					</div>
 				</div>
 
@@ -936,7 +934,7 @@ export async function getPDFString(
 
 			<div class="earnings_total">
 				<p>Total</p>
-				<p>R$ ${materialsTotal + subServicesTotal}</p>
+				<p>R$ ${materialsTotal + productsTotal}</p>
 			</div>
 
 			<section class="full">
@@ -975,8 +973,8 @@ export async function getPDFString(
             <div class="earnings_total">
                 <p>Total</p>
                 <p>R$ ${
-					subServicesTotal
-						? subServicesTotal
+					productsTotal
+						? productsTotal
 						: 0 + (materialsTotal ? materialsTotal : 0)
 				}</p>
             </div>
@@ -989,16 +987,16 @@ export async function getPDFString(
                     <div class="column">
                         <p class="section_title">Condições de Pagamento</p>
                         <p class="section_description">${getPaymentCondition(
-							service.paymentCondition,
-							service.splitValue,
-							service.splitRemaining
+							order.paymentCondition,
+							order.splitValue,
+							order.splitRemaining
 						)}</p>
                     </div>
                     ${
-						service.paymentMethods.length > 0
+						order.paymentMethods.length > 0
 							? `<div class="column">
                         <p class="section_title">Meios de Pagamento</p>
-                        <p class="section_description">${service.paymentMethods.join(
+                        <p class="section_description">${order.paymentMethods.join(
 							", "
 						)}</p>
                     </div>`
@@ -1041,15 +1039,15 @@ export async function getPDFString(
                     <div class="column" style="min-width: 25%;">
                         <p class="section_title">Período de Garantia</p>
                         <p class="section_description">${
-							service.warrantyPeriod
+							order.warrantyPeriod
 						} dias</p>
                     </div>
                     ${
-						service.warrantyDetails &&
+						order.warrantyDetails &&
 						`
                         <div class="column">
                         <p class="section_title">Condições da Garantia</p>
-                        <p class="section_description">${service.warrantyDetails}</p>
+                        <p class="section_description">${order.warrantyDetails}</p>
                         </div>
                     `
 					}
@@ -1057,8 +1055,8 @@ export async function getPDFString(
             </section>
 
             ${
-				service.additionalInfo &&
-				service.additionalInfo.length > 0 &&
+				order.additionalInfo &&
+				order.additionalInfo.length > 0 &&
 				`<section class="full">
                 <header>
                     <p>Garantia</p>
@@ -1067,15 +1065,15 @@ export async function getPDFString(
                     <div class="column" style="min-width: 25%;">
                         <p class="section_title">Período de Garantia</p>
                         <p class="section_description">${
-							service.warrantyPeriod
+							order.warrantyPeriod
 						} dias</p>
                     </div>
                     ${
-						service.warrantyDetails &&
+						order.warrantyDetails &&
 						`
                         <div class="column">
                         <p class="section_title">Condições da Garantia</p>
-                        <p class="section_description">${service.warrantyDetails}</p>
+                        <p class="section_description">${order.warrantyDetails}</p>
                         </div>
                     `
 					}
@@ -1130,10 +1128,10 @@ export async function getPDFString(
                     </div>
 
                     ${
-						servicesTypes.length > 0
+						ordersTypes.length > 0
 							? `<div class="column" style="min-width: 25%;">
                         <p class="section_title">Categorias</p>
-                        <p class="section_description">${servicesTypes
+                        <p class="section_description">${ordersTypes
 							?.map((type) => type.name)
 							.join(", ")}</p>
                     </div>`

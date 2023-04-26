@@ -9,7 +9,7 @@ import {
 import { Associations } from "@nozbe/watermelondb/Model";
 
 // Types
-import type { ServiceModel } from "./serviceModel";
+import type { OrderModel } from "./orderModel";
 import type { ProjectModel } from "./projectModel";
 
 // Category
@@ -17,10 +17,10 @@ import { Category } from "screens/Main/Business/@types";
 
 const sanitizeTypes = (json: Category) => json;
 
-export class SubServiceModel extends Model {
-	static table = "sub_services";
+export class ProductModel extends Model {
+	static table = "products";
 	static associations: Associations = {
-		services: { type: "belongs_to", key: "service_id" },
+		orders: { type: "belongs_to", key: "order_id" },
 		projects: { type: "belongs_to", key: "project_id" },
 	};
 
@@ -31,7 +31,7 @@ export class SubServiceModel extends Model {
 	@field("amount") amount!: number;
 	@field("saved") saved!: boolean;
 
-	@relation("services", "service_id") service!: ServiceModel;
+	@relation("orders", "order_id") order!: OrderModel;
 	@relation("projects", "project_id") project!: ProjectModel;
 
 	@readonly @date("created_at") createdAt!: number;

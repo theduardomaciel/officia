@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ServiceModel } from "database/models/serviceModel";
+import { OrderModel } from "database/models/orderModel";
 import {
 	TouchableOpacity,
 	View,
@@ -11,7 +11,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
-import { SubServiceModel } from "database/models/subServiceModel";
+import { ProductModel } from "database/models/productModel";
 import { Preview, PreviewStatic } from "./Preview";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 
@@ -32,24 +32,24 @@ const Container = ({ children, ...rest }: Container) => (
 );
 
 const MainInfo = ({
-	service,
-	subServices,
+	order,
+	products,
 }: {
-	service: ServiceModel;
-	subServices?: SubServiceModel[];
+	order: OrderModel;
+	products?: ProductModel[];
 }) => (
 	<View className="flex-col items-start justify-start flex flex-1 mr-4">
 		<Text className="font-titleSemiBold text-base text-black dark:text-white leading-none">
-			{service.name}
+			{order.name}
 		</Text>
 		<Text className="leading-tight font-regular text-xs text-gray-100">
-			{subServices && subServices?.length > 0 ? (
+			{products && products?.length > 0 ? (
 				<>
-					{subServices?.length} subserviço
-					{subServices?.length !== 1 ? "s" : ""}{" "}
-					{service.client.name ? "para" : ""}
+					{products?.length} subserviço
+					{products?.length !== 1 ? "s" : ""}{" "}
+					{order.client.name ? "para" : ""}
 					<Text className="font-titleSemiBold text-base text-black dark:text-white">
-						{service.client.name ? service.client.name : ""}
+						{order.client.name ? order.client.name : ""}
 					</Text>
 				</>
 			) : (
@@ -92,9 +92,9 @@ const InfoHolderRight = ({
 	</TouchableWithoutFeedback>
 );
 
-export interface ServicePreviewProps {
-	service: ServiceModel;
-	subServices?: SubServiceModel[];
+export interface OrderPreviewProps {
+	order: OrderModel;
+	products?: ProductModel[];
 	onPress: () => void;
 	additionalInfo: "day" | "date" | "time";
 }
@@ -108,35 +108,33 @@ const specialStyle = {
 	borderStyle: "dashed",
 } as ViewStyle;
 
-export default function ServicePreview({
-	service,
-	subServices,
+export default function OrderPreview({
+	order,
+	products,
 	onPress,
 	additionalInfo,
-}: ServicePreviewProps) {
-	const serviceTypes = subServices
-		?.map((subService) => subService.types)
-		.flat();
-	const serviceTypesIcon =
-		serviceTypes && serviceTypes?.length > 0 && serviceTypes[0].icon;
+}: OrderPreviewProps) {
+	const orderTypes = products?.map((product) => product.types).flat();
+	const orderTypesIcon =
+		orderTypes && orderTypes?.length > 0 && orderTypes[0].icon;
 
 	const currentDate = new Date();
-	const serviceDate = new Date(service.date);
+	const orderDate = new Date(order.date);
 	const infoContainers = {
 		day:
-			serviceDate.getDate() === currentDate.getDate()
+			orderDate.getDate() === currentDate.getDate()
 				? "hoje"
-				: serviceDate.getDate() === currentDate.getDate() + 1
+				: orderDate.getDate() === currentDate.getDate() + 1
 				? "amanhã"
-				: serviceDate
+				: orderDate
 						.toLocaleDateString("pt-BR", { weekday: "long" })
 						.split(", ")[0]
 						.split("-")[0],
-		date: serviceDate.toLocaleDateString("pt-BR", {
+		date: orderDate.toLocaleDateString("pt-BR", {
 			day: "2-digit",
 			month: "2-digit",
 		}),
-		time: serviceDate.toLocaleTimeString("pt-BR", {
+		time: orderDate.toLocaleTimeString("pt-BR", {
 			hour: "2-digit",
 			minute: "2-digit",
 		}),
@@ -145,18 +143,18 @@ export default function ServicePreview({
 	return (
 		<Container
 			style={
-				serviceDate.getDate() === currentDate.getDate() && specialStyle
+				orderDate.getDate() === currentDate.getDate() && specialStyle
 			}
 			onPress={onPress}
 		>
-			{serviceTypes && (
+			{orderTypes && (
 				<InfoHolderLeft>
 					<MaterialIcons
 						name={
-							serviceTypes.length > 1
+							orderTypes.length > 1
 								? "api"
-								: serviceTypesIcon
-								? (serviceTypesIcon as unknown as any)
+								: orderTypesIcon
+								? (orderTypesIcon as unknown as any)
 								: "hourglass-empty"
 						}
 						size={32}
@@ -165,7 +163,7 @@ export default function ServicePreview({
 				</InfoHolderLeft>
 			)}
 			<Line />
-			<MainInfo service={service} subServices={subServices} />
+			<MainInfo order={order} products={products} />
 			<InfoHolderRight>
 				{/* <Text className='absolute font-black text-[42px] opacity-20 flex-nowrap whitespace-nowrap text-text_light-100 dark:text-white'>
                     R$
@@ -193,24 +191,22 @@ export default function ServicePreview({
 	);
 }
 
-interface ServiceWithSubServicesPreviewProps {
-	service: ServicePreviewProps["service"];
-	subServices?: ServicePreviewProps["subServices"];
-	onPress: ServicePreviewProps["onPress"];
+interface OrderWithProductsPreviewProps {
+	order: OrderPreviewProps["order"];
+	products?: OrderPreviewProps["products"];
+	onPress: OrderPreviewProps["onPress"];
 }
 
-export function ServiceWithSubServicesPreview({
-	service,
-	subServices,
+export function OrderWithProductsPreview({
+	order,
+	products,
 	onPress,
-}: ServiceWithSubServicesPreviewProps) {
+}: OrderWithProductsPreviewProps) {
 	const [isExpanded, setIsExpanded] = useState(false);
 
 	const earnings =
-		subServices &&
-		subServices
-			?.map((subService) => subService.price)
-			.reduce((a, b) => a + b, 0);
+		products &&
+		products?.map((product) => product.price).reduce((a, b) => a + b, 0);
 
 	return (
 		<View className="flex-col w-full items-center justify-between">
@@ -232,9 +228,9 @@ export function ServiceWithSubServicesPreview({
 						</Text>
 					</InfoHolderLeft>
 					<Line />
-					<MainInfo service={service} subServices={subServices} />
+					<MainInfo order={order} products={products} />
 				</TouchableOpacity>
-				{subServices && subServices?.length > 0 && (
+				{products && products?.length > 0 && (
 					<InfoHolderRight onPress={() => setIsExpanded(!isExpanded)}>
 						<MaterialIcons
 							name={"keyboard-arrow-down"}
@@ -252,13 +248,13 @@ export function ServiceWithSubServicesPreview({
 				)}
 			</Container>
 			{isExpanded &&
-				subServices &&
-				subServices?.map((subService) => (
-					<View className="mb-3" key={subService.id}>
+				products &&
+				products?.map((product) => (
+					<View className="mb-3" key={product.id}>
 						<PreviewStatic
 							palette="light"
 							padding="small"
-							subService={subService}
+							product={product}
 						/>
 					</View>
 				))}

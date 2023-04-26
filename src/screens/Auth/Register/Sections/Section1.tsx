@@ -1,9 +1,18 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import { Linking, Text, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import {
+	ActivityIndicator,
+	Linking,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
+} from "react-native";
 
 import { useColorScheme } from "nativewind";
 import colors from "global/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+
+import MailLockIcon from "assets/icons/mail_lock.svg";
 
 // Components
 import Input, { borderErrorStyle } from "components/Input";
@@ -14,6 +23,10 @@ import { ActionButton } from "components/Button";
 import { Controller, SubmitErrorHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Modal from "components/Modal";
+import clsx from "clsx";
+import { useAuth } from "context/AuthContext";
+import { forwardRef } from "react";
 
 export const loginDataScheme = z
 	.object({
@@ -42,16 +55,41 @@ export const loginDataScheme = z
 
 export type LoginDataSchemeType = z.infer<typeof loginDataScheme>;
 
+export const censorEmail = (email: string) => {
+	const [firstPart, secondPart] = email.split("@");
+	const firstPartLength = firstPart.length;
+	const firstPartCensored =
+		firstPart.slice(0, 3) + "*".repeat(firstPartLength - 3);
+	return `${firstPartCensored}@${secondPart}`;
+};
+
+const formatSecondsToTimer = (seconds: number) => {
+	const minutes = Math.floor(seconds / 60);
+	const secondsLeft = seconds % 60;
+	return `${minutes}:${secondsLeft < 10 ? "0" : ""}${secondsLeft}`;
+};
+
 interface Props {
-	onSubmit: (data: LoginDataSchemeType) => void;
+	onSubmit: (data: LoginDataSchemeType) => Promise<void>;
 	email?: string;
 }
 
+interface EmailVerificationData {
+	email: string;
+	verificationCode: string;
+}
+
+const EMAIL_RESEND_DELAY = 90;
+const CODE_CHARACTERS_AMOUNT = 4;
+
 export default function RegisterSection1({ onSubmit, email }: Props) {
+	const { verify } = useAuth();
+
 	const {
 		handleSubmit: section1HandleSubmit,
 		control: section1Control,
 		formState: { errors: section1Errors },
+		getValues,
 	} = useForm<LoginDataSchemeType>({
 		mode: "onSubmit",
 		defaultValues: {
@@ -89,7 +127,88 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 		return amount;
 	}, [fulfilledRequirements]);
 
-	const submitSection1Data = section1HandleSubmit((data) => {
+	const [isSendingEmail, setIsSendingEmail] = useState(false);
+	const [verificationData, setVerificationData] = useState<
+		EmailVerificationData | undefined
+	>(undefined);
+
+	const emailsSent = useRef(0);
+	const [resendEmailCooldown, setResendEmailCooldown] =
+		useState(EMAIL_RESEND_DELAY);
+
+	const startInterval = () => {
+		const timer = setInterval(() => {
+			setResendEmailCooldown((prevCount) => {
+				if (prevCount === 0) {
+					clearInterval(timer);
+					return prevCount;
+				}
+
+				return prevCount - 1;
+			});
+		}, 1000);
+		return timer;
+	};
+
+	const lastInterval = useRef<NodeJS.Timeout>();
+
+	const sendEmail = useCallback(
+		async (email: string, isResending?: boolean) => {
+			if (isResending) {
+				lastInterval.current && clearInterval(lastInterval.current);
+				setVerificationData(undefined);
+			} else {
+				setIsSendingEmail(true);
+			}
+			emailsSent.current += 1;
+
+			try {
+				const verificationCode = await verify(email);
+
+				setVerificationData({
+					email,
+					verificationCode,
+				});
+
+				// Aumentamos o delay de reenvio de e-mails a cada tentativa
+				if (emailsSent.current > 1) {
+					setResendEmailCooldown(
+						Math.round(
+							EMAIL_RESEND_DELAY *
+								Math.pow(1.5, emailsSent.current)
+						)
+					);
+				}
+
+				const interval = startInterval();
+				lastInterval.current = interval;
+
+				if (isResending) {
+					Toast.show({
+						preset: "success",
+						title: "E-mail reenviado com sucesso!",
+						message: `O código de verificação foi enviado novamente para ${censorEmail(
+							email
+						)}.\nLembre-se de conferir o spam!`,
+					});
+				}
+			} catch (error) {
+				Toast.show({
+					preset: "error",
+					title: "Algo deu errado ao concluir o cadastro de sua conta",
+					message:
+						"Um problema com o serviço de e-mails nos impediu de criar sua conta. Tente novamente mais tarde.",
+				});
+			} finally {
+				if (!isResending) {
+					setIsSendingEmail(false);
+				}
+			}
+		},
+		[]
+	);
+
+	const submitSection1Data = section1HandleSubmit(async (data) => {
 		let errorsMessage = "";
 		if (fulfilledRequirementsAmount < 3) {
 			errorsMessage += `A senha deve conter ao menos 3 dos seguintes itens: letras maiúsculas, letras minúsculas, números e caracteres especiais.`;
@@ -104,8 +223,21 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 			return;
 		}
 
-		onSubmit(data);
+		await sendEmail(data.email);
+		//onSubmit(data);
 	}, onError);
+
+	const codeInputsRefs = useRef<React.MutableRefObject<TextInput | null>[]>(
+		[]
+	);
+	const fullCode = useRef<string[]>([]);
+
+	const checkCodeInput = useCallback(async () => {
+		if (fullCode.current.join("") == verificationData?.verificationCode) {
+			setVerificationData(undefined);
+			await onSubmit(getValues());
+		}
+	}, [verificationData?.verificationCode]);
 
 	return (
 		<>
@@ -171,8 +303,8 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 							<MaterialCommunityIcons
 								name={
 									isPasswordHidden
-										? "eye-off-outline"
-										: "eye-outline"
+										? "eye-outline"
+										: "eye-off-outline"
 								}
 								color={colors.gray[100]}
 								size={20}
@@ -275,6 +407,14 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 			<ActionButton
 				onPress={submitSection1Data}
 				preset="next"
+				isLoading={
+					isSendingEmail && !verificationData?.verificationCode
+				}
+				disabled={
+					isSendingEmail || verificationData?.verificationCode
+						? true
+						: false
+				}
 				label="Concordar e continuar"
 				textProps={{
 					className: "font-logoRegular text-white text-md",
@@ -312,6 +452,126 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 				</Text>
 				.
 			</Text>
+			<Modal
+				isVisible={!!verificationData?.verificationCode}
+				toggleVisibility={() => setVerificationData(undefined)}
+				title={"Verifique seu e-mail"}
+				message={
+					<Text className="text-white text-sm text-left">
+						Insira o código enviado para o e-mail{` `}
+						<Text className="font-bold">
+							{verificationData?.email
+								? censorEmail(verificationData?.email)
+								: ""}
+						</Text>{" "}
+						no campo abaixo para prosseguir
+					</Text>
+				}
+				icon={<MailLockIcon />}
+			>
+				<View className="w-full flex-row items-center justify-between my-4">
+					{Array.from({ length: CODE_CHARACTERS_AMOUNT }).map(
+						(_, index) => {
+							codeInputsRefs.current[index] = React.createRef();
+							return (
+								<CodeCharacterInput
+									key={index}
+									ref={codeInputsRefs.current[index]}
+									onChange={async (value) => {
+										if (
+											index <
+											CODE_CHARACTERS_AMOUNT - 1
+										) {
+											codeInputsRefs.current[
+												index + 1
+											].current?.focus();
+										}
+
+										fullCode.current[index] = value;
+										await checkCodeInput();
+									}}
+									onBack={() => {
+										if (index > 0) {
+											codeInputsRefs.current[
+												index - 1
+											].current?.clear();
+											codeInputsRefs.current[
+												index - 1
+											].current?.focus();
+										}
+									}}
+								/>
+							);
+						}
+					)}
+				</View>
+				<TouchableOpacity
+					className={clsx(
+						"w-full py-2.5 bg-primary rounded-md flex-row items-center justify-center",
+						{
+							"bg-gray-100": resendEmailCooldown > 0,
+						}
+					)}
+					activeOpacity={
+						resendEmailCooldown > 0 || isSendingEmail ? 1 : 0.7
+					}
+					disabled={isSendingEmail || resendEmailCooldown > 0}
+					onPress={() => {
+						sendEmail(verificationData?.email ?? "", true);
+					}}
+				>
+					{isSendingEmail ? (
+						<ActivityIndicator
+							size={"small"}
+							color={colors.text[100]}
+						/>
+					) : (
+						<Text
+							className={clsx("text-sm font-bold text-white", {
+								"text-text-100": resendEmailCooldown > 0,
+							})}
+						>
+							Reenviar código
+							{resendEmailCooldown > 0
+								? ` (${formatSecondsToTimer(
+										resendEmailCooldown
+								  )})`
+								: ""}
+						</Text>
+					)}
+				</TouchableOpacity>
+			</Modal>
 		</>
 	);
 }
+
+interface CodeCharacterInputProps {
+	onChange: (value: string) => void;
+	onBack: () => void;
+}
+
+const CodeCharacterInput = forwardRef<
+	React.ElementRef<typeof TextInput>,
+	CodeCharacterInputProps
+>(({ onChange, onBack }: CodeCharacterInputProps, ref) => {
+	return (
+		<TextInput
+			ref={ref}
+			className="text-center text-6xl font-bold text-text-100 bg-transparent border border-text-100 rounded-md px-4 py-4 min-h-[100px]"
+			style={{
+				width: `${100 / CODE_CHARACTERS_AMOUNT - 1}%`,
+			}}
+			onChangeText={onChange}
+			cursorColor={colors.text[100]}
+			maxLength={1}
+			autoCapitalize="characters"
+			placeholder="_"
+			placeholderTextColor={colors.text[100]}
+			onKeyPress={({ nativeEvent }) => {
+				if (nativeEvent.key === "Backspace") {
+					onBack();
+				}
+			}}
+		/>
+	);
+});

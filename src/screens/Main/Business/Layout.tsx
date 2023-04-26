@@ -1,89 +1,61 @@
-import React, { useCallback, useEffect } from "react";
-import { BackHandler } from "react-native";
+import React, { useEffect } from "react";
 
 // Components
 import Container from "components/Container";
 import Header from "components/Header";
-import Toast from "components/Toast";
 import SaveButton from "components/Business/SaveButton";
-import ConfirmExitModal from "components/Business/ConfirmExitModal";
 
 // Hooks
 import { useNavigation } from "@react-navigation/native";
+import useBackHandler from "hooks/useBackHandler";
 
 // Types
 import type { BusinessData } from "./@types";
-import type { SubSectionWrapperProps } from "components/ScheduleForm/SubSectionWrapper";
+import type { SubSectionWrapperProps } from "components/Form/SubSectionWrapper";
+import type { FormChangesObserver } from "hooks/useFormChangesObserver";
+import useFormChangesObserver from "hooks/useFormChangesObserver";
 
 interface Props {
-    headerProps: SubSectionWrapperProps['header'];
-    children: React.ReactNode;
-    hasDifferences: boolean;
-    submitData: () => void;
+	children: React.ReactNode;
+	headerProps: SubSectionWrapperProps["header"];
+	changesObserverProps: FormChangesObserver;
+	submitData: () => void;
 }
 
-interface ChangesObserverProps {
-    children: React.ReactNode;
-    setHasDifferences: React.Dispatch<React.SetStateAction<boolean>>;
-    watch: (callback: (value: any) => void) => { unsubscribe: () => void };
-    currentData: Partial<BusinessData>;
-}
+export default function BusinessLayout({
+	children,
+	headerProps,
+	changesObserverProps,
+	submitData,
+}: Props) {
+	const navigation = useNavigation();
 
-export function ChangesObserver({ children, watch, currentData, setHasDifferences }: ChangesObserverProps) {
-    useEffect(() => {
-        const subscription = watch((value) => {
-            setHasDifferences(JSON.stringify(currentData) !== JSON.stringify(value))
-        });
-        return () => subscription.unsubscribe();
-    }, [watch, currentData]);
+	const { FormSaveButton, hasDifferences } = useFormChangesObserver({
+		...changesObserverProps,
+	});
 
-    return (
-        <>
-            {children}
-        </>
-    )
-}
+	const { ConfirmExitModal, setConfirmExitModalVisible } = useBackHandler({
+		onExitConfirm: () => {
+			navigation.goBack();
+		},
+		shouldTriggerModal: () => hasDifferences,
+	});
 
-export default function BusinessLayout({ headerProps, children, hasDifferences, submitData }: Props) {
-    const navigation = useNavigation();
-    const [isConfirmExitModalVisible, setConfirmExitModalVisible] = React.useState(false);
-
-    const backAction = useCallback(() => {
-        if (hasDifferences) {
-            setConfirmExitModalVisible(true);
-            return true;
-        } else {
-            return false;
-        }
-    }, [hasDifferences])
-
-    useEffect(() => {
-        const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-        return () => backHandler.remove();
-    }, [hasDifferences]);
-
-    return (
-        <Container>
-            <Header
-                returnButton={() => {
-                    if (hasDifferences) {
-                        setConfirmExitModalVisible(true);
-                    } else {
-                        navigation.goBack();
-                    }
-                }}
-                {...headerProps}
-            />
-            {children}
-            <SaveButton hasDifferences={hasDifferences} submitData={submitData} />
-            <ConfirmExitModal
-                isVisible={isConfirmExitModalVisible}
-                toggleVisibility={() => setConfirmExitModalVisible(false)}
-                onExitConfirmation={() => {
-                    setConfirmExitModalVisible(false);
-                    navigation.goBack();
-                }}
-            />
-        </Container>
-    )
+	return (
+		<Container>
+			<Header
+				returnButton={() => {
+					if (hasDifferences) {
+						setConfirmExitModalVisible(true);
+					} else {
+						navigation.goBack();
+					}
+				}}
+				{...headerProps}
+			/>
+			{children}
+			<FormSaveButton onPress={submitData} />
+			<ConfirmExitModal />
+		</Container>
+	);
 }

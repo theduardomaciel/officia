@@ -7,12 +7,16 @@ import { AppStack } from "./app.routes";
 import { AuthStack } from "./auth.routes";
 
 export default function Routes() {
-    const { authData } = useAuth();
+	const { authData } = useAuth();
 
-    return (
-        <NavigationContainer>
-            <PortalHost name="BottomSheetHost" />
-            {authData ? <AppStack /> : <AuthStack />}
-        </NavigationContainer>
-    )
+	return (
+		<NavigationContainer>
+			<PortalHost name="BottomSheetHost" />
+			{authData?.id && authData.selectedProjectId ? (
+				<AppStack />
+			) : (
+				<AuthStack />
+			)}
+		</NavigationContainer>
+	);
 }

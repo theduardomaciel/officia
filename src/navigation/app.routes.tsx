@@ -12,13 +12,13 @@ const Stack = createStackNavigator();
 
 import Invoice from "screens/Invoice";
 import ScheduleForm from "screens/ScheduleForm";
-import Service from "screens/Service";
+import Order from "screens/Order";
 import DayAgenda from "screens/DayAgenda";
 
 // Business
 import BasicInfo from "screens/Main/Business/screens/BasicInfo";
 import AdditionalInfo from "screens/Main/Business/screens/AdditionalInfo";
-import BankAccount from "screens/Main/Business/screens/BankAccount";
+import BankAccount from "screens/Main/Business/screens/Payments";
 import PhoneAndAddress from "screens/Main/Business/screens/ContactAndAddress";
 import SocialMedia from "screens/Main/Business/screens/SocialMedia";
 import CategoriesScreen from "screens/Main/Business/screens/Categories";
@@ -51,7 +51,7 @@ export function AppStack() {
 			if (type === EventType.PRESS) {
 				const { notification } = detail;
 				if (notification && detail.pressAction?.id) {
-					navigate("service", { serviceId: detail.pressAction?.id });
+					navigate("order", { orderId: detail.pressAction?.id });
 				}
 			}
 		});
@@ -134,8 +134,8 @@ export function AppStack() {
 				}}
 			/>
 			<Stack.Screen
-				name="service"
-				component={Service}
+				name="order"
+				component={Order}
 				options={{
 					cardStyleInterpolator:
 						CardStyleInterpolators.forHorizontalIOS,

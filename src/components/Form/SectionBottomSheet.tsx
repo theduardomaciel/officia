@@ -1,48 +1,42 @@
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import BottomSheet from "components/BottomSheet";
-
 import colors from "global/colors";
 
-interface Props {
-	children: React.ReactNode;
-	bottomSheet: string;
-	expanded?: boolean;
-	onDismissed?: () => void;
-	onExpanded?: () => void;
-	bottomSheetHeight?: string;
+import BottomSheet, { BottomSheetProps } from "components/BottomSheet";
+
+interface Props extends BottomSheetProps {
 	rowGap?: number;
 }
 
 export default function SectionBottomSheet({
 	children,
-	bottomSheet,
-	expanded = false,
+	id,
+	defaultValues = {
+		expanded: false,
+	},
 	onDismissed,
 	onExpanded,
-	bottomSheetHeight,
+	height = "76%",
 	rowGap,
+	...rest
 }: Props) {
 	const insets = useSafeAreaInsets();
 
 	return (
 		<BottomSheet
-			id={bottomSheet}
-			defaultValues={{
-				expanded: expanded,
-				suppressBackdrop: true,
-				suppressHandle: true,
-				suppressPortal: true,
-			}}
-			height={bottomSheetHeight ?? "76%"}
+			id={id}
+			suppressBackdrop={true}
+			suppressHandle={true}
+			suppressPortal={true}
+			height={height}
 			canDismiss={false}
 			heightLimitBehaviour="contentHeight"
 			colors={{
 				background: colors.gray[500],
 			}}
-			onDismissed={onDismissed}
-			onExpanded={onExpanded}
+			{...rest}
+			defaultValues={defaultValues}
 		>
 			<View
 				className="flex flex-1"

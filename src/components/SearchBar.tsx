@@ -3,13 +3,17 @@ import { TextInput, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
-interface Props {
+export interface SearchBarProps {
 	placeholder?: string;
 	onSubmit?: () => void;
 	palette?: "dark";
 }
 
-export default function SearchBar({ placeholder, onSubmit, palette }: Props) {
+export default function SearchBar({
+	placeholder,
+	onSubmit,
+	palette,
+}: SearchBarProps) {
 	return (
 		<View
 			className="flex flex-row w-full h-10"

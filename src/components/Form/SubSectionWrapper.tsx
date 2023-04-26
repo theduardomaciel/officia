@@ -5,13 +5,13 @@ import Label from "components/Label";
 
 // Types
 import type { MaterialModel } from "database/models/materialModel";
-import type { ServiceModel } from "database/models/serviceModel";
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { OrderModel } from "database/models/orderModel";
+import type { ProductModel } from "database/models/productModel";
 
 export interface Section {
 	initialValue?: {
-		service: ServiceModel;
-		subServices: SubServiceModel[];
+		order: OrderModel;
+		products: ProductModel[];
 		materials: MaterialModel[];
 	};
 	updateHandler?: (id: number) => void;

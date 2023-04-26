@@ -24,7 +24,7 @@ import { ActionButton } from "components/Button";
 import BottomSheet, { BottomSheetActions } from "components/BottomSheet";
 import { Loading } from "components/StatusMessage";
 import { PreviewStatic } from "components/Preview";
-import { SubSectionWrapper } from "components/ScheduleForm/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
 import { Tag } from "components/TagsSelector";
 
 import ClientAdd from "components/ClientForms/ClientAdd";
@@ -36,34 +36,32 @@ import { database } from "database/index.native";
 // Types
 import type { ClientModel } from "database/models/clientModel";
 import type { MaterialModel } from "database/models/materialModel";
-import type { ServiceModel } from "database/models/serviceModel";
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { OrderModel } from "database/models/orderModel";
+import type { ProductModel } from "database/models/productModel";
 import {
 	removeNotification,
-	scheduleServiceNotification,
+	scheduleOrderNotification,
 } from "utils/notificationHandler";
 
 interface Props {
-	service: ServiceModel;
-	subServices?: SubServiceModel[];
+	order: OrderModel;
+	products?: ProductModel[];
 	materials?: MaterialModel[];
 	client?: ClientModel;
 }
 
-interface ObservableServiceModel extends ServiceModel {
-	subServices: any;
+interface ObservableOrderModel extends OrderModel {
+	products: any;
 	materials: any;
 }
 
-export default function Service({ route, navigation }: any) {
-	const { serviceId, updated } = route.params;
+export default function Order({ route, navigation }: any) {
+	const { orderId, updated } = route.params;
 
-	const [service, setService] = React.useState<ServiceModel | undefined>(
+	const [order, setOrder] = React.useState<OrderModel | undefined>(undefined);
+	const [products, setProducts] = React.useState<ProductModel[] | undefined>(
 		undefined
 	);
-	const [subServices, setSubServices] = React.useState<
-		SubServiceModel[] | undefined
-	>(undefined);
 	const [materials, setMaterials] = React.useState<
 		MaterialModel[] | undefined
 	>(undefined);
@@ -71,7 +69,7 @@ export default function Service({ route, navigation }: any) {
 		undefined
 	);
 
-	const showUpdatedServiceToast = useCallback(() => {
+	const showUpdatedOrderToast = useCallback(() => {
 		Toast.show({
 			preset: "success",
 			icon: "edit",
@@ -80,26 +78,26 @@ export default function Service({ route, navigation }: any) {
 		});
 	}, []);
 
-	async function fetchService() {
-		const newService = (await database
-			.get<ServiceModel>("services")
-			.find(serviceId)) as ObservableServiceModel;
+	async function fetchOrder() {
+		const newOrder = (await database
+			.get<OrderModel>("orders")
+			.find(orderId)) as ObservableOrderModel;
 
-		if (newService.date < new Date() && newService.status === "scheduled") {
+		if (newOrder.date < new Date() && newOrder.status === "scheduled") {
 			await database.write(async () => {
-				await newService.update((service: any) => {
-					service.status = "archived";
+				await newOrder.update((order: any) => {
+					order.status = "archived";
 				});
 			});
-			removeNotification(newService.id);
+			removeNotification(newOrder.id);
 		}
 
-		setService(newService);
+		setOrder(newOrder);
 
-		//newService.observe().subscribe(setService);
-		newService.subServices.observe().subscribe(setSubServices);
-		newService.materials.observe().subscribe(setMaterials);
-		newService.client.observe().subscribe(setClient);
+		//newOrder.observe().subscribe(setOrder);
+		newOrder.products.observe().subscribe(setProducts);
+		newOrder.materials.observe().subscribe(setMaterials);
+		newOrder.client.observe().subscribe(setClient);
 	}
 
 	useFocusEffect(
@@ -107,21 +105,21 @@ export default function Service({ route, navigation }: any) {
 			if (updated) {
 				navigation.setParams({
 					updated: undefined,
-					serviceId: serviceId,
+					orderId: orderId,
 				});
-				showUpdatedServiceToast();
+				showUpdatedOrderToast();
 			}
 
-			fetchService();
-		}, [serviceId, updated])
+			fetchOrder();
+		}, [orderId, updated])
 	);
 
 	return (
 		<>
-			{service ? (
+			{order ? (
 				<ScreenContent
-					service={service}
-					subServices={subServices}
+					order={order}
+					products={products}
 					materials={materials}
 					client={client}
 				/>
@@ -140,17 +138,17 @@ const STATUS_DATA = [
 	{ label: "Arquivado", value: "archived", icon: "archive" },
 ] as DropdownData[];
 
-function ScreenContent({ service, subServices, materials, client }: Props) {
+function ScreenContent({ order, products, materials, client }: Props) {
 	const insets = useSafeAreaInsets();
 	const { navigate } = useNavigation();
 
 	const [isDeleteModalVisible, setDeleteModalVisible] = React.useState(false);
-	const servicesTypes = [
+	const ordersTypes = [
 		...new Set(
-			subServices
-				?.map((subService) =>
-					subService.types.length > 0
-						? subService.types.map((category) => category)
+			products
+				?.map((product) =>
+					product.types.length > 0
+						? product.types.map((category) => category)
 						: []
 				)
 				.flat()
@@ -167,7 +165,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 	}, []);
 
 	// Dropdowns
-	const [serviceStatus, setServiceStatus] = React.useState(service.status);
+	const [serviceStatus, setOrderStatus] = React.useState(order.status);
 	const statusDropdownRef = useRef<any>(null);
 
 	const statusDropdownOpenHandler = useCallback(() => {
@@ -175,52 +173,52 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 	}, []);
 
 	async function updateStatus(status: string) {
-		setServiceStatus(status);
+		setOrderStatus(status);
 
 		await database.write(async () => {
-			const queryService = await database
-				.get<ServiceModel>("services")
-				.find(service.id);
+			const queryOrder = await database
+				.get<OrderModel>("orders")
+				.find(order.id);
 
-			await queryService.update((service) => {
-				service.status = status;
+			await queryOrder.update((order) => {
+				order.status = status;
 			});
 		});
 
 		if (status === "archived") {
-			await removeNotification(service.id);
+			await removeNotification(order.id);
 		} else if (
 			status === "scheduled" &&
-			service.date.getTime() >= new Date().getTime()
+			order.date.getTime() >= new Date().getTime()
 		) {
-			await scheduleServiceNotification(
-				service,
-				subServices?.length ?? 0,
+			await scheduleOrderNotification(
+				order,
+				products?.length ?? 0,
 				client?.name
 			);
 		}
 	}
 
-	async function deleteService() {
+	async function deleteOrder() {
 		await database.write(async () => {
-			const queryService = await database
-				.get<ServiceModel>("services")
-				.find(service.id);
+			const queryOrder = await database
+				.get<OrderModel>("orders")
+				.find(order.id);
 
-			await queryService.destroyPermanently();
+			await queryOrder.destroyPermanently();
 		});
 
-		await removeNotification(service.id);
+		await removeNotification(order.id);
 
 		setDeleteModalVisible(false);
-		navigate("home", { service: "deleted" });
+		navigate("home", { order: "deleted" });
 	}
 
 	return (
 		<Container>
 			<View>
 				<Header
-					title={service?.name ?? "teste"}
+					title={order?.name ?? "teste"}
 					returnButton
 					upperChildren={
 						<View className="flex-row items-center gap-x-2">
@@ -230,12 +228,12 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 								color={colors.text[100]}
 							/>
 							<Text className="text-sm text-text-100">
-								{service?.date?.toLocaleDateString("pt-BR", {
+								{order?.date?.toLocaleDateString("pt-BR", {
 									day: "2-digit",
 									month: "2-digit",
 								})}{" "}
 								-{" "}
-								{service?.date.toLocaleTimeString("pt-BR", {
+								{order?.date.toLocaleTimeString("pt-BR", {
 									hour: "2-digit",
 									minute: "2-digit",
 								})}
@@ -277,7 +275,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 						<TouchableOpacity
 							activeOpacity={0.8}
 							onPress={
-								client && service.status === "scheduled"
+								client && order.status === "scheduled"
 									? expandClientViewBottomSheet
 									: expandClientAddBottomSheet
 							}
@@ -293,7 +291,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 										className="text-base text-text-100"
 										style={{
 											textDecorationLine:
-												service.status === "scheduled"
+												order.status === "scheduled"
 													? "underline"
 													: "none",
 										}}
@@ -318,7 +316,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 				}}
 				showsVerticalScrollIndicator={false}
 			>
-				{servicesTypes && servicesTypes.length > 0 && (
+				{ordersTypes && ordersTypes.length > 0 && (
 					<SubSectionWrapper
 						header={{
 							title: "Categorias",
@@ -332,7 +330,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 								contentContainerStyle={{}}
 								nestedScrollEnabled
 								showsHorizontalScrollIndicator={false}
-								data={servicesTypes}
+								data={ordersTypes}
 								renderItem={({ item, index }) => (
 									<Tag {...item} />
 								)}
@@ -341,7 +339,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 					</SubSectionWrapper>
 				)}
 
-				{subServices && subServices.length > 0 ? (
+				{products && products.length > 0 ? (
 					<SubSectionWrapper
 						header={{
 							title: "Serviços",
@@ -349,19 +347,19 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 						preset="smallMargin"
 					>
 						<View className="w-full">
-							{subServices?.map((subService, index) => (
+							{products?.map((product, index) => (
 								<View className="mb-2" key={index.toString()}>
 									<PreviewStatic
 										palette="light"
 										hasBorder
-										subService={subService}
+										product={product}
 									/>
 								</View>
 							))}
 						</View>
 					</SubSectionWrapper>
 				) : (
-					subServices === undefined && (
+					products === undefined && (
 						<ActivityIndicator
 							color={colors.primary}
 							size="small"
@@ -393,7 +391,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 						</View>
 					</SubSectionWrapper>
 				) : (
-					subServices === undefined && (
+					products === undefined && (
 						<ActivityIndicator
 							color={colors.primary}
 							size="small"
@@ -413,7 +411,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 							icon="edit"
 							style={{ paddingTop: 12, paddingBottom: 12 }}
 							onPress={() =>
-								navigate("schedule", { serviceId: service.id })
+								navigate("schedule", { orderId: order.id })
 							}
 						/>
 						<View>
@@ -441,14 +439,12 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 					preset="next"
 					icon={"attach-money"}
 					label={"Gerar orçamento"}
-					disabled={subServices && subServices?.length === 0}
-					onPress={() =>
-						navigate("invoice", { serviceId: service.id })
-					}
+					disabled={products && products?.length === 0}
+					onPress={() => navigate("invoice", { orderId: order.id })}
 				/>
 			</View>
-			{client && <ClientView client={client} service={service} />}
-			<ClientAdd service={service} />
+			{client && <ClientView client={client} order={order} />}
+			<ClientAdd order={order} />
 			<Dropdown
 				ref={statusDropdownRef}
 				data={STATUS_DATA}
@@ -466,7 +462,7 @@ function ScreenContent({ service, subServices, materials, client }: Props) {
 				buttons={[
 					{
 						label: "Remover",
-						onPress: deleteService,
+						onPress: deleteOrder,
 						color: colors.red,
 						closeOnPress: true,
 					},

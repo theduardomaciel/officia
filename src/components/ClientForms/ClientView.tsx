@@ -8,7 +8,7 @@ import WhatsAppIcon from "src/assets/icons/whatsapp.svg";
 
 // Types
 import type { ClientModel } from "database/models/clientModel";
-import type { ServiceModel } from "database/models/serviceModel";
+import type { OrderModel } from "database/models/orderModel";
 
 // Components
 import { ActionButton, SubActionButton } from "components/Button";
@@ -21,10 +21,10 @@ import { database } from "database/index.native";
 
 interface Props {
 	client: ClientModel;
-	service: ServiceModel;
+	order: OrderModel;
 }
 
-export default function ClientView({ client, service }: Props) {
+export default function ClientView({ client, order }: Props) {
 	// Bottom Sheets
 	const clientSelectBottomSheet = "clientSelectBottomSheet";
 	const clientSelectBottomSheetOpenHandler = useCallback(() => {
@@ -40,13 +40,13 @@ export default function ClientView({ client, service }: Props) {
 		BottomSheet.close("clientViewBottomSheet");
 	}, []);
 
-	async function removeServiceClient() {
+	async function removeOrderClient() {
 		bottomSheetCloseHandler();
 
 		try {
 			await database.write(async () => {
-				await service.update((service: any) => {
-					service.client.id = null;
+				await order.update((order: any) => {
+					order.client.id = null;
 				});
 			});
 		} catch (error) {
@@ -149,19 +149,19 @@ export default function ClientView({ client, service }: Props) {
 							icon="do-not-disturb-on"
 							preset="dashed"
 							borderColor={colors.red}
-							onPress={removeServiceClient}
+							onPress={removeOrderClient}
 						/>
 					</View>
 				</View>
 			</View>
 			<ClientSelect
-				service={service}
+				order={order}
 				lastBottomSheet={"clientViewBottomSheet"}
 			/>
-			<ClientAdd service={service} />
+			<ClientAdd order={order} />
 			<ClientEdit
 				client={client}
-				service={service}
+				order={order}
 				lastBottomSheet={"clientViewBottomSheet"}
 			/>
 		</BottomSheet>

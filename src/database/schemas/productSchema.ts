@@ -4,8 +4,8 @@ import { tableSchema } from "@nozbe/watermelondb";
 // schema = column
 // both = database schema
 
-export const subServiceSchema = tableSchema({
-	name: "sub_services",
+export const productSchema = tableSchema({
+	name: "products",
 	columns: [
 		{ name: "description", type: "string" },
 		{ name: "details", type: "string", isOptional: true },
@@ -14,6 +14,6 @@ export const subServiceSchema = tableSchema({
 		{ name: "amount", type: "number" },
 		{ name: "saved", type: "boolean" },
 		{ name: "created_at", type: "number" },
-		{ name: "service_id", type: "string", isIndexed: true },
+		{ name: "order_id", type: "string", isIndexed: true },
 	],
 });

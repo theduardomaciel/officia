@@ -6,11 +6,17 @@ import ConfirmExitModal, {
 	ConfirmExitModalProps,
 } from "components/Business/ConfirmExitModal";
 
-export default function useBackHandler(
-	shouldTriggerModal: () => boolean | undefined,
-	onBack: () => void,
-	onExitConfirm: () => void
-) {
+interface UseBackHandlerProps {
+	shouldTriggerModal: () => boolean;
+	onBack?: () => void;
+	onExitConfirm: () => void;
+}
+
+export default function useBackHandler({
+	shouldTriggerModal,
+	onBack,
+	onExitConfirm,
+}: UseBackHandlerProps) {
 	const [confirmExitModalVisible, setConfirmExitModalVisible] =
 		useState(false);
 
@@ -19,10 +25,12 @@ export default function useBackHandler(
 			const shouldTrigger = shouldTriggerModal();
 			if (shouldTrigger) {
 				setConfirmExitModalVisible(true);
-			} else {
+				return true;
+			} else if (onBack) {
 				onBack();
+				return true;
 			}
-			return true;
+			return false;
 		};
 
 		const backHandler = BackHandler.addEventListener(
@@ -40,7 +48,10 @@ export default function useBackHandler(
 		return (
 			<ConfirmExitModal
 				isVisible={confirmExitModalVisible}
-				onExitConfirmation={onExitConfirm}
+				onExitConfirmation={() => {
+					setConfirmExitModalVisible(false);
+					onExitConfirm();
+				}}
 				toggleVisibility={() => setConfirmExitModalVisible(false)}
 				{...rest}
 			/>
@@ -49,5 +60,6 @@ export default function useBackHandler(
 
 	return {
 		ConfirmExitModal: Modal,
+		setConfirmExitModalVisible,
 	};
 }

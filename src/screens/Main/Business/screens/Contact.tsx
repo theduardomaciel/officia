@@ -26,20 +26,19 @@ import type { StateToWatch } from "hooks/useFormChangesObserver";
 
 // MMKV
 import { useMMKVObject } from "react-native-mmkv";
-import Multiselect from "components/Multiselect";
-import { Loading } from "components/StatusMessage";
 
-export function useBasicInfoForm({ defaultValues, onSubmit }: FormProps) {
+export function useContactForm({ defaultValues, onSubmit }: FormProps) {
 	const {
 		handleSubmit,
 		control,
 		formState: { errors },
 		watch,
+		getValues,
 		setValue,
-	} = useForm<Partial<BusinessData>>({
+	} = useForm<BasicInfoSchemeType>({
 		mode: "onSubmit",
 		defaultValues: {
-			name: "",
+			fantasyName: "",
 			juridicalPerson: "",
 			socialReason: "",
 		},
@@ -61,19 +60,17 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormProps) {
 		});
 	};
 
-	const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] =
-		React.useState(
-			!defaultValues?.juridicalPerson ||
-				defaultValues.juridicalPerson === ""
-				? false
-				: true
-		);
-
-	const [segments, setSegments] = React.useState<string[]>([]);
-
 	const submitData = handleSubmit((data) => {
-		onSubmit({ ...data, segments });
+		onSubmit(data);
 	}, onError);
+
+	const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] =
+		React.useState(getValues().juridicalPerson === "");
+
+	const [selectedBusinessType, setSelectedBusinessType] =
+		React.useState("generalOrders");
+	const [selectedProductType, setSelectedProductType] =
+		React.useState("products");
 
 	function BasicInfoForm() {
 		return (
@@ -82,14 +79,14 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormProps) {
 					control={control}
 					render={({ field: { onChange, onBlur, value } }) => (
 						<Input
-							label="Nome da Empresa"
+							label="Nome Fantasia"
 							value={value}
 							onBlur={onBlur}
 							onChangeText={(value) => onChange(value)}
-							style={!!errors.name && borderErrorStyle}
+							style={!!errors.fantasyName && borderErrorStyle}
 						/>
 					)}
-					name="name"
+					name="fantasyName"
 					rules={{ maxLength: 50 }}
 				/>
 				<Controller
@@ -142,54 +139,52 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormProps) {
 						setValue && setValue("juridicalPerson", "");
 					}}
 				/>
-				<Multiselect
-					label="Segmentos"
+				<Dropdown
+					label="Tipo de empreendimento"
+					bottomSheetLabel="Selecione o tipo de empreendimento"
+					selected={selectedBusinessType}
+					setSelected={setSelectedBusinessType}
+					bottomSheetHeight="45%"
 					data={[
 						{
-							title: "Alimentação",
-							data: [
-								{ name: "Bares" },
-								{ name: "Cafeterias" },
-								{ name: "Confeitarias" },
-								{ name: "Docerias" },
-								{ name: "Lanchonetes" },
-								{ name: "Padarias" },
-								{ name: "Pizzarias" },
-								{ name: "Restaurantes" },
-								{ name: "Outros" },
-							],
+							label: "Serviços gerais",
+							value: "generalOrders",
 						},
 						{
-							title: "Beleza",
-							data: [
-								{ name: "Barbearias" },
-								{ name: "Cabeleireiros" },
-								{ name: "Clínicas de Estética" },
-								{ name: "Cosméticos" },
-								{ name: "Manicures e Pedicures" },
-								{ name: "Maquiadores" },
-								{ name: "Outros" },
-							],
+							label: "Comércio",
+							value: "store",
 						},
 						{
-							title: "Educação",
-							data: [
-								{ name: "Aulas Particulares" },
-								{ name: "Cursos" },
-								{ name: "Escolas" },
-								{ name: "Faculdades" },
-								{ name: "Outros" },
-							],
+							label: "Prestação de serviços",
+							value: "serviceProvider",
+						},
+						{
+							label: "Outro",
+							value: "other",
 						},
 					]}
-					bottomSheetLabel="Selecione os segmentos da sua empresa"
-					placeholder="Nenhum segmento selecionado"
-					searchBarProps={{
-						placeholder: "Pesquisar segmentos",
-					}}
-					selected={segments}
-					setSelected={setSegments}
-					pallette="dark"
+				/>
+				<Dropdown
+					label="Tipo de Produto"
+					description="Qual palavra descreve melhor o que você vende, fornece ou usa em seu negócio?"
+					bottomSheetLabel="Selecione o tipo de produto"
+					selected={selectedProductType}
+					setSelected={setSelectedProductType}
+					bottomSheetHeight="30%"
+					data={[
+						{
+							label: "Produtos",
+							value: "products",
+						},
+						{
+							label: "Serviços",
+							value: "orders",
+						},
+						{
+							label: "Peças",
+							value: "parts",
+						},
+					]}
 				/>
 			</BusinessScrollView>
 		);
@@ -197,36 +192,23 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormProps) {
 
 	const statesToWatch = [
 		{
-			name: "segments",
-			state: segments,
+			name: "businessType",
+			state: selectedBusinessType,
+		},
+		{
+			name: "productType",
+			state: selectedProductType,
 		},
 	] as StateToWatch[];
 
 	return { BasicInfoForm, submitData, watch, statesToWatch };
 }
 
-/* 
-
-<Dropdown
-				data={[
-					{ label: "Opção 1", value: "1" },
-					{ label: "Opção 2", value: "2" },
-					{ label: "Opção 3", value: "3" },
-				]}
-				selected={opt}
-				setSelected={setOpt}
-			/>
-*/
-
 export default function BasicInfoScreen() {
 	const [currentBusiness, setCurrentBusiness] = useMMKVObject(
 		"currentBusiness"
 	) as [BusinessData, React.Dispatch<React.SetStateAction<BusinessData>>];
 	// este estado é necessário em todas as telas pois o parâmetro de comparação tem que atualizar mesmo após a atualização dos dados
-
-	if (!currentBusiness) {
-		return <Loading />;
-	}
 
 	const memoizedCurrentBusiness = React.useMemo(() => currentBusiness, []);
 
@@ -235,16 +217,15 @@ export default function BasicInfoScreen() {
 		// TODO: enviar dados para o servidor
 	};
 
-	const { BasicInfoForm, submitData, watch, statesToWatch } =
-		useBasicInfoForm({
-			onSubmit,
-			defaultValues: memoizedCurrentBusiness,
-		});
+	const { BasicInfoForm, submitData, watch, statesToWatch } = useContactForm({
+		onSubmit,
+		defaultValues: memoizedCurrentBusiness,
+	});
 
 	return (
 		<BusinessLayout
 			headerProps={{
-				title: "Informações Básicas",
+				title: "Contato",
 			}}
 			changesObserverProps={{
 				currentData: currentBusiness,

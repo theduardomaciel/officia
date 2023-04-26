@@ -8,17 +8,17 @@ export declare global {
 	namespace ReactNavigation {
 		interface RootParamList {
 			home: {
-				service: "created" | "deleted";
+				order: "created" | "deleted";
 			};
 			overview: undefined;
 			schedule: {
-				serviceId: string;
+				orderId: string;
 			};
 			invoice: {
-				serviceId: string;
+				orderId: string;
 			};
-			service: {
-				serviceId: string;
+			order: {
+				orderId: string;
 				updated?: boolean;
 			};
 			dayAgenda: {

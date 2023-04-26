@@ -151,7 +151,7 @@ const ToastUI = forwardRef(
 				<PanGestureHandler onGestureEvent={gestureHandler}>
 					<Animated.View
 						style={[animationStyle]}
-						className="w-screen absolute top-0 left-0 px-6 z-10 flex items-center justify-center"
+						className="w-screen absolute top-0 left-0 px-6 z-50 flex items-center justify-center"
 					>
 						<View
 							onLayout={(event) =>

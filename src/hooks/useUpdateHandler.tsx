@@ -1,12 +1,9 @@
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback } from "react";
 import Animated, {
 	Layout,
-	runOnJS,
 	useAnimatedStyle,
 	useSharedValue,
-	withSequence,
 	withSpring,
-	withTiming,
 } from "react-native-reanimated";
 import {
 	Text,
@@ -31,20 +28,31 @@ const SPRING_OPTIONS = {
 	stiffness: 1000,
 };
 
-export default function useUpdateHandler(
-	sections: string[],
-	HEADERS: Header[],
-	onLimitReached: () => void,
-	initialValue: number = 0
-) {
+interface UpdateHandlerProps {
+	sections: string[];
+	HEADERS: Header[];
+	onLimitReached: () => void;
+	initialValue?: number;
+}
+
+export default function useUpdateHandler({
+	sections,
+	HEADERS,
+	onLimitReached,
+	initialValue = 0,
+}: UpdateHandlerProps) {
 	const { width } = useWindowDimensions();
 
-	const [selectedSection, setSelectedSection] = useState({
-		value: initialValue,
-		direction: "forward",
-	});
+	const COLUMN_GAP = width / 2;
+	const ANIMATION_WIDTH = width - 24 * 2;
+
+	const getPosition = useCallback(
+		(id: number) => -(ANIMATION_WIDTH + COLUMN_GAP) * id,
+		[width]
+	);
+
 	const selectedSectionId = useSharedValue(initialValue);
-	const headerPosition = useSharedValue(initialValue);
+	const headerPosition = useSharedValue(getPosition(initialValue));
 
 	const headerAnimatedStyle = useAnimatedStyle(() => {
 		return {
@@ -59,51 +67,84 @@ export default function useUpdateHandler(
 	const updateHandler = useCallback((id: number) => {
 		"worklet";
 		if (sections[selectedSectionId.value] && sections[id] && id >= 0) {
-			// Bottom Sheet Animation
+			// Close current section bottom sheet
 			BottomSheet.close(sections[selectedSectionId.value]);
 
-			if (id > selectedSectionId.value) {
-				headerPosition.value = withSpring(
-					-width,
-					SPRING_OPTIONS,
-					() => {
-						runOnJS(setSelectedSection)({
-							value: id,
-							direction: "forward",
-						});
-					}
-				);
-				selectedSectionId.value = withSpring(id, SPRING_OPTIONS);
-			} else {
-				// id < selectedSectionId.value - animação reversa
-				headerPosition.value = withSpring(width, SPRING_OPTIONS, () => {
-					runOnJS(setSelectedSection)({
-						value: id,
-						direction: "backward",
-					});
-				});
-				selectedSectionId.value = withSpring(id, SPRING_OPTIONS);
-			}
+			// Update selected section
+			const POSITION = getPosition(id);
 
+			headerPosition.value = withSpring(POSITION, SPRING_OPTIONS);
+			selectedSectionId.value = withSpring(id, SPRING_OPTIONS);
+
+			// Open next section bottom sheet
 			BottomSheet.expand(sections[id]);
 		} else {
 			onLimitReached();
 		}
 	}, []);
 
-	useEffect(() => {
-		if (selectedSection.direction === "forward") {
-			headerPosition.value = withSequence(
-				withTiming(width, { duration: 0 }),
-				withSpring(0, SPRING_OPTIONS)
-			);
-		} else if (selectedSection.direction === "backward") {
-			headerPosition.value = withSequence(
-				withTiming(-width, { duration: 0 }),
-				withSpring(0, SPRING_OPTIONS)
-			);
-		}
-	}, [selectedSection]);
+	const Header = memo(() => (
+		<Animated.View
+			className={"w-full items-center justify-start flex-row"}
+			style={[headerAnimatedStyle, { columnGap: COLUMN_GAP }]}
+			layout={Layout.springify().damping(7).stiffness(100).mass(0.25)}
+		>
+			{HEADERS.map((header, index) => (
+				<View
+					key={index}
+					className="flex-col items-center justify-center"
+					style={{ rowGap: 10, width: ANIMATION_WIDTH }}
+				>
+					<Text className="font-logoRegular leading-[95%] text-4xl text-white text-center w-5/6">
+						{header.title}
+					</Text>
+					<Text className="text-white text-sm font-semibold text-center">
+						{header.subtitle}
+					</Text>
+				</View>
+			))}
+		</Animated.View>
+	));
+
+	/* 
+    <Animated.FlatList
+			data={HEADERS}
+			style={[
+				{
+					flexGrow: 0,
+					flexShrink: 0,
+					width: ANIMATION_WIDTH * HEADERS.length,
+					backgroundColor: "red",
+				},
+				headerAnimatedStyle,
+			]}
+			keyExtractor={(_, index) => index.toString()}
+			contentContainerStyle={{
+				columnGap: width / 2,
+				backgroundColor: "red",
+				alignItems: "center",
+				justifyContent: "flex-start",
+			}}
+			horizontal
+			pagingEnabled
+			scrollEnabled={false}
+			showsHorizontalScrollIndicator={false}
+			renderItem={({ item: header, index }) => (
+				<View
+					key={index}
+					className="flex-col items-center justify-center"
+					style={{ rowGap: 10, width: ANIMATION_WIDTH }}
+				>
+					<Text className="font-logoRegular leading-[95%] text-4xl text-white text-center w-5/6">
+						{header.title}
+					</Text>
+					<Text className="text-white text-sm font-semibold text-center">
+						{header.subtitle}
+					</Text>
+				</View>
+			)}
+		/>
+    */
 
 	const BackButton = memo(({ isEnabled }: { isEnabled?: boolean }) =>
 		isEnabled ? (
@@ -128,21 +169,6 @@ export default function useUpdateHandler(
 			<View className="py-1.5" />
 		)
 	);
-
-	const Header = memo(() => (
-		<Animated.View
-			className="flex-col items-center justify-center"
-			style={[headerAnimatedStyle, { rowGap: 10 }]}
-			layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}
-		>
-			<Text className="font-logoRegular leading-[95%] text-4xl text-white text-center w-5/6">
-				{HEADERS[selectedSection.value].title}
-			</Text>
-			<Text className="text-white text-sm font-semibold text-center">
-				{HEADERS[selectedSection.value].subtitle}
-			</Text>
-		</Animated.View>
-	));
 
 	return {
 		updateHandler,

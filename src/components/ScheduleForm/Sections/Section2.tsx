@@ -9,14 +9,14 @@ import PaymentMethodsIcon from "assets/icons/currency_exchange.svg";
 import WarrantyIcon from "assets/icons/warranty.svg";
 
 // Components
-import SectionBottomSheet from "../SectionBottomSheet";
+import SectionBottomSheet from "../../Form/SectionBottomSheet";
 import { Loading } from "components/StatusMessage";
 import { PreviewStatic } from "components/Preview";
 import {
 	Section,
 	SubSectionWrapper,
 	SubSectionWrapperProps,
-} from "../SubSectionWrapper";
+} from "../../Form/SubSectionWrapper";
 import { ActionButton } from "components/Button";
 
 // Utils
@@ -24,16 +24,16 @@ import { database } from "database/index.native";
 
 // Functions
 
-async function getServiceNumber() {
-	const servicesCollection = database.get<ServiceModel>("services");
-	const count = await servicesCollection.query().fetchCount();
+async function getOrderNumber() {
+	const ordersCollection = database.get<OrderModel>("orders");
+	const count = await ordersCollection.query().fetchCount();
 	return count + 1;
 }
 
 // Types
 import type { MaterialModel } from "database/models/materialModel";
-import type { ServiceModel } from "database/models/serviceModel";
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { OrderModel } from "database/models/orderModel";
+import type { ProductModel } from "database/models/productModel";
 import type {
 	Section0Props,
 	Section0RefProps,
@@ -43,7 +43,7 @@ import type {
 
 // Utils
 import { Q } from "@nozbe/watermelondb";
-import { scheduleServiceNotification } from "utils/notificationHandler";
+import { scheduleOrderNotification } from "utils/notificationHandler";
 import { getPaymentCondition } from "utils/pdfHandler";
 
 interface ReviewSectionProps {
@@ -137,9 +137,7 @@ export default function Section2({
 
 	const currentDate = new Date();
 	const [data, setData] = useState<
-		| (Section0Props & Section1Props & { serviceId: number })
-		| undefined
-		| null
+		(Section0Props & Section1Props & { orderId: number }) | undefined | null
 	>(undefined);
 	const [isLoading, setLoading] = useState(false);
 
@@ -149,11 +147,11 @@ export default function Section2({
 			const section1Data = section1Ref.current?.getData();
 
 			if (section0Data && section1Data) {
-				const serviceId = await getServiceNumber();
+				const orderId = await getOrderNumber();
 				const newData = {
 					...section0Data,
 					...section1Data,
-					serviceId,
+					orderId,
 				};
 
 				setData(newData);
@@ -178,7 +176,7 @@ export default function Section2({
 			const formattedData = {
 				name:
 					data.name ||
-					`Serviço n.0${data.serviceId}-${currentDate.getFullYear()}`,
+					`Serviço n.0${data.orderId}-${currentDate.getFullYear()}`,
 				date: serviceDate,
 				status: "scheduled",
 				discount: data.discount,
@@ -189,105 +187,105 @@ export default function Section2({
 				splitRemaining: data.splitRemaining,
 				warrantyPeriod: data.warrantyDays,
 				warrantyDetails: data.warrantyDetails,
-			} as ServiceModel;
+			} as OrderModel;
 
 			if (initialValue) {
-				const { service, subServicesAmount, client } =
-					await database.write(async () => {
-						const updatedService =
-							await initialValue.service.update((service) => {
-								service.name = formattedData.name;
-								service.date = formattedData.date;
-								service.status = formattedData.status;
-								service.discount = formattedData.discount;
-								service.additionalInfo =
+				const { order, productsAmount, client } = await database.write(
+					async () => {
+						const updatedOrder = await initialValue.order.update(
+							(order) => {
+								order.name = formattedData.name;
+								order.date = formattedData.date;
+								order.status = formattedData.status;
+								order.discount = formattedData.discount;
+								order.additionalInfo =
 									formattedData.additionalInfo;
-								service.paymentCondition =
+								order.paymentCondition =
 									formattedData.paymentCondition;
-								service.paymentMethods =
+								order.paymentMethods =
 									formattedData.paymentMethods;
-								service.splitRemaining =
+								order.splitRemaining =
 									formattedData.splitRemaining;
-								service.splitValue = formattedData.splitValue;
-								service.warrantyPeriod =
+								order.splitValue = formattedData.splitValue;
+								order.warrantyPeriod =
 									formattedData.warrantyPeriod;
-								service.warrantyDetails =
+								order.warrantyDetails =
 									formattedData.warrantyDetails;
-							});
+							}
+						);
 
-						// Sub services
-						const subServicesToUpdate = updateFilter(
-							initialValue.subServices,
-							data.subServices
-						) as SubServiceModel[];
-						const batchSubServicesToUpdate =
-							subServicesToUpdate.map((subService) => {
-								const newData = data.subServices.find(
-									(newSubService) =>
-										newSubService.id === subService.id
+						// Sub orders
+						const productsToUpdate = updateFilter(
+							initialValue.products,
+							data.products
+						) as ProductModel[];
+						const batchProductsToUpdate = productsToUpdate.map(
+							(product) => {
+								const newData = data.products.find(
+									(newProduct) => newProduct.id === product.id
 								);
 								if (newData) {
-									const updatedSubService =
-										subService.prepareUpdate(
-											(subServiceToUpdate) => {
-												subServiceToUpdate.description =
+									const updatedProduct =
+										product.prepareUpdate(
+											(subOrderToUpdate) => {
+												subOrderToUpdate.description =
 													newData.description;
-												subServiceToUpdate.details =
+												subOrderToUpdate.details =
 													newData.details;
-												subServiceToUpdate.price =
+												subOrderToUpdate.price =
 													newData.price;
-												subServiceToUpdate.types =
+												subOrderToUpdate.types =
 													newData.types;
 											}
 										);
-									return updatedSubService;
+									return updatedProduct;
 								}
-							});
-
-						//console.log(batchSubServicesToUpdate)
-
-						const subServicesToDelete = deleteFilter(
-							initialValue.subServices,
-							data.subServices
+							}
 						);
-						const batchSubServicesToDelete =
-							subServicesToDelete.map((subService) => {
-								const deletedSubService =
-									subService.prepareDestroyPermanently();
-								return deletedSubService;
-							});
 
-						const subServicesModel =
-							await database.collections.get<SubServiceModel>(
-								"sub_services"
+						//console.log(batchProductsToUpdate)
+
+						const productsToDelete = deleteFilter(
+							initialValue.products,
+							data.products
+						);
+						const batchProductsToDelete = productsToDelete.map(
+							(product) => {
+								const deletedProduct =
+									product.prepareDestroyPermanently();
+								return deletedProduct;
+							}
+						);
+
+						const productsModel =
+							await database.collections.get<ProductModel>(
+								"sub_orders"
 							);
 
-						const subServicesToCreate = createFilter(
-							initialValue.subServices,
-							data.subServices
+						const productsToCreate = createFilter(
+							initialValue.products,
+							data.products
 						);
-						const batchSubServicesToCreate =
-							subServicesToCreate.map((subService) => {
-								const newSubService =
-									subServicesModel.prepareCreate(
-										(subServiceToCreate: any) => {
-											subServiceToCreate.service.set(
-												updatedService
-											);
-											subServiceToCreate.description =
-												subService.description;
-											subServiceToCreate.details =
-												subService.details;
-											subServiceToCreate.types =
-												subService.types;
-											subServiceToCreate.amount =
-												subService.amount;
-											subServiceToCreate.price =
-												subService.price;
-										}
-									);
-								return newSubService;
-							});
+						const batchProductsToCreate = productsToCreate.map(
+							(product) => {
+								const newProduct = productsModel.prepareCreate(
+									(subOrderToCreate: any) => {
+										subOrderToCreate.order.set(
+											updatedOrder
+										);
+										subOrderToCreate.description =
+											product.description;
+										subOrderToCreate.details =
+											product.details;
+										subOrderToCreate.types = product.types;
+										subOrderToCreate.amount =
+											product.amount;
+										subOrderToCreate.price = product.price;
+									}
+								);
+								return newProduct;
+							}
+						);
 
 						// Materials
 						const materialsToUpdate = updateFilter(
@@ -353,8 +351,8 @@ export default function Section2({
 								const newMaterial =
 									materialsModel.prepareCreate(
 										(materialToCreate: any) => {
-											materialToCreate.service.set(
-												updatedService
+											materialToCreate.order.set(
+												updatedOrder
 											);
 											materialToCreate.name =
 												material.name;
@@ -379,79 +377,76 @@ export default function Section2({
 
 						// Adicionamos os subserviços e os materiais ao serviço
 						await database.batch([
-							...batchSubServicesToUpdate,
-							...batchSubServicesToDelete,
-							...batchSubServicesToCreate,
+							...batchProductsToUpdate,
+							...batchProductsToDelete,
+							...batchProductsToCreate,
 							...batchMaterialsToUpdate,
 							...batchMaterialsToDelete,
 							...batchMaterialsToCreate,
 						]);
 
-						const subServicesAmount = await database
-							.get<SubServiceModel>(`sub_services`)
-							.query(Q.where("service_id", updatedService.id))
+						const productsAmount = await database
+							.get<ProductModel>(`sub_orders`)
+							.query(Q.where("order_id", updatedOrder.id))
 							.fetchCount();
-						const typedUpdateService = updatedService as any;
-						const client = await typedUpdateService.client.fetch();
+						const typedUpdateOrder = updatedOrder as any;
+						const client = await typedUpdateOrder.client.fetch();
 
 						return {
-							service: updatedService,
-							subServicesAmount,
+							order: updatedOrder,
+							productsAmount,
 							client,
 						};
-					});
+					}
+				);
 
-				await scheduleServiceNotification(
-					service,
-					subServicesAmount,
+				await scheduleOrderNotification(
+					order,
+					productsAmount,
 					client?.name
 				);
 
 				setLoading(false);
 				console.log(
-					"Service updated successfully (with subServices and materials)."
+					"Order updated successfully (with products and materials)."
 				);
-				navigate("service", {
-					serviceId: initialValue.service.id,
+				navigate("order", {
+					orderId: initialValue.order.id,
 					updated: true,
 				});
 			} else {
 				const serviceOnDatabase = await database.write(async () => {
-					const newService = await database
-						.get<ServiceModel>("services")
-						.create((service) => {
-							service.name = formattedData.name;
-							service.date = formattedData.date;
-							service.status = formattedData.status;
-							service.additionalInfo =
-								formattedData.additionalInfo;
-							service.paymentCondition =
+					const newOrder = await database
+						.get<OrderModel>("orders")
+						.create((order) => {
+							order.name = formattedData.name;
+							order.date = formattedData.date;
+							order.status = formattedData.status;
+							order.additionalInfo = formattedData.additionalInfo;
+							order.paymentCondition =
 								formattedData.paymentCondition;
-							service.paymentMethods =
-								formattedData.paymentMethods;
-							service.splitValue = formattedData.splitValue;
-							service.splitRemaining =
-								formattedData.splitRemaining;
-							service.warrantyPeriod =
-								formattedData.warrantyPeriod;
-							service.warrantyDetails =
+							order.paymentMethods = formattedData.paymentMethods;
+							order.splitValue = formattedData.splitValue;
+							order.splitRemaining = formattedData.splitRemaining;
+							order.warrantyPeriod = formattedData.warrantyPeriod;
+							order.warrantyDetails =
 								formattedData.warrantyDetails;
 						});
 
-					const batchSubServices = await Promise.all(
-						data.subServices.map(async (subService) => {
-							const newSubService = await database
-								.get<SubServiceModel>("sub_services")
+					const batchProducts = await Promise.all(
+						data.products.map(async (product) => {
+							const newProduct = await database
+								.get<ProductModel>("sub_orders")
 								.prepareCreate((sub_service_db: any) => {
-									sub_service_db.service.set(newService);
+									sub_service_db.order.set(newOrder);
 									sub_service_db.description =
-										subService.description;
-									sub_service_db.details = subService.details;
-									sub_service_db.types = subService.types;
-									sub_service_db.price = subService.price;
-									sub_service_db.amount = subService.amount;
+										product.description;
+									sub_service_db.details = product.details;
+									sub_service_db.types = product.types;
+									sub_service_db.price = product.price;
+									sub_service_db.amount = product.amount;
 								});
-							return newSubService;
+							return newProduct;
 						})
 					);
 
@@ -460,7 +455,7 @@ export default function Section2({
 							const newMaterial = await database
 								.get<MaterialModel>("materials")
 								.prepareCreate((material_db: any) => {
-									material_db.service.set(newService);
+									material_db.order.set(newOrder);
 									material_db.name = material.name;
 									material_db.description =
 										material.description;
@@ -477,23 +472,20 @@ export default function Section2({
 					);
 
 					// Adicionamos os subserviços e os materiais ao serviço
-					await database.batch([
-						...batchSubServices,
-						...batchMaterials,
-					]);
+					await database.batch([...batchProducts, ...batchMaterials]);
 
-					return newService;
+					return newOrder;
 				});
 
 				if (serviceDate > new Date()) {
-					await scheduleServiceNotification(
+					await scheduleOrderNotification(
 						serviceOnDatabase,
-						data.subServices.length
+						data.products.length
 					);
 				}
 
-				//console.log("Service created successfully (with subServices and materials).")
-				navigate("home", { service: "created" });
+				//console.log("Order created successfully (with products and materials).")
+				navigate("home", { order: "created" });
 			}
 		}
 	}, [data]);
@@ -524,7 +516,7 @@ export default function Section2({
 						value={
 							data.name ||
 							`Serviço n.0${
-								data.serviceId
+								data.orderId
 							}-${currentDate.getFullYear()}`
 						}
 					/>
@@ -617,20 +609,18 @@ export default function Section2({
 						/>
 					)}
 
-					{data.subServices && data.subServices.length > 0 && (
+					{data.products && data.products.length > 0 && (
 						<SubSectionWrapper
 							style={{ flex: 1 }}
 							header={{ title: "Serviços" }}
 						>
 							<View className="w-full">
-								{data.subServices.map((subService, index) => (
+								{data.products.map((product, index) => (
 									<View
 										className="mb-4"
 										key={index.toString()}
 									>
-										<PreviewStatic
-											subService={subService}
-										/>
+										<PreviewStatic product={product} />
 									</View>
 								))}
 							</View>

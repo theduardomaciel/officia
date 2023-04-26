@@ -20,7 +20,7 @@ import Label from "components/Label";
 import DateFilter from "components/DateFilter";
 
 import { Empty, Loading } from "components/StatusMessage";
-import { ServiceWithSubServicesPreview } from "components/ServicePreview";
+import { OrderWithProductsPreview } from "components/OrderPreview";
 import { TagsSelector } from "components/TagsSelector";
 import { FilterView } from "./Home";
 import { ActionButton } from "components/Button";
@@ -30,17 +30,17 @@ import { Q } from "@nozbe/watermelondb";
 import { database } from "database/index.native";
 
 // Types
-import type { ServiceModel } from "database/models/serviceModel";
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { OrderModel } from "database/models/orderModel";
+import type { ProductModel } from "database/models/productModel";
 
-interface MonthWithServices {
+interface MonthWithOrders {
 	month: string;
-	dates: DateWithServices[];
+	dates: DateWithOrders[];
 }
 
-interface DateWithServices {
+interface DateWithOrders {
 	title: string;
-	data: ServiceModel[];
+	data: OrderModel[];
 }
 
 const monthsNames = [
@@ -60,15 +60,15 @@ const monthsNames = [
 
 export default function Overview({ navigation }: { navigation: any }) {
 	const { colorScheme } = useColorScheme();
-	const [services, setServices] = React.useState<ServiceModel[] | undefined>(
+	const [orders, setOrders] = React.useState<OrderModel[] | undefined>(
 		undefined
 	);
 
 	async function fetchData() {
-		setServices(undefined);
+		setOrders(undefined);
 		try {
-			const servicesCollection = database.get<ServiceModel>("services");
-			const services = await servicesCollection
+			const ordersCollection = database.get<OrderModel>("orders");
+			const orders = await ordersCollection
 				.query(
 					Q.or(
 						Q.where("date", Q.lte(new Date().getTime())),
@@ -76,16 +76,16 @@ export default function Overview({ navigation }: { navigation: any }) {
 					)
 				)
 				.fetch();
-			setServices(services);
+			setOrders(orders);
 		} catch (error) {
 			console.log(error, "erro");
-			setServices([]);
+			setOrders([]);
 		}
 	}
 
 	useFocusEffect(
 		useCallback(() => {
-			if (services === undefined) {
+			if (orders === undefined) {
 				fetchData();
 			}
 			NavigationBar.setPositionAsync("absolute");
@@ -93,39 +93,39 @@ export default function Overview({ navigation }: { navigation: any }) {
 		}, [])
 	);
 
-	const monthsWithServices = React.useMemo(() => {
-		const monthsWithServices: MonthWithServices[] = [];
+	const monthsWithOrders = React.useMemo(() => {
+		const monthsWithOrders: MonthWithOrders[] = [];
 		const months =
-			services?.map((service) => new Date(service.date).getMonth()) ?? [];
+			orders?.map((order) => new Date(order.date).getMonth()) ?? [];
 		const uniqueMonths = [...new Set(months)];
 		uniqueMonths.forEach((month) => {
-			const servicesInMonth =
-				services?.filter(
-					(service) => new Date(service.date).getMonth() === month
+			const ordersInMonth =
+				orders?.filter(
+					(order) => new Date(order.date).getMonth() === month
 				) ?? [];
-			const dates = servicesInMonth.map(
-				(service) => new Date(service.date).toISOString().split("T")[0]
+			const dates = ordersInMonth.map(
+				(order) => new Date(order.date).toISOString().split("T")[0]
 			);
 			const uniqueDates = [...new Set(dates)];
-			const datesWithServices: DateWithServices[] = [];
+			const datesWithOrders: DateWithOrders[] = [];
 			uniqueDates.forEach((date) => {
-				const servicesInDate = servicesInMonth.filter(
-					(service) =>
-						new Date(service.date).toISOString().split("T")[0] ===
+				const ordersInDate = ordersInMonth.filter(
+					(order) =>
+						new Date(order.date).toISOString().split("T")[0] ===
 						date
 				);
-				datesWithServices.push({
+				datesWithOrders.push({
 					title: date,
-					data: servicesInDate,
+					data: ordersInDate,
 				});
 			});
-			monthsWithServices.push({
+			monthsWithOrders.push({
 				month: monthsNames[month],
-				dates: datesWithServices,
+				dates: datesWithOrders,
 			});
 		});
-		return monthsWithServices;
-	}, [services]);
+		return monthsWithOrders;
+	}, [orders]);
 
 	const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
 	const [typesFilter, setTypesFilter] = useState<string[] | undefined>(
@@ -172,13 +172,13 @@ export default function Overview({ navigation }: { navigation: any }) {
 					</View>
 				</View>
 				<StatisticsCarousel />
-				{monthsWithServices.length > 0 ? (
+				{monthsWithOrders.length > 0 ? (
 					<FlatList
-						data={monthsWithServices}
+						data={monthsWithOrders}
 						className="w-screen"
 						renderItem={(data) => <MonthDates {...data.item} />}
 					/>
-				) : services === undefined ? (
+				) : orders === undefined ? (
 					<View className="w-full flex-1 items-center justify-center pt-14 px-4">
 						<Loading />
 					</View>
@@ -224,7 +224,7 @@ export default function Overview({ navigation }: { navigation: any }) {
 	);
 }
 
-const MonthDates = ({ month, dates }: MonthWithServices) => {
+const MonthDates = ({ month, dates }: MonthWithOrders) => {
 	const { navigate } = useNavigation();
 
 	return (
@@ -245,15 +245,13 @@ const MonthDates = ({ month, dates }: MonthWithServices) => {
 				sections={dates}
 				stickySectionHeadersEnabled
 				renderSectionHeader={({ section: { title, data } }) => (
-					<DateServicesList title={title} data={data} />
+					<DateOrdersList title={title} data={data} />
 				)}
 				renderItem={({ item, index }) => (
-					<EnhancedServiceWithSubServicesPreview
+					<EnhancedOrderWithProductsPreview
 						key={index.toString()}
-						service={item}
-						onPress={() =>
-							navigate("service", { serviceId: item.id })
-						}
+						order={item}
+						onPress={() => navigate("order", { orderId: item.id })}
 					/>
 				)}
 			/>
@@ -261,12 +259,12 @@ const MonthDates = ({ month, dates }: MonthWithServices) => {
 	);
 };
 
-const DateServicesList = ({
+const DateOrdersList = ({
 	title,
 	data,
 }: {
 	title: string;
-	data: ServiceModel[];
+	data: OrderModel[];
 }) => {
 	const date = new Date(title);
 	const dayName = date.toLocaleDateString("pt-BR", { weekday: "long" });
@@ -274,20 +272,20 @@ const DateServicesList = ({
 
 	const [earnings, setEarnings] = React.useState<number>(0);
 
-	async function getEarnings(servicesInDate: ServiceModel[]) {
-		const subServicesEarnings = await Promise.all(
-			servicesInDate.map(async (service: any) => {
-				const subServices = await service.subServices.fetch();
-				const subServicesEarnings = subServices.map(
-					(subService: SubServiceModel) => subService.price
+	async function getEarnings(ordersInDate: OrderModel[]) {
+		const productsEarnings = await Promise.all(
+			ordersInDate.map(async (order: any) => {
+				const products = await order.products.fetch();
+				const productsEarnings = products.map(
+					(product: ProductModel) => product.price
 				);
-				return subServicesEarnings.reduce(
+				return productsEarnings.reduce(
 					(a: number, b: number) => a + b,
 					0
 				);
 			})
 		);
-		const earnings = subServicesEarnings.reduce(
+		const earnings = productsEarnings.reduce(
 			(a: number, b: number) => a + b,
 			0
 		);
@@ -316,23 +314,21 @@ const DateServicesList = ({
 	);
 };
 
-const EnhancedServiceWithSubServicesPreview = ({ service, ...rest }: any) => {
-	const [observedSubServices, setSubServices] = useState<
-		SubServiceModel[] | undefined
+const EnhancedOrderWithProductsPreview = ({ order, ...rest }: any) => {
+	const [observedProducts, setProducts] = useState<
+		ProductModel[] | undefined
 	>(undefined);
 
 	useEffect(() => {
-		service.subServices
-			.observe()
-			.subscribe((subServices: SubServiceModel[]) => {
-				setSubServices(subServices);
-			});
+		order.products.observe().subscribe((products: ProductModel[]) => {
+			setProducts(products);
+		});
 	}, []);
 
 	return (
-		<ServiceWithSubServicesPreview
-			service={service}
-			subServices={observedSubServices}
+		<OrderWithProductsPreview
+			order={order}
+			products={observedProducts}
 			{...rest}
 		/>
 	);

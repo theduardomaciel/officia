@@ -20,12 +20,12 @@ import Input from "components/Input";
 import BottomSheet from "components/BottomSheet";
 import Calendar, { CalendarDate } from "components/Calendar";
 
-import { Section, SubSectionWrapper } from "../SubSectionWrapper";
+import { Section, SubSectionWrapper } from "../../Form/SubSectionWrapper";
 import { ActionButton, SubActionButton } from "components/Button";
 import { Preview } from "components/Preview";
 
 // Types
-import { SubServiceModel } from "database/models/subServiceModel";
+import { ProductModel } from "database/models/productModel";
 import { MaterialModel } from "database/models/materialModel";
 
 // Forms
@@ -33,7 +33,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import SubServiceForm from "../Forms/SubserviceForm";
+import ProductForm from "../Forms/SubserviceForm";
 import MaterialForm from "../Forms/MaterialForm";
 import SavedItemsView from "components/CatalogView";
 
@@ -49,23 +49,23 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 	const { colorScheme } = useColorScheme();
 	const currentDate = new Date();
 
-	const [subServices, setSubServices] = useState<SubServiceModel[]>(
-		initialValue?.subServices ?? []
+	const [products, setProducts] = useState<ProductModel[]>(
+		initialValue?.products ?? []
 	);
 	const [materials, setMaterials] = useState<MaterialModel[]>(
 		initialValue?.materials ?? []
 	);
 
 	const [date, setDate] = useState<CalendarDate | undefined>(
-		initialValue?.service?.date
+		initialValue?.order?.date
 			? {
-					date: initialValue.service?.date.getDate(),
-					month: initialValue.service?.date.getMonth(),
+					date: initialValue.order?.date.getDate(),
+					month: initialValue.order?.date.getMonth(),
 			  }
 			: { date: currentDate.getDate(), month: currentDate.getMonth() }
 	);
 
-	const [time, setTime] = useState(initialValue?.service?.date ?? undefined);
+	const [time, setTime] = useState(initialValue?.order?.date ?? undefined);
 
 	const [isTimeModalVisible, setTimeModalVisible] = useState(false);
 	const TimePickerModal = () => {
@@ -131,13 +131,13 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 		formState: { errors },
 	} = useForm<SchemaType>({
 		defaultValues: {
-			name: initialValue?.service?.name ?? "",
+			name: initialValue?.order?.name ?? "",
 			additionalInfo:
-				(initialValue?.service?.additionalInfo
-					? initialValue?.service.additionalInfo
+				(initialValue?.order?.additionalInfo
+					? initialValue?.order.additionalInfo
 					: "") ?? "",
-			discount: initialValue?.service?.discount
-				? `${initialValue?.service?.discount?.toString()}%`
+			discount: initialValue?.order?.discount
+				? `${initialValue?.order?.discount?.toString()}%`
 				: "0%",
 		},
 		resolver: zodResolver(schema),
@@ -157,7 +157,7 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 
 			return {
 				name,
-				subServices,
+				products,
 				materials,
 				discount,
 				date,
@@ -168,7 +168,7 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 	}));
 
 	const [editableData, setEditableData] = useState<
-		SubServiceModel | MaterialModel | undefined
+		ProductModel | MaterialModel | undefined
 	>(undefined);
 
 	const [currentType, setCurrentType] = useState<
@@ -196,7 +196,7 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 			<SubSectionWrapper
 				header={{
 					title: "Serviços",
-					children: subServices && subServices?.length > 0 && (
+					children: products && products?.length > 0 && (
 						<Text className="font-medium text-red text-xs opacity-80">
 							Arraste para excluir
 						</Text>
@@ -204,25 +204,23 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 				}}
 			>
 				<View className="w-full">
-					{subServices && subServices?.length === 0 && (
+					{products && products?.length === 0 && (
 						<Text className="text-sm text-center text-black dark:text-white mb-6">
 							Nenhum serviço adicionado.
 						</Text>
 					)}
-					{subServices.map((subService, index) => (
+					{products.map((product, index) => (
 						<View className="mb-4" key={index.toString()}>
 							<Preview
-								subService={subService}
+								product={product}
 								onDelete={() => {
-									setSubServices((prev) =>
-										prev.filter(
-											(s) => s.id !== subService.id
-										)
+									setProducts((prev) =>
+										prev.filter((s) => s.id !== product.id)
 									);
 								}}
 								onEdit={() => {
-									setEditableData(subService);
-									BottomSheet.expand("subServiceBottomSheet");
+									setEditableData(product);
+									BottomSheet.expand("subOrderBottomSheet");
 								}}
 							/>
 						</View>
@@ -233,7 +231,7 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 						<SubActionButton
 							onPress={() => {
 								setEditableData(undefined);
-								BottomSheet.expand("subServiceBottomSheet");
+								BottomSheet.expand("subOrderBottomSheet");
 							}}
 							label="Adicionar serviço"
 						/>
@@ -394,20 +392,18 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 				/>
 			</BottomSheet>
 
-			<BottomSheet height={"62%"} id={"subServiceBottomSheet"}>
-				<SubServiceForm
-					editableData={editableData as SubServiceModel}
-					onSubmitForm={(data: SubServiceModel) => {
+			<BottomSheet height={"62%"} id={"subOrderBottomSheet"}>
+				<ProductForm
+					editableData={editableData as ProductModel}
+					onSubmitForm={(data: ProductModel) => {
 						if (editableData) {
-							setSubServices((prev) =>
-								prev.map((oldService) =>
-									oldService.id === data.id
-										? data
-										: oldService
+							setProducts((prev) =>
+								prev.map((oldOrder) =>
+									oldOrder.id === data.id ? data : oldOrder
 								)
 							);
 						} else {
-							setSubServices((prev) => [...prev, data]);
+							setProducts((prev) => [...prev, data]);
 						}
 					}}
 				/>
@@ -433,11 +429,11 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 					)}
 					<SavedItemsView
 						type={currentType}
-						onSelect={(subService, material) => {
+						onSelect={(product, material) => {
 							if (material) {
 								setMaterials((prev) => [...prev, material]);
-							} else if (subService) {
-								setSubServices((prev) => [...prev, subService]);
+							} else if (product) {
+								setProducts((prev) => [...prev, product]);
 							}
 						}}
 						palette={"dark"}

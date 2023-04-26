@@ -1,32 +1,31 @@
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback } from "react";
+import React from "react";
 
 import { useColorScheme } from "nativewind";
 
 // Components
 import Container, { BusinessScrollView } from "components/Container";
 import NavigationButton from "components/NavigationButton";
-import ImagePicker from "components/ImagePicker";
 import Toast from "components/Toast";
 import { TabBarScreenHeader } from "components/Header";
 
 // Data
-import { database } from "database/index.native";
-
 import type { BusinessData } from "./@types";
+
+// MMKV
+import { globalStorage } from "context/AuthContext";
 
 export async function updateData(
 	dataToUpdate: Partial<BusinessData>,
 	businessData: BusinessData | Partial<BusinessData>,
 	suppressToast?: boolean
 ) {
-	try {
-		const updatedData = {
-			...businessData,
-			...dataToUpdate,
-		} as BusinessData;
+	const updatedData = {
+		...businessData,
+		...dataToUpdate,
+	} as BusinessData;
 
-		await database.localStorage.set("businessData", updatedData);
+	try {
+		globalStorage.set("currentBusiness", JSON.stringify(updatedData));
 
 		if (!suppressToast) {
 			Toast.show({
@@ -37,7 +36,7 @@ export async function updateData(
 			});
 		}
 
-		//console.log("Dados do negócio atualizados com sucesso.")
+		console.log("Dados do negócio atualizados com sucesso.");
 		return updatedData;
 	} catch (error) {
 		console.log(error);
@@ -51,40 +50,13 @@ export async function updateData(
 }
 
 export default function Business({ navigation }: { navigation: any }) {
-	const { colorScheme } = useColorScheme();
-	const { navigate } = useNavigation();
-
-	const [businessData, setBusinessData] = React.useState<
-		BusinessData | undefined
-	>(undefined);
-
-	async function getBusinessData() {
-		try {
-			const data = (await database.localStorage.get(
-				"businessData"
-			)) as BusinessData;
-			if (data) {
-				//console.log(data)
-				setBusinessData(data);
-			}
-		} catch (error) {
-			console.log(error);
-		}
-	}
-
-	useFocusEffect(
-		useCallback(() => {
-			getBusinessData();
-		}, [])
-	);
-
 	return (
 		<Container>
 			<TabBarScreenHeader title="Meu Negócio" navigation={navigation} />
 			<BusinessScrollView
 				style={{ paddingBottom: 25, paddingTop: 4, rowGap: 20 }}
 			>
-				<ImagePicker
+				{/* <ImagePicker
 					imageUri={businessData?.logo}
 					onUpdate={async (dataToUpdate) => {
 						if (!businessData) return;
@@ -98,59 +70,41 @@ export default function Business({ navigation }: { navigation: any }) {
 					}}
 					label="Adicionar logotipo da empresa"
 					showDeleteButton
-				/>
+				/> */}
 				<NavigationButton
 					title="Informações Básicas"
 					description="Nome, CNPJ e Razão Social"
-					onPress={() =>
-						navigate("basicInfo", { businessData: businessData })
-					}
+					onPress={() => navigation.navigate("basicInfo")}
 				/>
 				<NavigationButton
 					title="Dados Complementares"
 					description="Mensagens padrão e assinatura digital"
-					onPress={() =>
-						navigate("additionalInfo", {
-							businessData: businessData,
-						})
-					}
+					onPress={() => navigation.navigate("additionalInfo")}
 				/>
 				<NavigationButton
 					title="Dados Bancários"
 					description="Conta bancária e chave PIX"
-					onPress={() =>
-						navigate("bankAccount", { businessData: businessData })
-					}
+					onPress={() => navigation.navigate("bankAccount")}
 				/>
 				<NavigationButton
 					title="Contato e Endereço"
 					description="E-mail, telefone e endereço"
-					onPress={() =>
-						navigate("contactAndAddress", {
-							businessData: businessData,
-						})
-					}
+					onPress={() => navigation.navigate("contactAndAddress")}
 				/>
 				<NavigationButton
 					title="Redes Sociais"
 					description="Facebook, Instagram e etc."
-					onPress={() =>
-						navigate("socialMedia", { businessData: businessData })
-					}
+					onPress={() => navigation.navigate("socialMedia")}
 				/>
 				<NavigationButton
 					title="Categorias"
 					description="Defina em que ramos o seu negócio se encaixa"
-					onPress={() =>
-						navigate("categories", { businessData: businessData })
-					}
+					onPress={() => navigation.navigate("categories")}
 				/>
 				<NavigationButton
 					title="Configurações"
 					description="Gerencie sua conta e personalize suas preferências"
-					onPress={() =>
-						navigate("settings", { businessData: businessData })
-					}
+					onPress={() => navigation.navigate("settings")}
 				/>
 			</BusinessScrollView>
 		</Container>

@@ -13,19 +13,19 @@ import { Associations } from "@nozbe/watermelondb/Model";
 // Types
 import type { ClientModel } from "./clientModel";
 import type { MaterialModel } from "./materialModel";
-import type { SubServiceModel } from "./subServiceModel";
-import { ServiceModel } from "./serviceModel";
+import type { ProductModel } from "./productModel";
+import { OrderModel } from "./orderModel";
 
 export class ProjectModel extends Model {
 	static table = "projects";
 	static associations: Associations = {
-		services: { type: "has_many", foreignKey: "service_id" },
+		orders: { type: "has_many", foreignKey: "order_id" },
 		clients: { type: "has_many", foreignKey: "client_id" },
 
 		bookmarkedMaterials: { type: "has_many", foreignKey: "material_id" },
-		bookmarkedSubServices: {
+		bookmarkedProducts: {
 			type: "has_many",
-			foreignKey: "subService_id",
+			foreignKey: "subOrder_id",
 		},
 	};
 
@@ -54,12 +54,12 @@ export class ProjectModel extends Model {
 	@field("defaultAdditionalInfo") defaultAdditionalInfo!: string | null;
 	@field("defaultWarrantyDetails") defaultWarrantyDetails!: string | null;
 
-	@children("services") services!: ServiceModel[];
+	@children("orders") orders!: OrderModel[];
 	@children("clients") clients!: ClientModel[];
 
 	@children("bookmarkedMaterials") bookmarkedMaterials!: MaterialModel[];
-	@children("bookmarkedSubServices")
-	bookmarkedSubServices!: SubServiceModel[];
+	@children("bookmarkedProducts")
+	bookmarkedProducts!: ProductModel[];
 
 	@readonly @date("created_at") createdAt!: number;
 }

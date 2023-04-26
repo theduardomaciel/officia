@@ -10,7 +10,7 @@ import colors from "global/colors";
 import { BusinessScrollView } from "components/Container";
 import Toast from "components/Toast";
 import Input, { borderErrorStyle } from "components/Input";
-import { SubSectionWrapper } from "components/ScheduleForm/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
 
 import BusinessLayout, { ChangesObserver } from "../Layout";
 
@@ -148,6 +148,28 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
 							rules={{ maxLength: 50 }}
 						/>
 					</SubSectionWrapper>
+					<Dropdown
+						label="Tipo de Produto"
+						description="Qual palavra descreve melhor o que você vende, fornece ou usa em seu negócio?"
+						bottomSheetLabel="Selecione o tipo de produto"
+						selected={selectedProductType}
+						setSelected={setSelectedProductType}
+						bottomSheetHeight="30%"
+						data={[
+							{
+								label: "Produtos",
+								value: "products",
+							},
+							{
+								label: "Serviços",
+								value: "orders",
+							},
+							{
+								label: "Peças",
+								value: "parts",
+							},
+						]}
+					/>
 					<SubSectionWrapper
 						header={{ title: "Assinatura Digital", icon: "brush" }}
 					>

@@ -5,22 +5,22 @@ import Container, { BusinessScrollView } from "components/Container";
 import Header from "components/Header";
 import CatalogView, {
 	updateMaterial,
-	updateSubService,
+	updateProduct,
 } from "components/CatalogView";
 
 // Bottom Sheet
 import BottomSheet from "components/BottomSheet";
 
 import MaterialForm from "components/ScheduleForm/Forms/MaterialForm";
-import SubServiceForm from "components/ScheduleForm/Forms/SubserviceForm";
+import ProductForm from "components/ScheduleForm/Forms/SubserviceForm";
 
 // Types
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { ProductModel } from "database/models/productModel";
 import type { MaterialModel } from "database/models/materialModel";
 
 export default function CatalogScreen() {
 	const [editableData, setEditableData] = useState<
-		SubServiceModel | MaterialModel | undefined
+		ProductModel | MaterialModel | undefined
 	>(undefined);
 
 	return (
@@ -29,10 +29,10 @@ export default function CatalogScreen() {
 				<Header title="Catálogo" returnButton />
 				<BusinessScrollView>
 					<CatalogView
-						onEdit={(subServiceToEdit, materialToEdit) => {
-							if (subServiceToEdit) {
-								setEditableData(subServiceToEdit);
-								BottomSheet.expand("subServiceBottomSheet");
+						onEdit={(subOrderToEdit, materialToEdit) => {
+							if (subOrderToEdit) {
+								setEditableData(subOrderToEdit);
+								BottomSheet.expand("subOrderBottomSheet");
 							} else if (materialToEdit) {
 								setEditableData(materialToEdit);
 								BottomSheet.expand("materialBottomSheet");
@@ -53,15 +53,12 @@ export default function CatalogScreen() {
 				/>
 			</BottomSheet>
 
-			<BottomSheet height={"62%"} id={"subServiceBottomSheet"}>
-				<SubServiceForm
-					editableData={editableData as SubServiceModel}
-					onSubmitForm={(data: SubServiceModel) => {
+			<BottomSheet height={"62%"} id={"subOrderBottomSheet"}>
+				<ProductForm
+					editableData={editableData as ProductModel}
+					onSubmitForm={(data: ProductModel) => {
 						if (editableData) {
-							updateSubService(
-								editableData as SubServiceModel,
-								data
-							);
+							updateProduct(editableData as ProductModel, data);
 						}
 					}}
 				/>

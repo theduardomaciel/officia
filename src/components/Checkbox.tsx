@@ -1,6 +1,7 @@
 import { memo } from "react";
 import {
 	Text,
+	TextStyle,
 	TouchableOpacity,
 	TouchableOpacityProps,
 	View,
@@ -17,17 +18,20 @@ import colors from "global/colors";
 interface Props extends TouchableOpacityProps {
 	checked?: boolean;
 	inverted?: boolean;
-	title: string;
+	title?: string;
 	customKey: string;
 	preset?: "dark";
+	labelStyle?: TextStyle;
 }
 
 export function Checkbox({
 	title,
+	style,
 	checked = false,
 	preset,
 	inverted,
 	customKey,
+	labelStyle,
 	...rest
 }: Props) {
 	const entering = (targetValues: any) => {
@@ -58,10 +62,13 @@ export function Checkbox({
 		<TouchableOpacity
 			key={customKey}
 			activeOpacity={0.8}
-			className="flex-row mb-2 items-center"
-			style={{
-				flexDirection: inverted ? "row-reverse" : "row",
-			}}
+			className="flex-row items-center"
+			style={[
+				style,
+				{
+					flexDirection: inverted ? "row-reverse" : "row",
+				},
+			]}
 			{...rest}
 		>
 			{checked ? (
@@ -74,26 +81,33 @@ export function Checkbox({
 				</Animated.View>
 			) : (
 				<View
-					className="h-[30px] w-[30px] rounded-lg items-center justify-center"
+					className="h-[30px] w-[30px] rounded-lg items-center justify-center border border-text-200"
 					style={{
 						backgroundColor:
 							preset === "dark"
-								? colors.gray[200]
+								? "transparent" /* colors.gray[200] */
 								: colors.gray[300],
+						borderStyle: preset === "dark" ? "solid" : undefined,
+						borderWidth: preset === "dark" ? 1 : 0,
 					}}
 				/>
 			)}
-			<Text
-				className={"text-white flex-1 font-normal"}
-				ellipsizeMode="tail"
-				style={{
-					marginLeft: inverted ? 0 : 10,
-					marginRight: inverted ? 10 : 0,
-				}}
-				/* numberOfLines={1} */
-			>
-				{title}
-			</Text>
+			{title && (
+				<Text
+					className={"text-white flex-1 font-normal"}
+					ellipsizeMode="tail"
+					style={[
+						labelStyle,
+						{
+							marginLeft: inverted ? 0 : 10,
+							marginRight: inverted ? 10 : 0,
+						},
+					]}
+					/* numberOfLines={1} */
+				>
+					{title}
+				</Text>
+			)}
 		</TouchableOpacity>
 	);
 }

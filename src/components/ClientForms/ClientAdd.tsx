@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import colors from "global/colors";
 
 // Types
-import type { ServiceModel } from "database/models/serviceModel";
+import type { OrderModel } from "database/models/orderModel";
 import type { ClientModel } from "database/models/clientModel";
 
 // Components
@@ -24,14 +24,14 @@ import ClientDataForm, {
 	clientSchema,
 } from "./ClientDataForm";
 
-import { scheduleServiceNotification } from "utils/notificationHandler";
+import { scheduleOrderNotification } from "utils/notificationHandler";
 
 interface Props {
-	service: ServiceModel;
+	order: OrderModel;
 	onSubmitForm?: (data: ClientModel) => void;
 }
 
-export default function ClientAdd({ service, onSubmitForm }: Props) {
+export default function ClientAdd({ order, onSubmitForm }: Props) {
 	const showToast = (errorMessage?: string) => {
 		Toast.show({
 			preset: "error",
@@ -59,13 +59,13 @@ export default function ClientAdd({ service, onSubmitForm }: Props) {
 						newClient.contact = client.contact;
 						newClient.address = client.address;
 					});
-				await service.update((service: any) => {
-					service.client.set(newClient);
+				await order.update((order: any) => {
+					order.client.set(newClient);
 				});
 			});
-			await scheduleServiceNotification(
-				service,
-				service.subServices.length,
+			await scheduleOrderNotification(
+				order,
+				order.products.length,
 				client?.name
 			);
 		} catch (error) {
@@ -165,7 +165,7 @@ export default function ClientAdd({ service, onSubmitForm }: Props) {
 				/>
 			</View>
 			<ClientSelect
-				service={service}
+				order={order}
 				lastBottomSheet={"clientAddBottomSheet"}
 			/>
 		</BottomSheet>

@@ -9,7 +9,7 @@ import {
 	ReviewSection,
 	WarrantyReview,
 } from "components/ScheduleForm/Sections/Section2";
-import { SubSectionWrapper } from "components/ScheduleForm/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
 import { ActionButton } from "components/Button";
 
 // Utils
@@ -20,14 +20,14 @@ import colors from "global/colors";
 export default function Section1({
 	onSubmit,
 	isLoading,
-	service,
-	subServices,
+	order,
+	products,
 	materials,
 }: InvoiceSectionProps) {
 	// Data
-	const subServicesTotal = subServices
-		? subServices.reduce(
-				(acc, subService) => acc + subService.price * subService.amount,
+	const productsTotal = products
+		? products.reduce(
+				(acc, product) => acc + product.price * product.amount,
 				0
 		  )
 		: 0;
@@ -56,8 +56,8 @@ export default function Section1({
 			(material) => material.profitMargin && material.profitMargin > 0
 		);
 
-	const subTotal = subServicesTotal + materialsTotal + materialsProfitMargin;
-	const profit = subServicesTotal + materialsProfitMargin;
+	const subTotal = productsTotal + materialsTotal + materialsProfitMargin;
+	const profit = productsTotal + materialsProfitMargin;
 
 	return (
 		<>
@@ -67,18 +67,15 @@ export default function Section1({
 				}}
 			>
 				<View className="w-full">
-					{subServices && subServices?.length === 0 && (
+					{products && products?.length === 0 && (
 						<Text className="text-sm text-center text-black dark:text-white mb-6">
 							Nenhum serviço adicionado.
 						</Text>
 					)}
-					{subServices &&
-						subServices.map((subService, index) => (
+					{products &&
+						products.map((product, index) => (
 							<View className="mb-4" key={index.toString()}>
-								<PreviewStatic
-									subService={subService}
-									hasBorder
-								/>
+								<PreviewStatic product={product} hasBorder />
 							</View>
 						))}
 				</View>
@@ -110,17 +107,17 @@ export default function Section1({
 				}}
 			>
 				<View className="w-full p-[12.5px] bg-gray-300 border border-gray-500 rounded-lg">
-					{subServices && subServices.length > 0 && (
+					{products && products.length > 0 && (
 						<View className="flex flex-col mb-2">
 							<Text className="font-normal text-sm text-gray-100 mb-2">
 								Serviços
 							</Text>
 							<View className="flex flex-col w-full gap-y-1">
-								{subServices.map((subService, index) => (
+								{products.map((product, index) => (
 									<View key={index.toString()}>
 										<Value
-											value={subService.price}
-											multiplier={subService.amount}
+											value={product.price}
+											multiplier={product.amount}
 											type="earning"
 										/>
 									</View>
@@ -161,11 +158,11 @@ export default function Section1({
 								Gastos do Cliente
 							</Text>
 							<View className="flex flex-col w-full gap-y-1">
-								{materials.map((subService, index) => (
+								{materials.map((product, index) => (
 									<View key={index.toString()}>
 										<Value
-											value={subService.price}
-											multiplier={subService.amount}
+											value={product.price}
+											multiplier={product.amount}
 										/>
 									</View>
 								))}
@@ -173,7 +170,7 @@ export default function Section1({
 						</View>
 					)}
 
-					{service.discount && service.discount > 0 && (
+					{order.discount && order.discount > 0 && (
 						<View className="flex flex-col mb-2">
 							<Text className="font-normal text-sm text-gray-100 mb-2">
 								Desconto
@@ -181,12 +178,12 @@ export default function Section1({
 							<View className="flex flex-col w-full gap-y-1">
 								<View className="w-full items-center flex flex-row justify-between">
 									<Text className="text-sm text-white">
-										{service.discount}% de desconto
+										{order.discount}% de desconto
 									</Text>
 									<Text className={"text-sm text-red"}>
 										-R$
-										{(subServicesTotal + materialsTotal) *
-											(service.discount / 100)}
+										{(productsTotal + materialsTotal) *
+											(order.discount / 100)}
 									</Text>
 								</View>
 							</View>

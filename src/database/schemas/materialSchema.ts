@@ -16,6 +16,6 @@ export const materialSchema = tableSchema({
 		{ name: "availability", type: "boolean" },
 		{ name: "saved", type: "boolean" },
 		{ name: "created_at", type: "number" },
-		{ name: "service_id", type: "string", isIndexed: true },
+		{ name: "order_id", type: "string", isIndexed: true },
 	],
 });

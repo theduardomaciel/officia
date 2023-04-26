@@ -6,39 +6,30 @@ import colors from "global/colors";
 
 // Components
 import Container from "components/Container";
-import Toast from "components/Toast";
-import ImagePicker from "components/ImagePicker";
-import SectionBottomSheet from "components/ScheduleForm/SectionBottomSheet";
+import SectionBottomSheet from "components/Form/SectionBottomSheet";
 import { SectionsNavigator } from "components/SectionsNavigator";
 
-import { BasicInfo } from "screens/Main/Business/screens/BasicInfo";
-import { ContactAndAddress } from "screens/Main/Business/screens/ContactAndAddress";
+import { useBasicInfoForm } from "screens/Main/Business/screens/BasicInfo";
 import { ActionButton } from "components/Button";
 
-// Form
-import { SubmitErrorHandler, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-import {
-	basicInfoScheme,
-	BasicInfoSchemeType,
-	BusinessData,
-	contactAndAddressScheme,
-	ContactAndAddressSchemeType,
-} from "screens/Main/Business/@types";
-
-import { updateData } from "screens/Main/Business";
+import { BusinessData } from "screens/Main/Business/@types";
 
 // Hooks
 import useBackHandler from "hooks/useBackHandler";
 import useUpdateHandler from "hooks/useUpdateHandler";
+import { useAuth } from "context/AuthContext";
+import { api } from "lib/axios";
+import Toast from "components/Toast";
+import Dropdown from "components/Dropdown";
+
+const sections = [
+	"registerSection0BottomSheet",
+	"registerSection1BottomSheet",
+	"registerSection2BottomSheet",
+];
 
 export default function BusinessRegister({ navigation }: any) {
-	const sections = [
-		"registerSection0BottomSheet",
-		"registerSection1BottomSheet",
-		"registerSection2BottomSheet",
-	];
+	const { updateSelectedProject } = useAuth();
 
 	const [newBusinessData, setNewBusinessData] = React.useState<
 		Partial<BusinessData>
@@ -48,111 +39,71 @@ export default function BusinessRegister({ navigation }: any) {
 		{
 			title: "Vamos começar com o básico.",
 			subtitle:
-				"Insira os dados básicos que caracterizam o seu negócio como ele é.",
+				"Insira os dados básicos que caracterizam o seu empreendimento como ele é.",
 		},
 		{
 			title: "Seus clientes precisam de dados.",
 			subtitle:
 				"Insira as informações que serão exibidas para elevar a confiabilidade de sua empresa.",
 		},
-		/* {
-			title: "Quanto mais clareza, melhor.",
-			subtitle:
-				"Insira alguns dos seus dados de pagamento para que seus clientes esteja informados.",
-		}, */
 	];
 
-	const {
-		updateHandler,
-		selectedSection,
-		selectedSectionId,
-		Header,
-		BackButton,
-	} = useUpdateHandler(sections, HEADERS, () => navigation.goBack());
-
-	const { ConfirmExitModal } = useBackHandler(
-		() => {
-			if (selectedSection !== 0) {
-				return true;
-			} else {
-				return false;
-			}
-		},
-		() => {
-			navigation.goBack();
-		}
-	);
-
-	const {
-		handleSubmit: section0HandleSubmit,
-		control: section0Control,
-		formState: { errors: section0Errors },
-	} = useForm<BasicInfoSchemeType>({
-		mode: "onSubmit",
-		resetOptions: {
-			keepDirtyValues: true, // user-interacted input will be retained
-			keepErrors: true, // input errors will be retained with value update
-		},
-		resolver: zodResolver(basicInfoScheme),
-	});
-
-	const {
-		handleSubmit: section1HandleSubmit,
-		control: section1Control,
-		formState: { errors: section1Errors },
-		setValue,
-		getValues,
-	} = useForm<ContactAndAddressSchemeType>({
-		mode: "onSubmit",
-		defaultValues: {
-			email: undefined,
-		},
-		resetOptions: {
-			keepDirtyValues: true, // user-interacted input will be retained
-			keepErrors: true, // input errors will be retained with value update
-		},
-		resolver: zodResolver(contactAndAddressScheme),
-	});
-
-	const onError: SubmitErrorHandler<
-		BasicInfoSchemeType & ContactAndAddressSchemeType
-	> = (errors, e) => {
-		//console.log(errors)
-		//setFocus(Object.keys(errors)[0] as unknown as keyof BasicInfoSchemeType)
-		Toast.show({
-			preset: "error",
-			title: "Algo está errado com os dados inseridos.",
-			message: Object.values(errors)
-				.map((error) => error.message)
-				.join("\n"),
+	const { updateHandler, selectedSectionId, Header, BackButton } =
+		useUpdateHandler({
+			sections,
+			HEADERS,
+			onLimitReached: () => {
+				navigation.goBack();
+			},
 		});
-	};
 
-	const submitSection0Data = section0HandleSubmit(async (data) => {
-		setNewBusinessData((prevState) => ({ ...prevState, ...data }));
-		updateHandler(1);
-	}, onError);
+	const { ConfirmExitModal } = useBackHandler({
+		onBack: () => {
+			updateHandler(selectedSectionId.value - 1);
+		},
+		shouldTriggerModal: () => {
+			return selectedSectionId.value === 0;
+		},
+		onExitConfirm: () => {
+			navigation.goBack();
+		},
+	});
 
-	const submitSection1Data = section1HandleSubmit(async (data) => {
-		const fullData = { ...newBusinessData, ...data };
-		const result = await updateData(fullData, {}, true);
-		if (result) {
-			/*  */
-		} else {
+	const { BasicInfoForm, submitData: submitSection0Data } = useBasicInfoForm({
+		onSubmit: (data) => {
+			setNewBusinessData((prevState) => ({ ...prevState, ...data }));
+			updateHandler(1);
+		},
+	});
+
+	const submitSection1Data = useCallback(async () => {
+		try {
+			const response = await api.post(`/projects`, newBusinessData);
+
+			if (response.data) {
+				updateSelectedProject(response.data.id);
+			} else {
+				Toast.show({
+					preset: "error",
+					title: "Erro ao criar projeto",
+					message: "Tente novamente mais tarde",
+				});
+			}
+		} catch (error) {
+			console.log(error);
 			Toast.show({
 				preset: "error",
-				title: "Algo deu errado.",
-				message:
-					"Não foi possível criar sua empresa. Tente novamente mais tarde.",
+				title: "Erro ao criar projeto",
+				message: "Tente novamente mais tarde",
 			});
 		}
-	}, onError);
+	}, [newBusinessData]);
 
-	const BOTTOM_SHEET_HEIGHT = "67%";
+	const BOTTOM_SHEET_HEIGHT = "65%";
 
 	return (
-		<Container style={{ rowGap: 10 }}>
-			<BackButton isEnabled={selectedSectionId.value >= 0} />
+		<Container style={{ rowGap: 0 }}>
+			<BackButton isEnabled={true} />
 			<Header />
 
 			<SectionsNavigator
@@ -166,46 +117,27 @@ export default function BusinessRegister({ navigation }: any) {
 					},
 					{
 						id: 1,
-						title: "Dados Adicionais",
+						title: "Atendimento",
 					},
 				]}
 			/>
 
 			<SectionBottomSheet
-				bottomSheet={sections[0]}
-				expanded={true}
-				bottomSheetHeight={BOTTOM_SHEET_HEIGHT}
+				id={sections[0]}
+				defaultValues={{
+					expanded: true,
+				}}
+				height={BOTTOM_SHEET_HEIGHT}
 			>
-				<BasicInfo
-					control={section0Control}
-					errors={section0Errors}
-					setValue={setValue}
-					getValues={getValues}
-				/>
-				<ActionButton
+				<BasicInfoForm />
+				{/* <ActionButton
 					onPress={submitSection0Data}
 					preset="next"
 					label="Próximo"
-				/>
+				/> */}
 			</SectionBottomSheet>
 
-			<SectionBottomSheet
-				bottomSheet={sections[1]}
-				expanded={false}
-				bottomSheetHeight={BOTTOM_SHEET_HEIGHT}
-			>
-				<ContactAndAddress
-					control={section1Control}
-					errors={section1Errors}
-					businessData={newBusinessData!}
-					onAddressFetch={(addressText) => {
-						setValue("address", "");
-						setNewBusinessData({
-							...newBusinessData,
-							geocodedAddress: addressText,
-						});
-					}}
-				/>
+			<SectionBottomSheet id={sections[1]} height={BOTTOM_SHEET_HEIGHT}>
 				<ActionButton
 					onPress={submitSection1Data}
 					preset="next"
@@ -216,7 +148,7 @@ export default function BusinessRegister({ navigation }: any) {
 
 			<ConfirmExitModal
 				title="Você tem certeza que deseja voltar?"
-				message="Será necessário inserir os dados de Seu Negócio novamente para concluir o cadastro."
+				message="Será necessário inserir os dados do Seu Negócio novamente para concluir o cadastro."
 			/>
 		</Container>
 	);

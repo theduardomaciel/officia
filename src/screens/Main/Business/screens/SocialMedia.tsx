@@ -30,7 +30,6 @@ export default function SocialMedia({ route, navigation }: any) {
 		twitter: businessData.twitter,
 		youtube: businessData.youtube,
 		tiktok: businessData.tiktok,
-		whatsAppBusiness: businessData.whatsAppBusiness,
 	} as SocialMediaSchemeType;
 
 	const [hasDifferences, setHasDifferences] = React.useState(false);
@@ -51,7 +50,6 @@ export default function SocialMedia({ route, navigation }: any) {
 			twitter: "",
 			youtube: "",
 			tiktok: "",
-			whatsAppBusiness: "",
 		},
 		values: businessData ? screenData : undefined,
 		resetOptions: {
@@ -129,28 +127,6 @@ export default function SocialMedia({ route, navigation }: any) {
 							/>
 						)}
 						name="instagram"
-						rules={{ maxLength: 50 }}
-					/>
-					<Controller
-						control={control}
-						render={({ field: { onChange, onBlur, value } }) => (
-							<Input
-								label="WhatsApp Business"
-								icon={{
-									name: "whatsapp",
-									family: "FontAwesome5",
-								}}
-								value={value}
-								onBlur={onBlur}
-								autoCapitalize="none"
-								onChangeText={onChange}
-								style={
-									!!errors.whatsAppBusiness &&
-									borderErrorStyle
-								}
-							/>
-						)}
-						name="whatsAppBusiness"
 						rules={{ maxLength: 50 }}
 					/>
 					<Controller

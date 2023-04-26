@@ -1,4 +1,4 @@
-import { Collection, Model } from "@nozbe/watermelondb";
+import { Model } from "@nozbe/watermelondb";
 import {
 	field,
 	readonly,
@@ -11,7 +11,7 @@ import {
 import { Associations } from "@nozbe/watermelondb/Model";
 import { ClientModel } from "./clientModel";
 import { MaterialModel } from "./materialModel";
-import { SubServiceModel } from "./subServiceModel";
+import { ProductModel } from "./productModel";
 
 const sanitizePaymentMethods = (rawReactions: string[]) => {
 	return Array.isArray(rawReactions) ? rawReactions.map(String) : [];
@@ -19,12 +19,12 @@ const sanitizePaymentMethods = (rawReactions: string[]) => {
 
 // Copilot Hint = (rawJson) => JSON.parse(rawJson)
 
-export class ServiceModel extends Model {
-	static table = "services";
+export class OrderModel extends Model {
+	static table = "orders";
 	static associations: Associations = {
-		sub_services: { type: "has_many", foreignKey: "service_id" },
-		materials: { type: "has_many", foreignKey: "service_id" },
-		clients: { type: "has_many", foreignKey: "service_id" },
+		products: { type: "has_many", foreignKey: "order_id" },
+		materials: { type: "has_many", foreignKey: "order_id" },
+		clients: { type: "has_many", foreignKey: "order_id" },
 	};
 
 	@field("name") name!: string;
@@ -46,7 +46,7 @@ export class ServiceModel extends Model {
 	@field("invoiceValidity") invoiceValidity!: number | null;
 	@field("discount") discount!: number | null;
 
-	@children("sub_services") subServices!: SubServiceModel[];
+	@children("products") products!: ProductModel[];
 	@children("materials") materials!: MaterialModel[];
 	@relation("clients", "client_id") client!: ClientModel;
 

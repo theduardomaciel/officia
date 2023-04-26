@@ -15,15 +15,15 @@ import { Q } from "@nozbe/watermelondb";
 
 // Types
 import type { ClientModel } from "database/models/clientModel";
-import type { ServiceModel } from "database/models/serviceModel";
+import type { OrderModel } from "database/models/orderModel";
 
 interface Props {
 	lastBottomSheet: string;
-	service: ServiceModel;
+	order: OrderModel;
 	onSelectClient?: (data: ClientModel) => void;
 }
 
-export default function ClientSelect({ lastBottomSheet, service }: Props) {
+export default function ClientSelect({ lastBottomSheet, order }: Props) {
 	const [clients, setClients] = useState<ClientModel[]>([]);
 
 	const lastBottomSheetRefOpenHandler = useCallback(() => {
@@ -38,8 +38,8 @@ export default function ClientSelect({ lastBottomSheet, service }: Props) {
 		bottomSheetCloseHandler();
 		try {
 			await database.write(async () => {
-				await service.update((service: any) => {
-					service.client.id = client.id;
+				await order.update((order: any) => {
+					order.client.id = client.id;
 				});
 			});
 		} catch (error) {
@@ -117,15 +117,15 @@ export default function ClientSelect({ lastBottomSheet, service }: Props) {
 
 async function deleteClient(client: ClientModel) {
 	await database.write(async () => {
-		const servicesWithClient = await database
-			.get<ServiceModel>("services")
+		const ordersWithClient = await database
+			.get<OrderModel>("orders")
 			.query(Q.where("client_id", client.id))
 			.fetch();
 
 		await Promise.all(
-			servicesWithClient.map(async (service) => {
-				await service.update((service: any) => {
-					service.client.id = null;
+			ordersWithClient.map(async (order) => {
+				await order.update((order: any) => {
+					order.client.id = null;
 				});
 			})
 		);

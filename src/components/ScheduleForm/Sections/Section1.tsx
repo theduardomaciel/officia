@@ -17,12 +17,12 @@ import CurrencyExchangeIcon from "src/assets/icons/currency_exchange.svg";
 import WarrantyIcon from "src/assets/icons/warranty.svg";
 
 // Components
-import SectionBottomSheet from "../SectionBottomSheet";
+import SectionBottomSheet from "../../Form/SectionBottomSheet";
 import ToggleGroup, {
 	ToggleGroupWithManualValue,
 	ToggleGroupWithManualValueRef,
 } from "components/ToggleGroup";
-import { Section, SubSectionWrapper } from "../SubSectionWrapper";
+import { Section, SubSectionWrapper } from "../../Form/SubSectionWrapper";
 import { ActionButton } from "components/Button";
 import { CheckboxesGroup } from "components/Checkbox";
 
@@ -75,12 +75,12 @@ function checkedPaymentsReducer(state: any, action: any) {
 const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 	// Payment Condition - full, card or agreement
 	const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>(
-		(initialValue?.service?.paymentCondition as PaymentCondition) ?? "full"
+		(initialValue?.order?.paymentCondition as PaymentCondition) ?? "full"
 	);
 
 	const [checkedPaymentMethods, dispatch] = useReducer(
 		checkedPaymentsReducer,
-		initialValue?.service?.paymentMethods ?? []
+		initialValue?.order?.paymentMethods ?? []
 	);
 
 	// Split Method (for agreement)
@@ -90,9 +90,7 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 	// 3. valor inicial do acordo em porcentagem: quando há o símbolo de (%) no valor
 
 	const [splitMethod, setSplitMethod] = useState<SplitMethod | null>(
-		initialValue?.service?.splitValue?.includes("%")
-			? "percentage"
-			: "money"
+		initialValue?.order?.splitValue?.includes("%") ? "percentage" : "money"
 	);
 
 	// Agreement Initial Value - money (ex: número inteiro ['462'], '1/3' ou '1/2')
@@ -106,7 +104,7 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 
 	// Remaining Value - pode ser 'parcelas' (ex: 2x, 3x) ou 'valor restante do acordo' ('remaining')
 	const [remainingValue, setRemainingValue] = useState<RemainingValue>(
-		(initialValue?.service.splitRemaining === "remaining"
+		(initialValue?.order.splitRemaining === "remaining"
 			? "afterCompletion"
 			: "withInstallments") as RemainingValue
 	);
@@ -130,16 +128,16 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 		formState: { errors },
 	} = useForm<FormData>({
 		defaultValues: {
-			splitValue: initialValue?.service?.splitValue ?? "",
-			splitRemaining: initialValue?.service?.splitRemaining ?? "",
-			warrantyDetails: initialValue?.service?.warrantyDetails ?? "",
+			splitValue: initialValue?.order?.splitValue ?? "",
+			splitRemaining: initialValue?.order?.splitRemaining ?? "",
+			warrantyDetails: initialValue?.order?.warrantyDetails ?? "",
 			warrantyPeriod_days:
-				initialValue?.service?.warrantyPeriod?.toString() ?? "",
-			warrantyPeriod_months: initialValue?.service?.warrantyPeriod
-				? (initialValue?.service?.warrantyPeriod / 30).toString()
+				initialValue?.order?.warrantyPeriod?.toString() ?? "",
+			warrantyPeriod_months: initialValue?.order?.warrantyPeriod
+				? (initialValue?.order?.warrantyPeriod / 30).toString()
 				: "",
-			warrantyPeriod_years: initialValue?.service?.warrantyPeriod
-				? (initialValue?.service?.warrantyPeriod / 365).toString()
+			warrantyPeriod_years: initialValue?.order?.warrantyPeriod
+				? (initialValue?.order?.warrantyPeriod / 365).toString()
 				: "",
 		},
 		resolver: zodResolver(schema),
@@ -271,8 +269,8 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 									]}
 									ref={splitInitialPercentageRef}
 									defaultValue={
-										initialValue?.service?.discount
-											? `${initialValue?.service?.discount}%`
+										initialValue?.order?.discount
+											? `${initialValue?.order?.discount}%`
 											: "50%"
 									}
 									manualValue={{
@@ -311,7 +309,7 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 									]}
 									ref={splitInitialValueRef}
 									defaultValue={
-										(initialValue?.service
+										(initialValue?.order
 											?.splitValue as SplitMethod) ??
 										"1/2"
 									}
@@ -374,8 +372,8 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 								]}
 								ref={installmentsAmountRef}
 								defaultValue={
-									initialValue?.service?.splitValue
-										? `${initialValue?.service?.splitValue}x`
+									initialValue?.order?.splitValue
+										? `${initialValue?.order?.splitValue}x`
 										: "2x"
 								}
 								manualValue={{
@@ -452,8 +450,8 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 							]}
 							ref={warrantyPeriodRef}
 							defaultValue={
-								initialValue?.service?.warrantyPeriod
-									? initialValue.service.warrantyPeriod.toString()
+								initialValue?.order?.warrantyPeriod
+									? initialValue.order.warrantyPeriod.toString()
 									: "90"
 							}
 							manualValue={{

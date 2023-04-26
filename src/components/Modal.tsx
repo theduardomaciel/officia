@@ -1,3 +1,4 @@
+import React from "react";
 import {
 	Text,
 	View,
@@ -5,8 +6,12 @@ import {
 	TouchableWithoutFeedback,
 	TouchableOpacity,
 } from "react-native";
-import { PanGestureHandler } from "react-native-gesture-handler";
+
+import clsx from "clsx";
 import { Portal } from "@gorhom/portal";
+
+import { PanGestureHandler } from "react-native-gesture-handler";
+
 import Animated, {
 	EntryAnimationsValues,
 	ExitAnimationsValues,
@@ -23,19 +28,21 @@ import colors from "global/colors";
 
 const animProps = {
 	damping: 150,
-	stiffness: 300,
+	stiffness: 800,
 } as WithSpringConfig;
 
 export interface ModalProps {
 	children?: React.ReactNode;
 	isVisible: boolean;
 	toggleVisibility: () => void;
+	suppressCloseOnBackdropPress?: boolean;
 	title?: string;
-	message?: string;
-	icon?: string;
+	message?: string | React.ReactNode;
+	icon?: string | React.ReactNode;
 	buttons?: {
 		label: string;
 		color?: string;
+		disabled?: boolean;
 		onPress?: () => void;
 		closeOnPress?: boolean;
 	}[];
@@ -45,6 +52,7 @@ export interface ModalProps {
 export default function Modal({
 	isVisible,
 	toggleVisibility,
+	suppressCloseOnBackdropPress,
 	title,
 	message,
 	icon,
@@ -88,7 +96,7 @@ export default function Modal({
 	const fadeInBackdrop = () => {
 		"worklet";
 		const animations = {
-			opacity: withTiming(BACKDROP_OPACITY, { duration: 500 }),
+			opacity: withTiming(BACKDROP_OPACITY, { duration: 300 }),
 		};
 		const initialValues = {
 			opacity: 0,
@@ -106,7 +114,7 @@ export default function Modal({
 	const fadeOutBackdrop = () => {
 		"worklet";
 		const animations = {
-			opacity: withTiming(0, { duration: 500 }),
+			opacity: withTiming(0, { duration: 300 }),
 		};
 		const initialValues = {
 			opacity: BACKDROP_OPACITY,
@@ -129,7 +137,7 @@ export default function Modal({
 				newActiveHeight - targetValues.targetHeight / 2,
 				animProps
 			),
-			opacity: withTiming(1, { duration: 400 }),
+			opacity: withTiming(1, { duration: 300 }),
 		};
 		const initialValues = {
 			originY: screenHeight,
@@ -145,7 +153,7 @@ export default function Modal({
 		"worklet";
 		const animations = {
 			originY: withSpring(screenHeight, animProps),
-			opacity: withTiming(0, { duration: 400 }),
+			opacity: withTiming(0, { duration: 300 }),
 		};
 		const initialValues = {
 			originY: values.currentOriginY,
@@ -163,7 +171,11 @@ export default function Modal({
 
 	return isVisible ? (
 		<Portal>
-			<TouchableWithoutFeedback onPress={toggleVisibility}>
+			<TouchableWithoutFeedback
+				onPress={() =>
+					!suppressCloseOnBackdropPress && toggleVisibility
+				}
+			>
 				<Animated.View
 					entering={fadeInBackdrop}
 					exiting={fadeOutBackdrop}
@@ -179,12 +191,14 @@ export default function Modal({
 				>
 					<View className="w-full flex-col items-start p-5 bg-white dark:bg-gray-200 rounded">
 						<View className="flex-col items-start">
-							{icon && (
+							{icon && typeof icon === "string" ? (
 								<MaterialIcons
 									name={icon as unknown as any}
 									size={28}
 									color={colors.white}
 								/>
+							) : (
+								icon && icon
 							)}
 							{title && (
 								<Text className="font-titleBold text-lg text-black dark:text-white mt-1 mb-1">
@@ -192,10 +206,12 @@ export default function Modal({
 								</Text>
 							)}
 						</View>
-						{message && (
+						{message && typeof message === "string" ? (
 							<Text className="text-sm text-black dark:text-text-100 mb-2">
 								{message}
 							</Text>
+						) : (
+							message && message
 						)}
 						{children}
 						<View className="flex-row w-full items-center justify-between">
@@ -214,7 +230,13 @@ export default function Modal({
 								buttons.map((button, index) => (
 									<TouchableOpacity
 										activeOpacity={0.8}
-										className="flex-1 items-center justify-center py-3 mt-2 bg-primary rounded"
+										className={clsx(
+											"flex-1 items-center justify-center py-3 mt-2 bg-primary rounded",
+											{
+												"bg-gray-100 opacity-50":
+													button.disabled,
+											}
+										)}
 										style={{
 											marginRight:
 												index === buttons.length - 1
@@ -223,6 +245,7 @@ export default function Modal({
 											backgroundColor:
 												button.color ?? colors.primary,
 										}}
+										disabled={button.disabled}
 										key={index}
 										onPress={() => {
 											button.onPress && button.onPress();
@@ -241,5 +264,7 @@ export default function Modal({
 				</Animated.View>
 			</PanGestureHandler>
 		</Portal>
-	) : null;
+	) : (
+		<></>
+	);
 }

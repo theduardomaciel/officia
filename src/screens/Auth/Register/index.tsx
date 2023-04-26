@@ -1,25 +1,29 @@
-import React, { useCallback, useMemo } from "react";
-import { TouchableOpacity, View, Text } from "react-native";
+import React, { useCallback } from "react";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 // Components
 import Container from "components/Container";
-import SectionBottomSheet from "components/ScheduleForm/SectionBottomSheet";
+import SectionBottomSheet from "components/Form/SectionBottomSheet";
 import { SectionsNavigator } from "components/SectionsNavigator";
-import { ActionButton } from "components/Button";
+import Toast from "components/Toast";
 
-import { useAuth } from "context/AuthContext";
+import { AuthData, useAuth, userStorage } from "context/AuthContext";
 
 // Hooks
 import useUpdateHandler from "hooks/useUpdateHandler";
 import useBackHandler from "hooks/useBackHandler";
+import useLoadingModal from "hooks/useLoadingModal";
 
 // Sections
 import RegisterSection0, { PersonalDataSchemeType } from "./Sections/Section0";
-import RegisterSection1, { LoginDataSchemeType } from "./Sections/Section1";
+import RegisterSection1, {
+	LoginDataSchemeType,
+	censorEmail,
+} from "./Sections/Section1";
 import RegisterSection2 from "./Sections/Section2";
+import { BackHandler, Text } from "react-native";
 
 interface RegisterProps extends PersonalDataSchemeType, LoginDataSchemeType {}
 
@@ -46,67 +50,114 @@ const HEADERS = [
 	},
 ];
 
+// The logic used behind the (!email) conditional is that if the user already created an account and reopened the app but didn't created a business yet, the app will redirect him to the register screen, but in the last section, so he can create a business.
+
 export default function Register({ route, navigation }: any) {
-	const { email } = route.params;
-	const { signIn } = useAuth();
+	const email = route.params?.email;
+	const { signIn, signOut } = useAuth();
 
 	const [partialAccountData, setPartialAccountData] = React.useState<
 		Partial<RegisterProps> | undefined
 	>(undefined);
 
 	const { updateHandler, selectedSectionId, Header, BackButton } =
-		useUpdateHandler(
+		useUpdateHandler({
 			sections,
 			HEADERS,
-			useCallback(() => navigation.goBack(), []),
-			useMemo(() => (email ? 0 : 2), [])
-		);
+			onLimitReached: () => {
+				navigation.goBack();
+			},
+			initialValue: email ? 0 : 2,
+		});
 
-	const { ConfirmExitModal } = useBackHandler(
-		useCallback(() => {
+	const { ConfirmExitModal } = useBackHandler({
+		shouldTriggerModal: useCallback(() => {
 			if (selectedSectionId.value === 0) {
 				return true;
-			} else if (!email) {
-				return undefined;
 			} else {
 				return false;
 			}
 		}, []),
-		useCallback(() => {
-			updateHandler(selectedSectionId.value - 1);
-		}, []),
-		useCallback(() => {
+		onExitConfirm: useCallback(() => {
 			navigation.goBack();
-		}, [])
+		}, []),
+		onBack: useCallback(() => {
+			if (selectedSectionId.value !== 2) {
+				navigation.goBack();
+			} else if (selectedSectionId.value === 2) {
+				BackHandler.exitApp();
+			}
+		}, []),
+	});
+
+	const [registerCompleted, setRegisterCompleted] = React.useState(
+		email ? false : true
 	);
+	const { LoadingModal, setIsVisible: setLoadingModalVisible } =
+		useLoadingModal();
 
-	const handleRegister = async (data: RegisterProps) => {
-		/* const { email, password, ...personalData } = data;
+	const handleRegister = async (data: LoginDataSchemeType) => {
+		if (!data.email || !data.password) return;
 
-		if (!email || !password) return;
+		// Gambiarra: Alterar o status do modal anterior e deste ao mesmo tempo está fazendo com que o modal atual não anime a entrada
+		setTimeout(() => {
+			setLoadingModalVisible(true);
+		}, 1);
 
 		const accountData = {
-			...personalData,
-			email,
-			password,
-		}; */
+			email: data.email,
+			password: data.password,
+			...partialAccountData,
+		} as AuthData;
 
-		updateHandler(2);
-		/* try {
+		try {
 			await signIn(accountData);
+
+			updateHandler(2);
+			setLoadingModalVisible(false);
+			setRegisterCompleted(true);
 		} catch (error) {
 			console.log(error);
-		} */
+
+			Toast.show({
+				preset: "error",
+				title: "Erro ao criar conta",
+				message:
+					"Não foi possível criar sua conta. Tente novamente mais tarde.",
+			});
+
+			navigation.goBack();
+		}
 	};
 
 	const BOTTOM_SHEET_HEIGHT = "62%";
+	const loggedUserEmail = userStorage.getString("user.email");
 
 	return (
 		<Container style={{ rowGap: 10 }}>
-			<BackButton isEnabled={!!email} />
+			<BackButton isEnabled={!!email && !registerCompleted} />
 			<Header />
 
-			{email ? (
+			{!email && (
+				<Text className="text-sm text-text-100 text-center font-regular">
+					Logado como{" "}
+					{loggedUserEmail ? censorEmail(loggedUserEmail) : "..."}
+					{"  "}
+					<Text
+						className="text-red font-medium underline"
+						onPress={() => {
+							signOut();
+
+							// Gambiarra: por conta do delay da alteração do estado "authData" pelo signOut, o usuário não consegue é levado de volta para a tela de login após o primeiro toque. Por enquanto, será necessário tocar duas vezes para voltar para a tela de login.
+							navigation.navigate("login");
+						}}
+					>
+						Sair
+					</Text>
+				</Text>
+			)}
+
+			{email && (
 				<>
 					<SectionsNavigator
 						selectedId={selectedSectionId}
@@ -126,9 +177,11 @@ export default function Register({ route, navigation }: any) {
 						]}
 					/>
 					<SectionBottomSheet
-						bottomSheet={sections[0]}
-						expanded={true}
-						bottomSheetHeight={BOTTOM_SHEET_HEIGHT}
+						id={sections[0]}
+						defaultValues={{
+							expanded: true,
+						}}
+						height={BOTTOM_SHEET_HEIGHT}
 						rowGap={20}
 					>
 						<RegisterSection0
@@ -140,21 +193,12 @@ export default function Register({ route, navigation }: any) {
 					</SectionBottomSheet>
 
 					<SectionBottomSheet
-						bottomSheet={sections[1]}
-						expanded={false}
-						bottomSheetHeight={BOTTOM_SHEET_HEIGHT}
+						id={sections[1]}
+						height={BOTTOM_SHEET_HEIGHT}
 						rowGap={20}
 					>
 						<RegisterSection1
-							onSubmit={(data) => {
-								setPartialAccountData((prev) => ({
-									...prev,
-									...data,
-								}));
-								handleRegister(
-									partialAccountData as RegisterProps
-								);
-							}}
+							onSubmit={handleRegister}
 							email={email}
 						/>
 					</SectionBottomSheet>
@@ -164,16 +208,20 @@ export default function Register({ route, navigation }: any) {
 						message="Após voltar, todas as informações terão que ser inseridas novamente."
 					/>
 				</>
-			) : (
-				<SectionBottomSheet
-					bottomSheet={sections[2]}
-					expanded={!email}
-					bottomSheetHeight={"69%"}
-					rowGap={20}
-				>
-					<RegisterSection2 navigation={navigation} />
-				</SectionBottomSheet>
 			)}
+
+			<SectionBottomSheet
+				id={sections[2]}
+				defaultValues={{
+					expanded: !email,
+				}}
+				height={email ? "69%" : "67%"}
+				rowGap={20}
+			>
+				<RegisterSection2 navigation={navigation} />
+			</SectionBottomSheet>
+
+			<LoadingModal message="Estamos apertando uns parafusos e pressionando alguns botões para que sua conta seja criada..." />
 		</Container>
 	);
 }

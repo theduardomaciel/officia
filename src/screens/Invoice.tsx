@@ -17,7 +17,7 @@ import colors from "global/colors";
 import Container from "components/Container";
 import Header from "components/Header";
 import Modal from "components/Modal";
-import SectionBottomSheet from "components/ScheduleForm/SectionBottomSheet";
+import SectionBottomSheet from "components/Form/SectionBottomSheet";
 import { Loading } from "components/StatusMessage";
 import { SectionsNavigator } from "components/SectionsNavigator";
 
@@ -29,8 +29,8 @@ import { database } from "database/index.native";
 // Types
 import type { ClientModel } from "database/models/clientModel";
 import type { MaterialModel } from "database/models/materialModel";
-import type { ServiceModel } from "database/models/serviceModel";
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { OrderModel } from "database/models/orderModel";
+import type { ProductModel } from "database/models/productModel";
 import type { BusinessData } from "./Main/Business/@types";
 
 // PDF
@@ -68,8 +68,8 @@ export default function Invoice({ route, navigation }: any) {
 
 	const [invoiceData, setInvoiceData] = useState<
 		| {
-				service: ServiceModel;
-				subServices: SubServiceModel[];
+				order: OrderModel;
+				products: ProductModel[];
 				materials: MaterialModel[];
 				client: ClientModel;
 		  }
@@ -78,19 +78,19 @@ export default function Invoice({ route, navigation }: any) {
 
 	async function setInitialState(id: string) {
 		try {
-			const service = (await database
-				.get<ServiceModel>("services")
+			const order = (await database
+				.get<OrderModel>("orders")
 				.find(id)) as any;
 
-			if (service) {
-				const subServices = await service.subServices.fetch();
-				const materials = await service.materials.fetch();
-				const client = (await service.client.fetch()) ?? undefined;
+			if (order) {
+				const products = await order.products.fetch();
+				const materials = await order.materials.fetch();
+				const client = (await order.client.fetch()) ?? undefined;
 
-				if (subServices && materials) {
+				if (products && materials) {
 					setInvoiceData({
-						service,
-						subServices,
+						order,
+						products,
 						materials,
 						client,
 					});
@@ -103,8 +103,8 @@ export default function Invoice({ route, navigation }: any) {
 	}
 
 	useEffect(() => {
-		if (route.params?.serviceId) {
-			setInitialState(route.params?.serviceId);
+		if (route.params?.orderId) {
+			setInitialState(route.params?.orderId);
 		}
 
 		const backAction = () => {
@@ -170,7 +170,7 @@ export default function Invoice({ route, navigation }: any) {
 			return;
 		}
 
-		if (!invoiceData || !invoiceData?.service) {
+		if (!invoiceData || !invoiceData?.order) {
 			setModalProps({
 				status: "error",
 				data: "Um erro desconhecido nos impediu de gerar o documento.",
@@ -180,8 +180,8 @@ export default function Invoice({ route, navigation }: any) {
 
 		const PDFString = await getPDFString(
 			data,
-			invoiceData?.service!,
-			invoiceData?.subServices,
+			invoiceData?.order!,
+			invoiceData?.products,
 			invoiceData?.materials,
 			invoiceData?.client,
 			section0Ref.current?.getValidity() ?? "15",
@@ -248,7 +248,7 @@ export default function Invoice({ route, navigation }: any) {
 						]}
 					/>
 
-					{route.params?.serviceId && invoiceData ? (
+					{route.params?.orderId && invoiceData ? (
 						<>
 							<SectionBottomSheet
 								bottomSheet={sections[0]}
@@ -259,7 +259,7 @@ export default function Invoice({ route, navigation }: any) {
 										updateHandler && updateHandler(1)
 									}
 									ref={section0Ref}
-									service={invoiceData.service}
+									order={invoiceData.order}
 								/>
 							</SectionBottomSheet>
 
@@ -270,8 +270,8 @@ export default function Invoice({ route, navigation }: any) {
 								<Section2
 									onSubmit={onSubmit}
 									isLoading={isLoading}
-									service={invoiceData.service}
-									subServices={invoiceData.subServices}
+									order={invoiceData.order}
+									products={invoiceData.products}
 									materials={invoiceData.materials}
 								/>
 							</SectionBottomSheet>

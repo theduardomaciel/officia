@@ -1,12 +1,12 @@
 // Types
-import { ServiceModel } from 'database/models/serviceModel';
-import { SubServiceModel } from 'database/models/subServiceModel';
-import { MaterialModel } from 'database/models/materialModel';
+import { OrderModel } from "database/models/orderModel";
+import { ProductModel } from "database/models/productModel";
+import { MaterialModel } from "database/models/materialModel";
 
 export interface InvoiceSectionProps {
-    onSubmit: () => void;
-    isLoading?: boolean;
-    service: ServiceModel;
-    subServices?: SubServiceModel[];
-    materials?: MaterialModel[];
+	onSubmit: () => void;
+	isLoading?: boolean;
+	order: OrderModel;
+	products?: ProductModel[];
+	materials?: MaterialModel[];
 }

@@ -11,9 +11,9 @@ import colors from "global/colors";
 
 // Components
 import Container from "components/Container";
-import Header, { TabBarScreenHeader } from "components/Header";
+import { TabBarScreenHeader } from "components/Header";
 import Toast from "components/Toast";
-import ServicePreview, { ServicePreviewProps } from "components/ServicePreview";
+import OrderPreview from "components/OrderPreview";
 
 import Calendar, { WeekDays, WeekView } from "components/Calendar";
 import { Empty, Loading } from "components/StatusMessage";
@@ -24,8 +24,8 @@ import { Q } from "@nozbe/watermelondb";
 import { database } from "database/index.native";
 
 // Types
-import type { ServiceModel } from "database/models/serviceModel";
-import type { SubServiceModel } from "database/models/subServiceModel";
+import type { OrderModel } from "database/models/orderModel";
+import type { ProductModel } from "database/models/productModel";
 import type { BusinessData, Category } from "screens/Main/Business/@types";
 
 export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
@@ -49,44 +49,44 @@ export const isToday = (date: Date) => {
 		: false;
 };
 
-const hasTags = (tags: Array<TagObject>, subServices: SubServiceModel[]) => {
-	const serviceTypes = subServices
-		?.map((subService) => subService.types)
+const hasTags = (tags: Array<TagObject>, products: ProductModel[]) => {
+	const serviceTypes = products
+		?.map((product) => product.types)
 		.flat()
 		.map((type) => type.name);
 	//return tags.every(tag => serviceTypes.includes(tag.name))
 	return tags.some((tag) => serviceTypes.includes(tag.name));
 };
 
-function getWeekServices(services: ServiceModel[], date: Date) {
-	const weekServices = services.filter((service) => {
-		const serviceDate = new Date(service.date);
+function getWeekOrders(orders: OrderModel[], date: Date) {
+	const weekOrders = orders.filter((order) => {
+		const serviceDate = new Date(order.date);
 		return (
 			serviceDate.getDate() > date.getDate() &&
 			serviceDate.getDate() <= date.getDate() + 5 &&
 			!isToday(serviceDate)
 		);
 	});
-	return weekServices
+	return weekOrders
 		.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 		.reverse();
 }
 
-function getMonthServices(
-	services: ServiceModel[],
+function getMonthOrders(
+	orders: OrderModel[],
 	month: Date,
-	excludeElements: Array<ServiceModel> = []
+	excludeElements: Array<OrderModel> = []
 ) {
-	const monthServices = services.filter((service) => {
-		const serviceDate = new Date(service.date);
+	const monthOrders = orders.filter((order) => {
+		const serviceDate = new Date(order.date);
 		return (
 			serviceDate.getMonth() === month.getMonth() &&
 			serviceDate.getFullYear() === month.getFullYear() &&
-			!excludeElements.includes(service) &&
+			!excludeElements.includes(order) &&
 			!isToday(serviceDate)
 		);
 	});
-	return monthServices;
+	return monthOrders;
 }
 
 const daysOnMonth = (month: number, year: number) => {
@@ -97,7 +97,7 @@ export default function Home({ route, navigation }: any) {
 	const { navigate } = useNavigation();
 	const { colorScheme } = useColorScheme();
 
-	const showCreatedServiceToast = useCallback(() => {
+	const showCreatedOrderToast = useCallback(() => {
 		Toast.show({
 			preset: "success",
 			title: "Serviço criado com sucesso!",
@@ -105,7 +105,7 @@ export default function Home({ route, navigation }: any) {
 		});
 	}, []);
 
-	const showDeleteServiceToast = useCallback(() => {
+	const showDeleteOrderToast = useCallback(() => {
 		Toast.show({
 			preset: "success",
 			title: "Serviço excluído com sucesso!",
@@ -113,8 +113,8 @@ export default function Home({ route, navigation }: any) {
 		});
 	}, []);
 
-	const [pendingServices, setPendingServices] = useState<
-		ServiceModel[] | undefined
+	const [pendingOrders, setPendingOrders] = useState<
+		OrderModel[] | undefined
 	>(undefined);
 	const [businessData, setBusinessData] = useState<BusinessData | undefined>(
 		undefined
@@ -123,17 +123,17 @@ export default function Home({ route, navigation }: any) {
 
 	const currentDate = new Date();
 	async function fetchData() {
-		setPendingServices(undefined);
+		setPendingOrders(undefined);
 		try {
 			await database
-				.get<ServiceModel>("services")
+				.get<OrderModel>("orders")
 				.query(Q.where("status", "scheduled"))
 				.observe()
-				.subscribe((services) => {
-					setPendingServices(
-						services.filter(
-							(service) =>
-								service.date.getTime() >= currentDate.getTime()
+				.subscribe((orders) => {
+					setPendingOrders(
+						orders.filter(
+							(order) =>
+								order.date.getTime() >= currentDate.getTime()
 						)
 					);
 				});
@@ -146,18 +146,18 @@ export default function Home({ route, navigation }: any) {
 			}
 		} catch (error) {
 			//console.log(error)
-			setPendingServices([]);
+			setPendingOrders([]);
 		}
 	}
 
 	useFocusEffect(
 		useCallback(() => {
-			if (route?.params?.service === "created") {
-				showCreatedServiceToast();
-				navigation.setParams({ service: undefined });
-			} else if (route?.params?.service === "deleted") {
-				showDeleteServiceToast();
-				navigation.setParams({ service: undefined });
+			if (route?.params?.order === "created") {
+				showCreatedOrderToast();
+				navigation.setParams({ order: undefined });
+			} else if (route?.params?.order === "deleted") {
+				showDeleteOrderToast();
+				navigation.setParams({ order: undefined });
 			}
 		}, [route.params])
 	);
@@ -170,53 +170,52 @@ export default function Home({ route, navigation }: any) {
 		[]
 	);
 
-	const isolatedServices =
-		pendingServices?.filter((service) => isToday(service.date)).reverse() ??
-		[];
-	const weekServices = getWeekServices(pendingServices || [], currentDate);
-	const monthServices = getMonthServices(
-		pendingServices || [],
+	const isolatedOrders =
+		pendingOrders?.filter((order) => isToday(order.date)).reverse() ?? [];
+	const weekOrders = getWeekOrders(pendingOrders || [], currentDate);
+	const monthOrders = getMonthOrders(
+		pendingOrders || [],
 		currentDate,
-		weekServices
+		weekOrders
 	);
-	const otherServices =
-		pendingServices?.filter(
-			(service) =>
-				!isolatedServices.includes(service) &&
-				!weekServices.includes(service) &&
-				!monthServices.includes(service)
+	const otherOrders =
+		pendingOrders?.filter(
+			(order) =>
+				!isolatedOrders.includes(order) &&
+				!weekOrders.includes(order) &&
+				!monthOrders.includes(order)
 		) ?? [];
 
 	const DATA = [
-		...(isolatedServices.length > 0
+		...(isolatedOrders.length > 0
 			? [
 					{
 						title: "blank",
-						data: isolatedServices,
+						data: isolatedOrders,
 					},
 			  ]
 			: []),
-		...(weekServices.length > 0
+		...(weekOrders.length > 0
 			? [
 					{
 						title: "Esta semana",
-						data: weekServices,
+						data: weekOrders,
 					},
 			  ]
 			: []),
-		...(monthServices.length > 0
+		...(monthOrders.length > 0
 			? [
 					{
 						title: "Este mês",
-						data: monthServices,
+						data: monthOrders,
 					},
 			  ]
 			: []),
-		...(otherServices.length > 0
+		...(otherOrders.length > 0
 			? [
 					{
 						title: "Próximos",
-						data: otherServices,
+						data: otherOrders,
 					},
 			  ]
 			: []),
@@ -231,15 +230,15 @@ export default function Home({ route, navigation }: any) {
 			return new Array(daysOnMonth(month, currentDate.getFullYear()))
 				.fill(null)
 				.map((_, index) => {
-					if (pendingServices) {
+					if (pendingOrders) {
 						const firstDayOfMonth = new Date(
 							currentDate.getFullYear(),
 							month,
 							1
 						).getDay();
-						const servicesCountOnDay = pendingServices.filter(
-							(service) => {
-								const serviceDate = new Date(service.date);
+						const ordersCountOnDay = pendingOrders.filter(
+							(order) => {
+								const serviceDate = new Date(order.date);
 								return (
 									serviceDate.getDate() +
 										(firstDayOfMonth - 1) ===
@@ -248,9 +247,9 @@ export default function Home({ route, navigation }: any) {
 								);
 							}
 						).length;
-						if (servicesCountOnDay === 1) {
+						if (ordersCountOnDay === 1) {
 							return "contains";
-						} else if (servicesCountOnDay > 1) {
+						} else if (ordersCountOnDay > 1) {
 							return "busy";
 						} else {
 							return undefined;
@@ -339,7 +338,7 @@ export default function Home({ route, navigation }: any) {
 				layout={Layout.springify().damping(7).stiffness(85).mass(0.25)}
 				className="flex-1 pb-3"
 			>
-				{pendingServices !== undefined ? (
+				{pendingOrders !== undefined ? (
 					<SectionList
 						sections={DATA}
 						keyExtractor={(item, index) => index.toString()}
@@ -360,12 +359,12 @@ export default function Home({ route, navigation }: any) {
 							)
 						}
 						renderItem={({ item, section }) => (
-							<EnhancedServicePreview
+							<EnhancedOrderPreview
 								key={item.id}
 								onPress={() =>
-									navigate("service", { serviceId: item.id })
+									navigate("order", { orderId: item.id })
 								}
-								service={item}
+								order={item}
 								additionalInfo={
 									section.title === "Esta semana" ||
 									section.title === "blank"
@@ -386,31 +385,21 @@ export default function Home({ route, navigation }: any) {
 	);
 }
 
-export const EnhancedServicePreview = ({
-	service,
-	filterTags,
-	...rest
-}: any) => {
-	const [observedSubServices, setSubServices] = useState<
-		SubServiceModel[] | undefined
+export const EnhancedOrderPreview = ({ order, filterTags, ...rest }: any) => {
+	const [observedProducts, setProducts] = useState<
+		ProductModel[] | undefined
 	>(undefined);
 
 	useEffect(() => {
-		service.subServices
-			.observe()
-			.subscribe((subServices: SubServiceModel[]) => {
-				setSubServices(subServices);
-			});
+		order.products.observe().subscribe((products: ProductModel[]) => {
+			setProducts(products);
+		});
 	}, []);
 
 	return !filterTags ||
 		(filterTags && filterTags.length === 0) ||
-		(filterTags && hasTags(filterTags, observedSubServices ?? [])) ? (
-		<ServicePreview
-			service={service}
-			subServices={observedSubServices}
-			{...rest}
-		/>
+		(filterTags && hasTags(filterTags, observedProducts ?? [])) ? (
+		<OrderPreview order={order} products={observedProducts} {...rest} />
 	) : (
 		<></>
 	);
