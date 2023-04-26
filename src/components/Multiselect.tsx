@@ -1,13 +1,21 @@
-import React, { useCallback, useId, useImperativeHandle, useRef } from "react";
+import React, {
+	Dispatch,
+	SetStateAction,
+	memo,
+	useCallback,
+	useId,
+	useImperativeHandle,
+	useMemo,
+	useReducer,
+	useState,
+} from "react";
 import {
 	TouchableOpacity,
 	TouchableOpacityProps,
 	View,
 	Text,
-	Dimensions,
 	SectionList,
 } from "react-native";
-import { FlatList } from "react-native-gesture-handler";
 
 import { useColorScheme } from "nativewind";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -19,8 +27,10 @@ import Label from "./Label";
 import BottomSheet from "./BottomSheet/index";
 import CustomBackdrop from "./BottomSheet/CustomBackdrop";
 import SearchBar, { SearchBarProps } from "./SearchBar";
-import { Checkbox } from "./Checkbox";
+import { Checkbox, CheckboxesGroup, checkboxesGroupReducer } from "./Checkbox";
 import { ActionButton } from "./Button";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { NativeViewGestureHandler } from "react-native-gesture-handler";
 
 type Category = {
 	title: string;
@@ -59,12 +69,13 @@ const Multiselect = React.forwardRef((props: Props, ref) => {
 		bottomSheetHeight,
 		pallette,
 		searchBarProps,
-		selected,
-		setSelected,
+		selected: parentSelected,
+		setSelected: parentSetSelected,
 		selectAllButton,
 		...rest
 	} = props;
 
+	const insets = useSafeAreaInsets();
 	const { colorScheme } = useColorScheme();
 	const id = useId();
 
@@ -81,15 +92,7 @@ const Multiselect = React.forwardRef((props: Props, ref) => {
 		close: () => closeHandler(),
 	}));
 
-	const updateState = useCallback((value: string) => {
-		setSelected((prev) => {
-			if (prev.includes(value)) {
-				return prev.filter((item) => item !== value);
-			} else {
-				return [...prev, value];
-			}
-		});
-	}, []);
+	const [search, setSearch] = React.useState("");
 
 	return (
 		<>
@@ -122,12 +125,12 @@ const Multiselect = React.forwardRef((props: Props, ref) => {
 						onPress={() => openHandler()}
 						{...rest}
 					>
-						{selected.length === 0 && (
+						{parentSelected.length === 0 && (
 							<Text className="text-text-200 opacity-80">
 								{placeholder}
 							</Text>
 						)}
-						{selected.length > 0 && (
+						{parentSelected.length > 0 && (
 							<View
 								className="flex-1 flex-row items-start justify-start flex-wrap"
 								style={{
@@ -136,7 +139,9 @@ const Multiselect = React.forwardRef((props: Props, ref) => {
 							>
 								{data.map((category) =>
 									category.data.map((item) => {
-										if (selected.includes(item.name)) {
+										if (
+											parentSelected.includes(item.name)
+										) {
 											return (
 												<SelectItem
 													key={item.name}
@@ -163,7 +168,7 @@ const Multiselect = React.forwardRef((props: Props, ref) => {
 				</View>
 			)}
 
-			<BottomSheet
+			{/* <BottomSheet
 				overDragAmount={overDragAmount || 0}
 				height={bottomSheetHeight || "90%"}
 				suppressBackdrop={true}
@@ -196,14 +201,44 @@ const Multiselect = React.forwardRef((props: Props, ref) => {
 							/>
 						)}
 					</View>
-					<BottomSheetContent
-						state={selected}
-						updateState={updateState}
+					<ItemsList
 						data={data}
+						selected={selected}
+						dispatch={dispatch}
 					/>
-					<ActionButton
-						label="Selecionar"
-						onPress={() => closeHandler()}
+				</View>
+			</BottomSheet> */}
+			<BottomSheet
+				overDragAmount={0}
+				height={"90%"}
+				suppressBackdrop={true}
+				backdropComponent={(props) => <CustomBackdrop {...props} />}
+				id={id}
+			>
+				<View
+					className="flex flex-1"
+					key={id}
+					style={{
+						paddingLeft: 24,
+						paddingRight: 24,
+						paddingBottom: insets.bottom,
+						rowGap: 15,
+					}}
+				>
+					{props.bottomSheetLabel && (
+						<Label style={{ marginBottom: 5 }}>
+							{props.bottomSheetLabel}
+						</Label>
+					)}
+					<ItemsList
+						data={data}
+						searchBarProps={{
+							palette: pallette,
+							...searchBarProps,
+						}}
+						parentSetSelected={parentSetSelected}
+						initialValue={parentSelected}
+						closeHandler={closeHandler}
 					/>
 				</View>
 			</BottomSheet>
@@ -212,6 +247,24 @@ const Multiselect = React.forwardRef((props: Props, ref) => {
 });
 
 export default Multiselect;
+
+/* function Teste({ data, parentSetSelected, initialValue }: any) {
+	const [selected, dispatch] = useReducer(
+		checkboxesGroupReducer,
+		initialValue
+	);
+
+	return (
+		<CheckboxesGroup
+			data={data
+				.map((category) => category.data)
+				.flat()
+				.map((item) => item.name)}
+			checked={selected}
+			dispatch={dispatch}
+		/>
+	);
+} */
 
 function SelectItem({ item }: { item: MultiselectData }) {
 	return (
@@ -223,49 +276,118 @@ function SelectItem({ item }: { item: MultiselectData }) {
 	);
 }
 
-function BottomSheetContent({
-	state,
-	updateState,
+interface List {
+	data: Category[];
+	searchBarProps?: SearchBarProps;
+	parentSetSelected: Dispatch<SetStateAction<string[]>>;
+	initialValue: string[];
+	closeHandler: () => void;
+}
+
+function ItemsList({
 	data,
-}: {
-	updateState: (value: string) => void;
-	state: Props["selected"];
-	data: Props["data"];
-}) {
+	searchBarProps,
+	parentSetSelected,
+	initialValue,
+	closeHandler,
+}: List) {
+	const [selected, dispatch] = useReducer(
+		checkboxesGroupReducer,
+		initialValue
+	);
+
+	const [search, setSearch] = useState("");
+
+	const updateState = useCallback(
+		(value: string) => {
+			if (selected.includes(value)) {
+				dispatch({ type: "remove", payload: value });
+			} else {
+				dispatch({ type: "add", payload: value });
+			}
+		},
+		[selected]
+	);
+
+	const onSubmit = useCallback(() => {
+		parentSetSelected(selected);
+		closeHandler();
+	}, [selected]);
+
+	const filteredData = useMemo(() => {
+		if (!search) return data;
+		return data
+			.map((category) => ({
+				...category,
+				data: category.data.filter((item) =>
+					item.name.toLowerCase().includes(search.toLowerCase())
+				),
+			}))
+			.filter((category) => category.data.length > 0);
+	}, [search, data]);
+
+	const dataLength = useMemo(
+		() => filteredData.reduce((acc, curr) => acc + curr.data.length, 0),
+		[filteredData]
+	);
+
 	return (
-		<SectionList
-			sections={data}
-			keyExtractor={(_, index) => index.toString()}
-			showsVerticalScrollIndicator={false}
-			contentContainerStyle={{ paddingBottom: 100 }}
-			style={{ flex: 1 }}
-			ListHeaderComponent={() => (
-				<Checkbox
-					checked={true}
-					title="Selecionar todos"
-					customKey={"select-all"}
-					inverted
-					labelStyle={{ fontWeight: "bold" }}
-					style={{ width: "100%" }}
+		<>
+			<SearchBar
+				value={search}
+				onChange={setSearch}
+				{...searchBarProps}
+			/>
+			<NativeViewGestureHandler disallowInterruption>
+				<SectionList
+					sections={filteredData}
+					keyExtractor={(_, index) => index.toString()}
+					showsVerticalScrollIndicator={false}
+					style={{ flex: 1 }}
+					ListHeaderComponent={() => (
+						<Checkbox
+							checked={selected.length === dataLength}
+							title="Selecionar todos"
+							onPress={() =>
+								selected.length === dataLength
+									? dispatch({ type: "reset" })
+									: dispatch({
+											type: "all",
+											payload: filteredData
+												.map((category) =>
+													category.data.map(
+														(item) => item.name
+													)
+												)
+												.flat(),
+									  })
+							}
+							customKey={"select-all"}
+							inverted
+							labelStyle={{ fontWeight: "bold" }}
+							style={{ width: "100%" }}
+						/>
+					)}
+					renderSectionHeader={({ section: { title } }) => (
+						<Text className="text-text-100 text-sm font-titleBold pt-6 pb-2">
+							{title}
+						</Text>
+					)}
+					ItemSeparatorComponent={() => (
+						<View className="w-full h-px bg-gray-300 dark:bg-gray-100 opacity-40" />
+					)}
+					renderItem={({ item, index }) => (
+						<ListItem
+							key={index}
+							item={item}
+							onPress={() => updateState(item.name)}
+							isSelected={selected.includes(item.name)}
+						/>
+					)}
 				/>
-			)}
-			renderSectionHeader={({ section: { title } }) => (
-				<Text className="text-text-100 text-sm font-titleSemiBold pt-4 pb-2">
-					{title}
-				</Text>
-			)}
-			ItemSeparatorComponent={() => (
-				<View className="w-full h-px bg-gray-300 dark:bg-gray-100 opacity-40" />
-			)}
-			renderItem={({ item, index }) => (
-				<ListItem
-					key={index}
-					item={item}
-					onPress={() => updateState(item.name)}
-					isSelected={state.includes(item.name)}
-				/>
-			)}
-		/>
+			</NativeViewGestureHandler>
+			<ActionButton label="Selecionar" onPress={onSubmit} />
+		</>
 	);
 }
 
@@ -300,12 +422,9 @@ function ListItem({
 					/>
 				)}
 				<Text
-					className={clsx(
-						"text-black dark:text-white text-sm font-semibold",
-						{
-							"font-bold": isSelected,
-						}
-					)}
+					className={
+						"text-black dark:text-white text-sm font-semibold"
+					}
 				>
 					{item.name}
 				</Text>

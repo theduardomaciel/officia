@@ -9,7 +9,10 @@ import Container from "components/Container";
 import SectionBottomSheet from "components/Form/SectionBottomSheet";
 import { SectionsNavigator } from "components/SectionsNavigator";
 
-import { useBasicInfoForm } from "screens/Main/Business/screens/BasicInfo";
+import {
+	BasicInfoForm,
+	useBasicInfoForm,
+} from "screens/Main/Business/screens/BasicInfo";
 import { ActionButton } from "components/Button";
 
 import { BusinessData } from "screens/Main/Business/@types";
@@ -69,7 +72,7 @@ export default function BusinessRegister({ navigation }: any) {
 		},
 	});
 
-	const { BasicInfoForm, submitData: submitSection0Data } = useBasicInfoForm({
+	const { submitData: submitSection0Data, ...hookProps } = useBasicInfoForm({
 		onSubmit: (data) => {
 			setNewBusinessData((prevState) => ({ ...prevState, ...data }));
 			updateHandler(1);
@@ -129,7 +132,7 @@ export default function BusinessRegister({ navigation }: any) {
 				}}
 				height={BOTTOM_SHEET_HEIGHT}
 			>
-				<BasicInfoForm />
+				<BasicInfoForm {...hookProps} />
 				{/* <ActionButton
 					onPress={submitSection0Data}
 					preset="next"

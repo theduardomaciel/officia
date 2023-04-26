@@ -5,12 +5,16 @@ import colors from "global/colors";
 
 export interface SearchBarProps {
 	placeholder?: string;
+	value?: string;
+	onChange?: (value: string) => void;
 	onSubmit?: () => void;
 	palette?: "dark";
 }
 
 export default function SearchBar({
 	placeholder,
+	value,
+	onChange,
 	onSubmit,
 	palette,
 }: SearchBarProps) {
@@ -27,6 +31,8 @@ export default function SearchBar({
 							? colors.gray[300]
 							: colors.gray[200],
 				}}
+				value={value}
+				onChangeText={onChange}
 				onSubmitEditing={onSubmit}
 				placeholderTextColor={colors.text[200]}
 				cursorColor={colors.primary}

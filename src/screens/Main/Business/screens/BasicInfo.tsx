@@ -1,4 +1,4 @@
-import React from "react";
+import React, { SetStateAction } from "react";
 
 // Components
 import { BusinessScrollView } from "components/Container";
@@ -20,7 +20,7 @@ import {
 	basicInfoScheme,
 	BasicInfoSchemeType,
 	BusinessData,
-	FormProps,
+	FormHookProps,
 } from "screens/Main/Business/@types";
 import type { StateToWatch } from "hooks/useFormChangesObserver";
 
@@ -29,7 +29,136 @@ import { useMMKVObject } from "react-native-mmkv";
 import Multiselect from "components/Multiselect";
 import { Loading } from "components/StatusMessage";
 
-export function useBasicInfoForm({ defaultValues, onSubmit }: FormProps) {
+interface FormProps {
+	control: any;
+	errors: any;
+	setValue?: any;
+}
+
+export function BasicInfoForm({ control, errors, setValue }: FormProps) {
+	const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] =
+		React.useState(false);
+
+	const [segments, setSegments] = React.useState<string[]>([]);
+
+	return (
+		<>
+			<Controller
+				control={control}
+				render={({ field: { onChange, onBlur, value } }) => (
+					<Input
+						label="Nome da Empresa"
+						value={value}
+						onBlur={onBlur}
+						onChangeText={(value) => onChange(value)}
+						style={!!errors.name && borderErrorStyle}
+					/>
+				)}
+				name="name"
+				rules={{ maxLength: 50 }}
+			/>
+			<Controller
+				control={control}
+				render={({ field: { onChange, onBlur, value } }) => (
+					<Input
+						label="Razão Social"
+						infoMessage={`termo registrado sob o qual uma pessoa jurídica (PJ) se individualiza e exerce suas atividades\nExemplo: Coca Cola Indústrias Ltda.`}
+						value={value}
+						onBlur={onBlur}
+						onChangeText={(value) => onChange(value)}
+						style={!!errors.socialReason && borderErrorStyle}
+					/>
+				)}
+				name="socialReason"
+				rules={{ maxLength: 80 }}
+			/>
+			{!isFormalCheckboxChecked && (
+				<Controller
+					control={control}
+					render={({ field: { onChange, onBlur, value } }) => (
+						<Input
+							label="CNPJ"
+							value={value}
+							onBlur={onBlur}
+							onChangeText={(value) => {
+								const { masked } = formatWithMask({
+									text: value,
+									mask: MASKS.BRL_CNPJ,
+								});
+								onChange(masked);
+							}}
+							maxLength={18}
+							keyboardType="numeric"
+							style={!!errors.juridicalPerson && borderErrorStyle}
+						/>
+					)}
+					name="juridicalPerson"
+				/>
+			)}
+			<Checkbox
+				preset="dark"
+				customKey="formality"
+				title="Não possuo uma empresa formal"
+				checked={isFormalCheckboxChecked}
+				onPress={() => {
+					setIsFormalCheckboxChecked(!isFormalCheckboxChecked);
+					setValue && setValue("juridicalPerson", "");
+				}}
+			/>
+			<Multiselect
+				label="Segmentos"
+				data={[
+					{
+						title: "Alimentação",
+						data: [
+							{ name: "Bares" },
+							{ name: "Cafeterias" },
+							{ name: "Confeitarias" },
+							{ name: "Docerias" },
+							{ name: "Lanchonetes" },
+							{ name: "Padarias" },
+							{ name: "Pizzarias" },
+							{ name: "Restaurantes" },
+							{ name: "Outros" },
+						],
+					},
+					{
+						title: "Beleza",
+						data: [
+							{ name: "Barbearias" },
+							{ name: "Cabeleireiros" },
+							{ name: "Clínicas de Estética" },
+							{ name: "Cosméticos" },
+							{ name: "Manicures e Pedicures" },
+							{ name: "Maquiadores" },
+							{ name: "Outros" },
+						],
+					},
+					{
+						title: "Educação",
+						data: [
+							{ name: "Aulas Particulares" },
+							{ name: "Cursos" },
+							{ name: "Escolas" },
+							{ name: "Faculdades" },
+							{ name: "Outros" },
+						],
+					},
+				]}
+				bottomSheetLabel="Selecione os segmentos da sua empresa"
+				placeholder="Nenhum segmento selecionado"
+				searchBarProps={{
+					placeholder: "Pesquisar segmentos",
+				}}
+				selected={segments}
+				setSelected={setSegments}
+				pallette="dark"
+			/>
+		</>
+	);
+}
+
+export function useBasicInfoForm({ defaultValues, onSubmit }: FormHookProps) {
 	const {
 		handleSubmit,
 		control,
@@ -61,148 +190,16 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormProps) {
 		});
 	};
 
-	const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] =
-		React.useState(
-			!defaultValues?.juridicalPerson ||
-				defaultValues.juridicalPerson === ""
-				? false
-				: true
-		);
-
-	const [segments, setSegments] = React.useState<string[]>([]);
-
 	const submitData = handleSubmit((data) => {
-		onSubmit({ ...data, segments });
+		onSubmit({ ...data });
 	}, onError);
 
-	function BasicInfoForm() {
-		return (
-			<BusinessScrollView>
-				<Controller
-					control={control}
-					render={({ field: { onChange, onBlur, value } }) => (
-						<Input
-							label="Nome da Empresa"
-							value={value}
-							onBlur={onBlur}
-							onChangeText={(value) => onChange(value)}
-							style={!!errors.name && borderErrorStyle}
-						/>
-					)}
-					name="name"
-					rules={{ maxLength: 50 }}
-				/>
-				<Controller
-					control={control}
-					render={({ field: { onChange, onBlur, value } }) => (
-						<Input
-							label="Razão Social"
-							infoMessage={`termo registrado sob o qual uma pessoa jurídica (PJ) se individualiza e exerce suas atividades\nExemplo: Coca Cola Indústrias Ltda.`}
-							value={value}
-							onBlur={onBlur}
-							onChangeText={(value) => onChange(value)}
-							style={!!errors.socialReason && borderErrorStyle}
-						/>
-					)}
-					name="socialReason"
-					rules={{ maxLength: 80 }}
-				/>
-				{!isFormalCheckboxChecked && (
-					<Controller
-						control={control}
-						render={({ field: { onChange, onBlur, value } }) => (
-							<Input
-								label="CNPJ"
-								value={value}
-								onBlur={onBlur}
-								onChangeText={(value) => {
-									const { masked } = formatWithMask({
-										text: value,
-										mask: MASKS.BRL_CNPJ,
-									});
-									onChange(masked);
-								}}
-								maxLength={18}
-								keyboardType="numeric"
-								style={
-									!!errors.juridicalPerson && borderErrorStyle
-								}
-							/>
-						)}
-						name="juridicalPerson"
-					/>
-				)}
-				<Checkbox
-					preset="dark"
-					customKey="formality"
-					title="Não possuo uma empresa formal"
-					checked={isFormalCheckboxChecked}
-					onPress={() => {
-						setIsFormalCheckboxChecked(!isFormalCheckboxChecked);
-						setValue && setValue("juridicalPerson", "");
-					}}
-				/>
-				<Multiselect
-					label="Segmentos"
-					data={[
-						{
-							title: "Alimentação",
-							data: [
-								{ name: "Bares" },
-								{ name: "Cafeterias" },
-								{ name: "Confeitarias" },
-								{ name: "Docerias" },
-								{ name: "Lanchonetes" },
-								{ name: "Padarias" },
-								{ name: "Pizzarias" },
-								{ name: "Restaurantes" },
-								{ name: "Outros" },
-							],
-						},
-						{
-							title: "Beleza",
-							data: [
-								{ name: "Barbearias" },
-								{ name: "Cabeleireiros" },
-								{ name: "Clínicas de Estética" },
-								{ name: "Cosméticos" },
-								{ name: "Manicures e Pedicures" },
-								{ name: "Maquiadores" },
-								{ name: "Outros" },
-							],
-						},
-						{
-							title: "Educação",
-							data: [
-								{ name: "Aulas Particulares" },
-								{ name: "Cursos" },
-								{ name: "Escolas" },
-								{ name: "Faculdades" },
-								{ name: "Outros" },
-							],
-						},
-					]}
-					bottomSheetLabel="Selecione os segmentos da sua empresa"
-					placeholder="Nenhum segmento selecionado"
-					searchBarProps={{
-						placeholder: "Pesquisar segmentos",
-					}}
-					selected={segments}
-					setSelected={setSegments}
-					pallette="dark"
-				/>
-			</BusinessScrollView>
-		);
-	}
-
-	const statesToWatch = [
-		{
-			name: "segments",
-			state: segments,
-		},
-	] as StateToWatch[];
-
-	return { BasicInfoForm, submitData, watch, statesToWatch };
+	return {
+		control,
+		errors,
+		submitData,
+		setValue,
+	};
 }
 
 /* 
@@ -235,25 +232,27 @@ export default function BasicInfoScreen() {
 		// TODO: enviar dados para o servidor
 	};
 
-	const { BasicInfoForm, submitData, watch, statesToWatch } =
+	/* const { BasicInfoForm, submitData, watch, statesToWatch } =
 		useBasicInfoForm({
 			onSubmit,
 			defaultValues: memoizedCurrentBusiness,
-		});
+		}); */
 
-	return (
-		<BusinessLayout
-			headerProps={{
-				title: "Informações Básicas",
-			}}
-			changesObserverProps={{
-				currentData: currentBusiness,
-				watch,
-				statesToWatch,
-			}}
-			submitData={submitData}
-		>
-			<BasicInfoForm />
-		</BusinessLayout>
-	);
+	return null;
+}
+
+{
+	/* <BusinessLayout
+        headerProps={{
+            title: "Informações Básicas",
+        }}
+        changesObserverProps={{
+            currentData: currentBusiness,
+            watch,
+            statesToWatch,
+        }}
+        submitData={submitData}
+    >
+        <BasicInfoForm />
+    </BusinessLayout> */
 }

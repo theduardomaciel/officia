@@ -24,7 +24,7 @@ import ToggleGroup, {
 } from "components/ToggleGroup";
 import { Section, SubSectionWrapper } from "../../Form/SubSectionWrapper";
 import { ActionButton } from "components/Button";
-import { CheckboxesGroup } from "components/Checkbox";
+import { CheckboxesGroup, checkboxesGroupReducer } from "components/Checkbox";
 
 // Forms
 import Input from "components/Input";
@@ -61,17 +61,6 @@ const paymentMethods = [
 	"Pix",
 ];
 
-function checkedPaymentsReducer(state: any, action: any) {
-	switch (action.type) {
-		case "add":
-			return [...state, action.payload];
-		case "remove":
-			return state.filter((item: any) => item !== action.payload);
-		default:
-			return state;
-	}
-}
-
 const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 	// Payment Condition - full, card or agreement
 	const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>(
@@ -79,7 +68,7 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 	);
 
 	const [checkedPaymentMethods, dispatch] = useReducer(
-		checkedPaymentsReducer,
+		checkboxesGroupReducer,
 		initialValue?.order?.paymentMethods ?? []
 	);
 

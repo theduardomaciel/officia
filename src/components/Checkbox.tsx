@@ -5,6 +5,7 @@ import {
 	TouchableOpacity,
 	TouchableOpacityProps,
 	View,
+	ViewStyle,
 } from "react-native";
 import Animated, {
 	withSpring,
@@ -81,15 +82,11 @@ export function Checkbox({
 				</Animated.View>
 			) : (
 				<View
-					className="h-[30px] w-[30px] rounded-lg items-center justify-center border border-text-200"
-					style={{
-						backgroundColor:
-							preset === "dark"
-								? "transparent" /* colors.gray[200] */
-								: colors.gray[300],
+					className="h-[30px] w-[30px] rounded-lg items-center justify-center bg-transparent border border-text-200"
+					/* style={{
 						borderStyle: preset === "dark" ? "solid" : undefined,
 						borderWidth: preset === "dark" ? 1 : 0,
-					}}
+					}} */
 				/>
 			)}
 			{title && (
@@ -112,20 +109,40 @@ export function Checkbox({
 	);
 }
 
+export function checkboxesGroupReducer(state: any, action: any) {
+	switch (action.type) {
+		case "add":
+			return [...state, action.payload];
+		case "remove":
+			return state.filter((item: any) => item !== action.payload);
+		case "reset":
+			return [];
+		case "all":
+			return action.payload;
+		default:
+			return state;
+	}
+}
+
 interface GroupProps {
 	data: string[];
 	checked: string[];
 	dispatch: (action: { type: "add" | "remove"; payload: string }) => void;
+	style?: ViewStyle;
 }
 
 export const CheckboxesGroup = memo(
-	({ data, checked, dispatch }: GroupProps, ref) => {
+	({ data, checked, dispatch, style }: GroupProps) => {
 		return (
-			<View className="flex-row flex-wrap items-center justify-between">
+			<View
+				className="flex-row flex-wrap items-center justify-between"
+				style={style}
+			>
 				{data.map((tag, index) => (
 					<View key={index} className="w-1/2">
 						<Checkbox
 							customKey={`${tag}-${index}`}
+							style={{ marginVertical: 5 }}
 							title={tag}
 							checked={checked.includes(tag)}
 							onPress={() => {

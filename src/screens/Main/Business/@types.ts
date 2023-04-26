@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-export interface FormProps {
-	onSubmit: (data: any) => void;
-	onChange?: (data: any) => void;
+export interface FormHookProps {
+	onSubmit: (data: Partial<BusinessData>) => void;
 	defaultValues?: Partial<BusinessData>;
 }
 
