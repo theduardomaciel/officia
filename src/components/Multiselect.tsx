@@ -1,12 +1,16 @@
 import React, {
 	Dispatch,
 	SetStateAction,
+	createRef,
+	forwardRef,
 	memo,
 	useCallback,
+	useEffect,
 	useId,
 	useImperativeHandle,
 	useMemo,
 	useReducer,
+	useRef,
 	useState,
 } from "react";
 import {
@@ -410,14 +414,20 @@ function List({
 
 	const dataLength = filteredData.length;
 
+	const itemsRef = useRef<TouchableOpacity[]>(null);
+
 	const renderItem = useCallback(
-		({ item }: { item: MultiselectData }) => (
-			<ListItem
-				item={item}
-				onPress={() => updateState(item.id)}
-				isSelected={selected.includes(item.id)}
-			/>
-		),
+		({ item }: { item: MultiselectData }) => {
+			const ref = useRef<TouchableOpacity>(null);
+			itemsRef.current?.push(ref.current!);
+			return (
+				<ListItem
+					item={item}
+					ref={ref}
+					onPress={() => updateState(item.id)}
+				/>
+			);
+		},
 		[selected]
 	);
 
@@ -471,28 +481,7 @@ function SectionsList({
 	initialValue,
 	closeHandler,
 }: ListProps & { data: MultiselectCategory[] }) {
-	const [selected, dispatch] = useReducer(
-		checkboxesGroupReducer,
-		initialValue
-	);
-
 	const [search, setSearch] = useState("");
-
-	const updateState = useCallback(
-		(value: string) => {
-			if (selected.includes(value)) {
-				dispatch({ type: "remove", payload: value });
-			} else {
-				dispatch({ type: "add", payload: value });
-			}
-		},
-		[selected]
-	);
-
-	const onSubmit = useCallback(() => {
-		parentSetSelected(selected);
-		closeHandler();
-	}, [selected]);
 
 	const filteredData = useMemo(() => {
 		if (!search) return data;
@@ -511,16 +500,54 @@ function SectionsList({
 		[filteredData]
 	);
 
-	const renderItem = useCallback(
-		({ item }: { item: MultiselectData }) => (
+	const itemsRef = useMemo(
+		() =>
+			data.flatMap((category) =>
+				category.data.map((item) => ({
+					id: item.id,
+					ref: createRef<ListItemObject>(),
+				}))
+			),
+		[]
+	);
+
+	const checkAllRef = useRef<CheckAllObject>(null);
+
+	const renderItem = useCallback(({ item }: { item: MultiselectData }) => {
+		const ref = itemsRef.find((ref) => ref.id === item.id)?.ref;
+
+		return (
 			<ListItem
 				item={item}
-				onPress={() => updateState(item.id)}
-				isSelected={selected.includes(item.id)}
+				ref={ref}
+				onPress={() => {
+					checkAllRef.current?.updateSelectedAmount(
+						!ref?.current?.isChecked()!
+					);
+					ref?.current?.toggle();
+				}}
+				initialChecked={initialValue.includes(item.id)}
 			/>
-		),
-		[selected]
-	);
+		);
+	}, []);
+
+	const onSubmit = useCallback(() => {
+		const selectedIds = itemsRef
+			?.filter((item) => item.ref?.current?.isChecked())
+			.map((item) => item.id as string);
+
+		console.log(selectedIds.length);
+
+		if (selectedIds) {
+			parentSetSelected(selectedIds);
+		}
+
+		closeHandler();
+	}, []);
+
+	// Gambiarra: a Section List só consegue ser rolada com o NativeViewGestureHandler e o "disallowInterruption" setado, no entanto,
+	// não é possível deslizar para fechar o BottomSheet ao chegar no topo da lista.
+	// Dar uma olhada em: https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/api/create-native-wrapper/
 
 	return (
 		<>
@@ -538,27 +565,11 @@ function SectionsList({
 					removeClippedSubviews
 					windowSize={21}
 					ListHeaderComponent={() => (
-						<Checkbox
-							checked={selected.length === dataLength}
-							title="Selecionar todos"
-							onPress={() =>
-								selected.length === dataLength
-									? dispatch({ type: "reset" })
-									: dispatch({
-											type: "all",
-											payload: filteredData
-												.map((category) =>
-													category.data.map(
-														(item) => item.id
-													)
-												)
-												.flat(),
-									  })
-							}
-							customKey={"select-all"}
-							inverted
-							labelStyle={{ fontWeight: "bold" }}
-							style={{ width: "100%", marginBottom: 8 }}
+						<CheckAll
+							ref={checkAllRef}
+							itemsRef={itemsRef}
+							dataLength={dataLength}
+							initialSelectedAmount={initialValue.length}
 						/>
 					)}
 					//stickyHeaderHiddenOnScroll
@@ -580,20 +591,99 @@ function SectionsList({
 	);
 }
 
+interface CheckAllProps {
+	itemsRef: {
+		id: string;
+		ref: React.RefObject<ListItemObject>;
+	}[];
+	initialSelectedAmount: number;
+	dataLength: number;
+}
+
+interface CheckAllObject {
+	updateSelectedAmount: (checked: boolean) => void;
+}
+
+const CheckAll = forwardRef(function CheckAll(
+	{ itemsRef, dataLength, initialSelectedAmount }: CheckAllProps,
+	ref
+) {
+	const [selectedAmount, setSelectedAmount] = useState(
+		initialSelectedAmount ?? 0
+	);
+
+	useImperativeHandle(ref, () => ({
+		updateSelectedAmount: (checked: boolean) => {
+			if (checked) {
+				setSelectedAmount((prev) => prev + 1);
+			} else {
+				setSelectedAmount((prev) => prev - 1);
+			}
+			console.log(selectedAmount);
+		},
+	}));
+
+	return (
+		<Checkbox
+			checked={selectedAmount === dataLength}
+			title="Selecionar todos"
+			onPress={() => {
+				if (selectedAmount === dataLength) {
+					itemsRef.forEach((item) => {
+						item.ref?.current?.uncheck();
+					});
+					setSelectedAmount(0);
+				} else {
+					itemsRef.forEach((item) => {
+						const selectedIds = itemsRef
+							?.filter((item) => item.ref?.current?.isChecked())
+							.map((item) => item.id as string);
+
+						if (selectedIds && !selectedIds.includes(item.id)) {
+							item.ref?.current?.check();
+						}
+					});
+					setSelectedAmount(dataLength);
+				}
+			}}
+			customKey={"select-all"}
+			inverted
+			labelStyle={{ fontWeight: "bold" }}
+			style={{ width: "100%", marginBottom: 8 }}
+		/>
+	);
+});
+
 function SectionSpace() {
 	return <View className="w-full h-2 bg-transparent" />;
 }
 
-function ListItem({
-	item,
-	onPress,
-	isSelected,
-}: {
+interface ListItem {
 	item: MultiselectData;
+	initialChecked?: boolean;
 	onPress: () => void;
-	isSelected?: boolean;
-}) {
+}
+
+interface ListItemObject extends Omit<TouchableOpacity, "props"> {
+	check: () => void;
+	uncheck: () => void;
+	toggle: () => void;
+	isChecked: () => boolean;
+}
+
+const ListItem = forwardRef(function ListItem(
+	{ item, onPress, initialChecked }: ListItem,
+	ref
+) {
 	const { colorScheme } = useColorScheme();
+	const [isSelected, setIsSelected] = useState(initialChecked);
+
+	useImperativeHandle(ref, () => ({
+		check: () => setIsSelected(true),
+		uncheck: () => setIsSelected(false),
+		toggle: () => setIsSelected((prev) => !prev),
+		isChecked: () => isSelected,
+	}));
 
 	return (
 		<TouchableOpacity
@@ -625,4 +715,4 @@ function ListItem({
 			<Checkbox customKey={item.id} checked={isSelected} disabled />
 		</TouchableOpacity>
 	);
-}
+});

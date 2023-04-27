@@ -62,7 +62,7 @@ export function Checkbox({
 		};
 	};
 
-	console.log("rendering checkbox");
+	// console.log("rendering checkbox");
 
 	const size = 30 * fontScale;
 

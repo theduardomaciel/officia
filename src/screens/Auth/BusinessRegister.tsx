@@ -121,6 +121,8 @@ export default function BusinessRegister({ navigation }: any) {
 					{
 						id: 1,
 						title: "Atendimento",
+						onPress: () =>
+							selectedSectionId.value === 0 && updateHandler(1),
 					},
 				]}
 			/>
