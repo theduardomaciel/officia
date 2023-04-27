@@ -18,7 +18,6 @@ import Logo from "src/assets/logo_gradient.svg";
 // Components
 import Container, { BusinessScrollView } from "components/Container";
 import Header from "components/Header";
-import { cn } from "utils";
 
 const SPRING_CONFIG = {
 	damping: 20,
@@ -139,21 +138,8 @@ export default function SubscriptionScreen() {
 							/>
 						)}
 					</View>
-					<BasicPlan />
-					<Plan
-						title="Plano Plus"
-						description={`• Todas as funcionalidades do Plano Básico
-• Remoção total de anúncios
-• Backup na nuvem em tempo real
-• Sincronização entre 2 dispositivos simultâneos
-• Upload de imagens em documentos
-• Pesquisa de serviços, clientes, materiais e qualquer outro tipo de elemento
-• Acompanhamento financeiro com gráficos e dados organizados por períodos
-• Marca d’água em documentos com sua marca própria
-• Criação de categorias para organizar diferentes tipos de serviços
-• Catálogo de serviços e produtos ofertados, que são armazenados e podem ser adicionados novamente a qualquer momento
-• Suporte técnico a qualquer momento`}
-					/>
+					<BasicPlan isActual />
+					<PremiumPlan />
 				</BusinessScrollView>
 				<View
 					className="w-screen rounded-tl-3xl rounded-tr-3xl bg-gray-600 p-6 absolute left-0 bottom-0"
@@ -260,11 +246,42 @@ const Plan = ({ title, description, isActual, style }: Plan) => {
 	);
 };
 
-export const BasicPlan = ({ style }: { style?: ViewStyle }) => (
+export const BasicPlan = ({
+	style,
+	isActual,
+}: {
+	style?: ViewStyle;
+	isActual?: Plan["isActual"];
+}) => (
 	<Plan
 		title="Plano Básico"
-		isActual
+		isActual={isActual}
 		style={style}
 		description={`• Anúncios \n• Agendamento de serviços, com inserção de materiais e seleção de cliente \n• Geração de documentos com base nos serviços agendados \n• Marca d’água em documentos`}
+	/>
+);
+
+export const PremiumPlan = ({
+	style,
+	isActual,
+}: {
+	style?: ViewStyle;
+	isActual?: Plan["isActual"];
+}) => (
+	<Plan
+		title="Plano Plus"
+		isActual={isActual}
+		style={style}
+		description={`• Todas as funcionalidades do Plano Básico
+• Remoção total de anúncios
+• Backup na nuvem em tempo real
+• Sincronização entre 2 dispositivos simultâneos
+• Upload de imagens em documentos
+• Pesquisa de serviços, clientes, materiais e qualquer outro tipo de elemento
+• Acompanhamento financeiro com gráficos e dados organizados por períodos
+• Marca d’água em documentos com sua marca própria
+• Criação de categorias para organizar diferentes tipos de serviços
+• Catálogo de serviços e produtos ofertados, que são armazenados e podem ser adicionados novamente a qualquer momento
+• Suporte técnico a qualquer momento`}
 	/>
 );

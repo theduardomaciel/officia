@@ -133,11 +133,11 @@ export default function BusinessRegister({ navigation }: any) {
 				height={BOTTOM_SHEET_HEIGHT}
 			>
 				<BasicInfoForm {...hookProps} />
-				{/* <ActionButton
+				<ActionButton
 					onPress={submitSection0Data}
 					preset="next"
 					label="Próximo"
-				/> */}
+				/>
 			</SectionBottomSheet>
 
 			<SectionBottomSheet id={sections[1]} height={BOTTOM_SHEET_HEIGHT}>

@@ -5,14 +5,26 @@ import {
 	ViewStyle,
 	ActivityIndicator,
 	TextProps,
+	TextStyle,
 } from "react-native";
 
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 import clsx from "clsx";
 
-const Label = ({ children }: { children: React.ReactNode }) => (
-	<Text className="ml-2 font-medium text-white text-sm">{children}</Text>
+const Label = ({
+	children,
+	style,
+}: {
+	children: React.ReactNode;
+	style?: TextStyle;
+}) => (
+	<Text
+		className="ml-2 font-medium text-white text-sm text-center"
+		style={style}
+	>
+		{children}
+	</Text>
 );
 
 interface Props {
@@ -76,7 +88,8 @@ export const ActionButton = ({
 					{label && preset === "next" ? (
 						<Text
 							className={
-								className ?? "font-bold text-white text-base"
+								className ??
+								"font-bold text-white text-base text-center"
 							}
 							{...rest}
 						>

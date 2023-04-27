@@ -6,13 +6,16 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Components
 import { ActionButton } from "components/Button";
-import { BasicPlan } from "screens/Drawer/Subscription";
+import { BasicPlan, PremiumPlan } from "screens/Drawer/Subscription";
+import { userStorage } from "context/AuthContext";
 
 interface Props {
 	navigation: any;
 }
 
 export default function RegisterSection2({ navigation }: Props) {
+	const plan = userStorage.getString("user.plan");
+
 	return (
 		<>
 			<View
@@ -35,38 +38,55 @@ export default function RegisterSection2({ navigation }: Props) {
 				Veja a seguir algumas das coisas que você será capaz de fazer no{" "}
 				<Text className="font-logoRegular">officia</Text>:
 			</Text>
-			<BasicPlan
-				style={{
-					backgroundColor: colors.gray[300],
-					borderWidth: 0,
-					borderColor: "transparent",
-				}}
-			/>
-			<TouchableOpacity
-				className="flex-row items-center justify-between p-4 rounded bg-gray-300 w-full"
-				activeOpacity={0.8}
-				onPress={() => navigation.navigate("subscription")}
-				style={{ rowGap: 10 }}
-			>
-				<View
-					className="flex-col items-start justify-start flex-1"
-					style={{ columnGap: 10 }}
-				>
-					<Text className="font-logoRegular text-white text-md text-left">
-						officia+
-					</Text>
-					<Text className="font-normal text-sm text-white text-left">
-						Veja todas as novas possibilidades adicionadas ao
-						assinar o{" "}
-						<Text className="font-logoRegular">officia+</Text>
-					</Text>
-				</View>
-				<MaterialCommunityIcons
-					name="chevron-right"
-					size={18}
-					color={colors.text[100]}
+			{plan && plan === "premium" ? (
+				<PremiumPlan
+					isActual
+					style={{
+						backgroundColor: colors.gray[300],
+						borderWidth: 0,
+						borderColor: "transparent",
+					}}
 				/>
-			</TouchableOpacity>
+			) : (
+				<BasicPlan
+					isActual
+					style={{
+						backgroundColor: colors.gray[300],
+						borderWidth: 0,
+						borderColor: "transparent",
+					}}
+				/>
+			)}
+			{!plan ||
+				(plan === "basic" && (
+					<TouchableOpacity
+						className="flex-row items-center justify-between p-4 rounded bg-gray-300 w-full"
+						activeOpacity={0.8}
+						onPress={() => navigation.navigate("subscription")}
+						style={{ rowGap: 10 }}
+					>
+						<View
+							className="flex-col items-start justify-start flex-1"
+							style={{ columnGap: 10 }}
+						>
+							<Text className="font-logoRegular text-white text-md text-left">
+								officia+
+							</Text>
+							<Text className="font-normal text-sm text-white text-left">
+								Veja todas as novas possibilidades adicionadas
+								ao assinar o{" "}
+								<Text className="font-logoRegular">
+									officia+
+								</Text>
+							</Text>
+						</View>
+						<MaterialCommunityIcons
+							name="chevron-right"
+							size={18}
+							color={colors.text[100]}
+						/>
+					</TouchableOpacity>
+				))}
 			<ActionButton
 				onPress={() => navigation.navigate("businessRegister")}
 				preset="next"
@@ -75,7 +95,8 @@ export default function RegisterSection2({ navigation }: Props) {
 				}}
 				label="Adicionar meu primeiro negócio"
 				textProps={{
-					className: "font-logoRegular text-white text-md",
+					className:
+						"font-logoRegular text-center text-white text-md",
 				}}
 			/>
 		</>

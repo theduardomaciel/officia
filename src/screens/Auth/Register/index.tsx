@@ -1,7 +1,5 @@
 import React, { useCallback } from "react";
-
-import { MaterialIcons } from "@expo/vector-icons";
-import colors from "global/colors";
+import { BackHandler, Text } from "react-native";
 
 // Components
 import Container from "components/Container";
@@ -23,7 +21,8 @@ import RegisterSection1, {
 	censorEmail,
 } from "./Sections/Section1";
 import RegisterSection2 from "./Sections/Section2";
-import { BackHandler, Text } from "react-native";
+
+import { StackActions } from "@react-navigation/native";
 
 interface RegisterProps extends PersonalDataSchemeType, LoginDataSchemeType {}
 
@@ -65,7 +64,7 @@ export default function Register({ route, navigation }: any) {
 			sections,
 			HEADERS,
 			onLimitReached: () => {
-				navigation.goBack();
+				navigation.replace("login");
 			},
 			initialValue: email ? 0 : 2,
 		});

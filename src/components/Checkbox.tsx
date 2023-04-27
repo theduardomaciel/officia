@@ -6,6 +6,7 @@ import {
 	TouchableOpacityProps,
 	View,
 	ViewStyle,
+	useWindowDimensions,
 } from "react-native";
 import Animated, {
 	withSpring,
@@ -35,6 +36,8 @@ export function Checkbox({
 	labelStyle,
 	...rest
 }: Props) {
+	const { fontScale } = useWindowDimensions();
+
 	const entering = (targetValues: any) => {
 		"worklet";
 		const animations = {
@@ -59,6 +62,10 @@ export function Checkbox({
 		};
 	};
 
+	console.log("rendering checkbox");
+
+	const size = 30 * fontScale;
+
 	return (
 		<TouchableOpacity
 			key={customKey}
@@ -74,7 +81,11 @@ export function Checkbox({
 		>
 			{checked ? (
 				<Animated.View
-					className="h-[30px] w-[30px] bg-primary rounded-lg items-center justify-center"
+					className="bg-primary rounded-lg items-center justify-center"
+					style={{
+						width: size,
+						height: size,
+					}}
 					entering={entering}
 					exiting={ZoomOut.duration(100)}
 				>
@@ -82,7 +93,11 @@ export function Checkbox({
 				</Animated.View>
 			) : (
 				<View
-					className="h-[30px] w-[30px] rounded-lg items-center justify-center bg-transparent border border-text-200"
+					className="rounded-lg items-center justify-center bg-transparent border border-text-200"
+					style={{
+						width: size,
+						height: size,
+					}}
 					/* style={{
 						borderStyle: preset === "dark" ? "solid" : undefined,
 						borderWidth: preset === "dark" ? 1 : 0,

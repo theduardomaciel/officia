@@ -1,4 +1,4 @@
-import React, { SetStateAction } from "react";
+import React, { SetStateAction, useCallback, useEffect } from "react";
 
 // Components
 import { BusinessScrollView } from "components/Container";
@@ -26,20 +26,41 @@ import type { StateToWatch } from "hooks/useFormChangesObserver";
 
 // MMKV
 import { useMMKVObject } from "react-native-mmkv";
-import Multiselect from "components/Multiselect";
+import {
+	MultiselectCategory,
+	MultiselectData,
+	SectionsMultiselect,
+} from "components/Multiselect";
 import { Loading } from "components/StatusMessage";
+import { api } from "lib/axios";
 
 interface FormProps {
 	control: any;
 	errors: any;
 	setValue?: any;
+	onStateChange?: (states: any[]) => void;
 }
 
-export function BasicInfoForm({ control, errors, setValue }: FormProps) {
+export function BasicInfoForm({
+	control,
+	errors,
+	setValue,
+	onStateChange,
+	dbSegments,
+}: FormProps & { dbSegments?: MultiselectCategory[] | null }) {
 	const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] =
 		React.useState(false);
 
 	const [segments, setSegments] = React.useState<string[]>([]);
+
+	// Gambiarra: ver se tem como fazer isso de forma mais performática, como por exemplo, fazer com que o hook seja condicionalmente chamado somente quando houver a propriedade 'onStateChange' no componente pai
+
+	// Esse 'useEffect' diminui um pouco a performance ao atualizar os segmentos pelo 'Multiselect', mas é necessário para que o 'onStateChange' funcione corretamente
+	useEffect(() => {
+		if (onStateChange) {
+			onStateChange(segments);
+		}
+	}, [segments]);
 
 	return (
 		<>
@@ -105,48 +126,13 @@ export function BasicInfoForm({ control, errors, setValue }: FormProps) {
 					setValue && setValue("juridicalPerson", "");
 				}}
 			/>
-			<Multiselect
+			<SectionsMultiselect
 				label="Segmentos"
-				data={[
-					{
-						title: "Alimentação",
-						data: [
-							{ name: "Bares" },
-							{ name: "Cafeterias" },
-							{ name: "Confeitarias" },
-							{ name: "Docerias" },
-							{ name: "Lanchonetes" },
-							{ name: "Padarias" },
-							{ name: "Pizzarias" },
-							{ name: "Restaurantes" },
-							{ name: "Outros" },
-						],
-					},
-					{
-						title: "Beleza",
-						data: [
-							{ name: "Barbearias" },
-							{ name: "Cabeleireiros" },
-							{ name: "Clínicas de Estética" },
-							{ name: "Cosméticos" },
-							{ name: "Manicures e Pedicures" },
-							{ name: "Maquiadores" },
-							{ name: "Outros" },
-						],
-					},
-					{
-						title: "Educação",
-						data: [
-							{ name: "Aulas Particulares" },
-							{ name: "Cursos" },
-							{ name: "Escolas" },
-							{ name: "Faculdades" },
-							{ name: "Outros" },
-						],
-					},
-				]}
-				bottomSheetLabel="Selecione os segmentos da sua empresa"
+				data={dbSegments}
 				placeholder="Nenhum segmento selecionado"
+				bottomSheetProps={{
+					title: "Selecione os segmentos da sua empresa",
+				}}
 				searchBarProps={{
 					placeholder: "Pesquisar segmentos",
 				}}
@@ -194,11 +180,68 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormHookProps) {
 		onSubmit({ ...data });
 	}, onError);
 
+	const [dbSegments, setDbSegments] = React.useState<
+		MultiselectCategory[] | undefined | null
+	>(undefined);
+
+	useEffect(() => {
+		const getSegments = async () => {
+			try {
+				const response = await api.get(`/projects/segments`);
+				if (!response.data) return setDbSegments(null);
+
+				/* const data = response.data as {
+					name: string;
+					segments: MultiselectData[];
+				}[];
+
+				setDbSegments(
+					data
+						.map((item) => ({
+							title: item.name,
+							data: item.segments.sort((a, b) =>
+								a.name.localeCompare(b.name)
+							),
+						}))
+						.sort((a, b) => a.title.localeCompare(b.title))
+				); */
+
+				let data = response.data as {
+					name: string;
+					segments: MultiselectData[];
+				}[];
+
+				const organizedData = data.map((item) => ({
+					title: item.name,
+					data: item.segments.sort((a, b) =>
+						a.name.localeCompare(b.name)
+					),
+				}));
+
+				const lastSegment = organizedData.pop();
+
+				setDbSegments(
+					organizedData
+						.sort((a, b) => a.title.localeCompare(b.title))
+						.concat(lastSegment ? [lastSegment] : []) // o segmento com o nome "Outros" deve ser o último
+				);
+				console.log("Segmentos obtidos com sucesso.");
+			} catch (error) {
+				console.log(error);
+				setDbSegments(null);
+			}
+		};
+
+		getSegments();
+	}, []);
+
 	return {
 		control,
+		dbSegments,
 		errors,
 		submitData,
 		setValue,
+		watch,
 	};
 }
 

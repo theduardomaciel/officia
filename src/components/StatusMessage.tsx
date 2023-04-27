@@ -33,7 +33,7 @@ export function Empty({ message, style }: EmptyMessageProps) {
 
 interface ErrorMessageProps {
 	message: string;
-	onPress: () => void;
+	onPress?: () => void;
 }
 
 export function Error({ message, onPress }: ErrorMessageProps) {
@@ -42,12 +42,14 @@ export function Error({ message, onPress }: ErrorMessageProps) {
 			<Text className="text-zinc-400 text-xl font-bold text-center">
 				{message}
 			</Text>
-			<MaterialCommunityIcons
-				onPress={onPress}
-				name="reload"
-				size={32}
-				color={colors.text[100]}
-			/>
+			{onPress && (
+				<MaterialCommunityIcons
+					onPress={onPress}
+					name="reload"
+					size={32}
+					color={colors.text[100]}
+				/>
+			)}
 		</View>
 	);
 }

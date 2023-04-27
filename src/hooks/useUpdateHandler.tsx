@@ -106,46 +106,6 @@ export default function useUpdateHandler({
 		</Animated.View>
 	));
 
-	/* 
-    <Animated.FlatList
-			data={HEADERS}
-			style={[
-				{
-					flexGrow: 0,
-					flexShrink: 0,
-					width: ANIMATION_WIDTH * HEADERS.length,
-					backgroundColor: "red",
-				},
-				headerAnimatedStyle,
-			]}
-			keyExtractor={(_, index) => index.toString()}
-			contentContainerStyle={{
-				columnGap: width / 2,
-				backgroundColor: "red",
-				alignItems: "center",
-				justifyContent: "flex-start",
-			}}
-			horizontal
-			pagingEnabled
-			scrollEnabled={false}
-			showsHorizontalScrollIndicator={false}
-			renderItem={({ item: header, index }) => (
-				<View
-					key={index}
-					className="flex-col items-center justify-center"
-					style={{ rowGap: 10, width: ANIMATION_WIDTH }}
-				>
-					<Text className="font-logoRegular leading-[95%] text-4xl text-white text-center w-5/6">
-						{header.title}
-					</Text>
-					<Text className="text-white text-sm font-semibold text-center">
-						{header.subtitle}
-					</Text>
-				</View>
-			)}
-		/>
-    */
-
 	const BackButton = memo(({ isEnabled }: { isEnabled?: boolean }) =>
 		isEnabled ? (
 			<View className="w-full flex-col items-center justify-center">

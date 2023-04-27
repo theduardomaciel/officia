@@ -49,6 +49,7 @@ export function AuthStack() {
 			}
 			<Stack.Screen
 				name="register"
+				initialParams={{}}
 				component={Register}
 				options={{
 					headerShown: false,

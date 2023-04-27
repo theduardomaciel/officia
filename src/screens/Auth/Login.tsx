@@ -143,7 +143,7 @@ export default function Login({ navigation }: any) {
 				break;
 			case true:
 				setStatus(undefined);
-				navigation.navigate("register", { email: inputRef.current });
+				navigation.replace("register", { email: inputRef.current });
 				break;
 			default:
 				setStatus("invalid");
@@ -211,22 +211,24 @@ export default function Login({ navigation }: any) {
 									</Text>
 								)}
 							</TouchableOpacity>
-							{status === "invalid" ? (
-								<Text className="absolute -bottom-14 left-0 w-full text-center text-red">
-									O e-mail inserido é inválido.
-								</Text>
-							) : status === "error" ? (
-								<Text className="absolute -bottom-14 left-0 w-full text-center text-red opacity-80">
-									Não foi possível entrar em contato com
-									nossos servidores.{"\n"}
-									Tente novamente mais tarde.
-								</Text>
-							) : (
+							{
+								status === "invalid" ? (
+									<Text className="absolute -bottom-14 left-0 w-full text-center text-red">
+										O e-mail inserido é inválido.
+									</Text>
+								) : status === "error" ? (
+									<Text className="absolute -bottom-14 left-0 w-full text-center text-red opacity-80">
+										Não foi possível entrar em contato com
+										nossos servidores.{"\n"}
+										Tente novamente mais tarde.
+									</Text>
+								) : null /* (
 								<Text className="absolute -bottom-14 left-0 w-full text-center text-text-200 opacity-80">
 									Caso já possua uma conta, insira o {`\n`}
 									e-mail de login.
 								</Text>
-							)}
+							) */
+							}
 						</View>
 					) : (
 						<TouchableOpacity
