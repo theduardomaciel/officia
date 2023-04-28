@@ -22,7 +22,7 @@ import ToggleGroup, {
 	ToggleGroupWithManualValue,
 	ToggleGroupWithManualValueRef,
 } from "components/ToggleGroup";
-import { Section, SubSectionWrapper } from "../../Form/SubSectionWrapper";
+import { Section, SubSectionWrapper } from "../../Form/SectionWrapper";
 import { ActionButton } from "components/Button";
 import { CheckboxesGroup, checkboxesGroupReducer } from "components/Checkbox";
 
@@ -194,7 +194,7 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 	return (
 		<>
 			<SubSectionWrapper
-				header={{
+				headerProps={{
 					title: "Condições de Pagamento",
 					icon: "credit-card",
 				}}
@@ -239,10 +239,9 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 					{paymentCondition === "agreement" &&
 						(splitMethod === "percentage" ? (
 							<SubSectionWrapper
-								header={{
+								headerProps={{
 									title: `Qual o percentual do acordo?`,
 								}}
-								preset="subSection"
 							>
 								<ToggleGroupWithManualValue
 									key={"agreementInitialPercentage"}
@@ -279,10 +278,9 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 							</SubSectionWrapper>
 						) : (
 							<SubSectionWrapper
-								header={{
+								headerProps={{
 									title: `Qual o valor inicial a ser pago com o acordo?`,
 								}}
-								preset="subSection"
 							>
 								<ToggleGroupWithManualValue
 									key={"agreementInitialValue"}
@@ -319,10 +317,9 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 						))}
 					{paymentCondition === "agreement" && (
 						<SubSectionWrapper
-							header={{
+							headerProps={{
 								title: "Como o valor restante será pago?",
 							}}
-							preset="subSection"
 						>
 							<ToggleGroup
 								data={[
@@ -342,10 +339,9 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 					)}
 					{hasInstallments && (
 						<SubSectionWrapper
-							header={{
+							headerProps={{
 								title: "Em quantas parcelas o valor será dividido?",
 							}}
-							preset="subSection"
 						>
 							<ToggleGroupWithManualValue
 								key={"installmentsAmount"}
@@ -384,9 +380,9 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 			</SubSectionWrapper>
 
 			<SubSectionWrapper
-				header={{
+				headerProps={{
 					title: "Métodos de Pagamento",
-					customIcon: CurrencyExchangeIcon as any,
+					icon: CurrencyExchangeIcon as any,
 				}}
 			>
 				<CheckboxesGroup
@@ -397,9 +393,9 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 			</SubSectionWrapper>
 
 			<SubSectionWrapper
-				header={{
+				headerProps={{
 					title: "Garantia",
-					customIcon: WarrantyIcon as any,
+					icon: WarrantyIcon as any,
 				}}
 			>
 				<View className="flex-col w-full" style={{ rowGap: 10 }}>
@@ -522,8 +518,7 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 
 				<View className="w-full">
 					<SubSectionWrapper
-						header={{ title: "Condições da Garantia" }}
-						preset="subSection"
+						headerProps={{ title: "Condições da Garantia" }}
 					>
 						<View className="w-full">
 							<Controller

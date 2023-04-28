@@ -5,6 +5,13 @@ export interface FormHookProps {
 	defaultValues?: Partial<BusinessData>;
 }
 
+export interface FormProps {
+	control: any;
+	errors: any;
+	setValue?: any;
+	onStateChange?: (states: any[]) => void;
+}
+
 /* ============ Form Validation */
 
 export const basicInfoScheme = z.object({

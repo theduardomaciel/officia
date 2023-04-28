@@ -10,7 +10,7 @@ import Modal, { ModalProps } from "components/Modal";
 import Input, { borderErrorStyle } from "components/Input";
 import ToggleGroup from "components/ToggleGroup";
 import Toast from "components/Toast";
-import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SectionWrapper";
 import { ActionButton } from "components/Button";
 
 // Form
@@ -190,10 +190,9 @@ export default function RegisterSection0({ onSubmit }: Props) {
 				pallette="dark"
 			/>
 			<SubSectionWrapper
-				header={{
+				headerProps={{
 					title: "Gênero",
 				}}
-				preset="smallMargin"
 			>
 				<ToggleGroup
 					data={genderOptions}

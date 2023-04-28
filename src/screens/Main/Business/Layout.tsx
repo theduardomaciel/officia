@@ -11,7 +11,7 @@ import useBackHandler from "hooks/useBackHandler";
 
 // Types
 import type { BusinessData } from "./@types";
-import type { SubSectionWrapperProps } from "components/Form/SubSectionWrapper";
+import type { SubSectionWrapperProps } from "components/Form/SectionWrapper";
 import type { FormChangesObserver } from "hooks/useFormChangesObserver";
 import useFormChangesObserver from "hooks/useFormChangesObserver";
 

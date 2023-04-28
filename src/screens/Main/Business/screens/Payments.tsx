@@ -26,7 +26,7 @@ import {
 	BankAccountSchemeType,
 	BusinessData,
 } from "screens/Main/Business/@types";
-import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SectionWrapper";
 
 type PIX_TYPE = "unselected" | "juridicalPerson" | "email" | "phone" | "random";
 

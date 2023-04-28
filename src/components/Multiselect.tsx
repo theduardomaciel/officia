@@ -46,9 +46,20 @@ interface TriggerProps {
 	onPress: () => void;
 	placeholder: string;
 	palette?: "dark";
+	isDisabled?: boolean;
+	disabledPlaceholder?: string;
+	allSelectedPlaceholder?: string;
 }
 
-function Trigger({ children, onPress, placeholder, palette }: TriggerProps) {
+function Trigger({
+	children,
+	onPress,
+	placeholder,
+	palette,
+	isDisabled,
+	disabledPlaceholder,
+	allSelectedPlaceholder,
+}: TriggerProps) {
 	const { colorScheme } = useColorScheme();
 
 	return (
@@ -58,8 +69,10 @@ function Trigger({ children, onPress, placeholder, palette }: TriggerProps) {
 				"flex-row justify-between items-center w-full px-4 py-3 rounded-lg bg-black dark:bg-gray-200",
 				{
 					"bg-black dark:bg-gray-300": palette === "dark",
+					"bg-black dark:bg-gray-100 border-text-200": isDisabled,
 				}
 			)}
+			disabled={isDisabled}
 			onPress={onPress}
 		>
 			{children ? (
@@ -72,7 +85,11 @@ function Trigger({ children, onPress, placeholder, palette }: TriggerProps) {
 					{children}
 				</View>
 			) : (
-				<Text className="text-text-200 opacity-80">{placeholder}</Text>
+				<Text className="text-text-200 opacity-80">
+					{isDisabled
+						? disabledPlaceholder
+						: allSelectedPlaceholder ?? placeholder}
+				</Text>
 			)}
 			<MaterialIcons
 				name="expand-more"
@@ -133,8 +150,8 @@ function MultiselectBottomSheet({
 		<BottomSheet
 			overDragAmount={overDragAmount ?? 0}
 			height={height ?? "90%"}
-			suppressBackdrop={true}
-			backdropComponent={(props) => <CustomBackdrop {...props} />}
+			/* suppressBackdrop={true}
+			backdropComponent={(props) => <CustomBackdrop {...props} />} */
 			id={id}
 		>
 			<View
@@ -174,8 +191,11 @@ interface Props extends ViewProps {
 	setSelected: React.Dispatch<React.SetStateAction<string[]>>;
 	bottomSheetProps?: Omit<MultiselectBottomSheetProps, "children" | "id">;
 	pallette?: "dark";
-	selectAllButton?: boolean;
+	showSelectAllButton?: boolean;
+	allSelectedPlaceholder?: string;
 	searchBarProps?: SearchBarProps;
+	disabled?: boolean;
+	disabledPlaceholder?: string;
 }
 
 const Multiselect = React.forwardRef(
@@ -189,8 +209,11 @@ const Multiselect = React.forwardRef(
 			searchBarProps,
 			selected: parentSelected,
 			setSelected: parentSetSelected,
-			selectAllButton,
+			showSelectAllButton = true,
 			pallette,
+			disabled,
+			disabledPlaceholder,
+			allSelectedPlaceholder,
 			...rest
 		}: Props & { data?: MultiselectData[] | null },
 		ref
@@ -222,6 +245,14 @@ const Multiselect = React.forwardRef(
 							onPress={openHandler}
 							placeholder={placeholder}
 							palette={pallette}
+							isDisabled={disabled}
+							disabledPlaceholder={disabledPlaceholder}
+							allSelectedPlaceholder={
+								allSelectedPlaceholder &&
+								parentSelected.length === data?.length
+									? allSelectedPlaceholder
+									: undefined
+							}
 						>
 							{data && parentSelected.length > 0
 								? data.map((item) => {
@@ -245,13 +276,18 @@ const Multiselect = React.forwardRef(
 					{data ? (
 						<List
 							data={data}
-							searchBarProps={{
-								palette: pallette,
-								...searchBarProps,
-							}}
+							searchBarProps={
+								searchBarProps
+									? {
+											palette: pallette,
+											...searchBarProps,
+									  }
+									: undefined
+							}
 							parentSetSelected={parentSetSelected}
 							initialValue={parentSelected}
 							closeHandler={closeHandler}
+							showSelectAllButton={showSelectAllButton}
 						/>
 					) : data === undefined ? (
 						<Loading />
@@ -279,7 +315,10 @@ export const SectionsMultiselect = React.forwardRef(
 			searchBarProps,
 			selected: parentSelected,
 			setSelected: parentSetSelected,
-			selectAllButton,
+			showSelectAllButton = true,
+			allSelectedPlaceholder,
+			disabled,
+			disabledPlaceholder,
 			pallette,
 			...rest
 		}: Props & { data?: MultiselectCategory[] | null },
@@ -312,6 +351,14 @@ export const SectionsMultiselect = React.forwardRef(
 							onPress={openHandler}
 							placeholder={placeholder}
 							palette={pallette}
+							disabledPlaceholder={disabledPlaceholder}
+							isDisabled={disabled}
+							allSelectedPlaceholder={
+								allSelectedPlaceholder &&
+								parentSelected.length === data?.length
+									? allSelectedPlaceholder
+									: undefined
+							}
 						>
 							{data && parentSelected.length > 0
 								? data.map((category) =>
@@ -339,13 +386,18 @@ export const SectionsMultiselect = React.forwardRef(
 					{data ? (
 						<SectionsList
 							data={data}
-							searchBarProps={{
-								palette: pallette,
-								...searchBarProps,
-							}}
+							searchBarProps={
+								searchBarProps
+									? {
+											palette: pallette,
+											...searchBarProps,
+									  }
+									: undefined
+							}
 							parentSetSelected={parentSetSelected}
 							initialValue={parentSelected}
 							closeHandler={closeHandler}
+							showSelectAllButton={showSelectAllButton}
 						/>
 					) : data === undefined ? (
 						<Loading />
@@ -375,6 +427,7 @@ interface ListProps {
 	parentSetSelected: Props["setSelected"];
 	initialValue: Props["selected"];
 	closeHandler: () => void;
+	showSelectAllButton?: boolean;
 }
 
 function List({
@@ -383,87 +436,93 @@ function List({
 	parentSetSelected,
 	initialValue,
 	closeHandler,
+	showSelectAllButton = true,
 }: ListProps & { data: MultiselectData[] }) {
-	const [selected, dispatch] = useReducer(
-		checkboxesGroupReducer,
-		initialValue
-	);
-
 	const [search, setSearch] = useState("");
-
-	const updateState = useCallback(
-		(value: string) => {
-			if (selected.includes(value)) {
-				dispatch({ type: "remove", payload: value });
-			} else {
-				dispatch({ type: "add", payload: value });
-			}
-		},
-		[selected]
-	);
-
-	const onSubmit = useCallback(() => {
-		parentSetSelected(selected);
-		closeHandler();
-	}, [selected]);
 
 	const filteredData = useMemo(() => {
 		if (!search) return data;
-		return data.filter((item) => item.name.toLowerCase().includes(search));
+		return data.filter((item) =>
+			item.name
+				.toLowerCase()
+				.replaceAll(" ", "")
+				.includes(search.toLocaleLowerCase().replace(/\s/g, ""))
+		);
 	}, [search, data]);
 
-	const dataLength = filteredData.length;
-
-	const itemsRef = useRef<TouchableOpacity[]>(null);
-
-	const renderItem = useCallback(
-		({ item }: { item: MultiselectData }) => {
-			const ref = useRef<TouchableOpacity>(null);
-			itemsRef.current?.push(ref.current!);
-			return (
-				<ListItem
-					item={item}
-					ref={ref}
-					onPress={() => updateState(item.id)}
-				/>
-			);
-		},
-		[selected]
+	const dataItems = useMemo(
+		() => filteredData.map((item) => item.id),
+		[filteredData]
 	);
+
+	const itemsRef = useMemo(
+		() =>
+			data.map((item) => ({
+				id: item.id,
+				ref: createRef<ListItemObject>(),
+			})),
+		[]
+	);
+
+	const checkAllRef = useRef<CheckAllObject>(null);
+
+	const renderItem = useCallback(({ item }: { item: MultiselectData }) => {
+		const ref = itemsRef.find((ref) => ref.id === item.id)?.ref;
+
+		return (
+			<ListItem
+				item={item}
+				ref={ref}
+				onPress={() => {
+					checkAllRef.current?.updateSelectedAmount(
+						!ref?.current?.isChecked()!
+					);
+					ref?.current?.toggle();
+				}}
+				initialChecked={initialValue.includes(item.id)}
+			/>
+		);
+	}, []);
+
+	const onSubmit = useCallback(() => {
+		const selectedIds = itemsRef
+			?.filter((item) => item.ref?.current?.isChecked())
+			.map((item) => item.id as string);
+
+		console.log(selectedIds.length, "tamanho");
+
+		if (selectedIds) {
+			parentSetSelected(selectedIds);
+		}
+
+		closeHandler();
+	}, []);
 
 	return (
 		<>
-			<SearchBar
-				value={search}
-				onChange={setSearch}
-				{...searchBarProps}
-			/>
+			{searchBarProps && (
+				<SearchBar
+					value={search}
+					onChange={setSearch}
+					{...searchBarProps}
+				/>
+			)}
 			<FlatList
 				data={filteredData}
 				keyExtractor={(_, index) => index.toString()}
 				showsVerticalScrollIndicator={false}
 				style={{ flex: 1 }}
 				removeClippedSubviews
-				ListHeaderComponent={() => (
-					<Checkbox
-						checked={selected.length === dataLength}
-						title="Selecionar todos"
-						onPress={() =>
-							selected.length === dataLength
-								? dispatch({ type: "reset" })
-								: dispatch({
-										type: "all",
-										payload: filteredData
-											.map((item) => item.id)
-											.flat(),
-								  })
-						}
-						customKey={"select-all"}
-						inverted
-						labelStyle={{ fontWeight: "bold" }}
-						style={{ width: "100%" }}
-					/>
-				)}
+				ListHeaderComponent={() =>
+					showSelectAllButton ? (
+						<CheckAll
+							ref={checkAllRef}
+							itemsRef={itemsRef}
+							data={dataItems}
+							initialSelectedAmount={initialValue.length}
+						/>
+					) : null
+				}
 				ItemSeparatorComponent={() => (
 					<View className="w-full h-px bg-gray-300 dark:bg-gray-100 opacity-40" />
 				)}
@@ -480,6 +539,7 @@ function SectionsList({
 	parentSetSelected,
 	initialValue,
 	closeHandler,
+	showSelectAllButton,
 }: ListProps & { data: MultiselectCategory[] }) {
 	const [search, setSearch] = useState("");
 
@@ -489,14 +549,20 @@ function SectionsList({
 			.map((category) => ({
 				...category,
 				data: category.data.filter((item) =>
-					item.name.toLowerCase().includes(search.toLowerCase())
+					item.name
+						.toLowerCase()
+						.replaceAll(" ", "")
+						.includes(search.toLocaleLowerCase().replace(/\s/g, ""))
 				),
 			}))
 			.filter((category) => category.data.length > 0);
 	}, [search, data]);
 
-	const dataLength = useMemo(
-		() => filteredData.reduce((acc, curr) => acc + curr.data.length, 0),
+	const dataItems = useMemo(
+		() =>
+			filteredData.flatMap((category) =>
+				category.data.map((item) => item.id)
+			),
 		[filteredData]
 	);
 
@@ -551,11 +617,13 @@ function SectionsList({
 
 	return (
 		<>
-			<SearchBar
-				value={search}
-				onChange={setSearch}
-				{...searchBarProps}
-			/>
+			{searchBarProps && (
+				<SearchBar
+					value={search}
+					onChange={setSearch}
+					{...searchBarProps}
+				/>
+			)}
 			<NativeViewGestureHandler disallowInterruption>
 				<SectionList
 					sections={filteredData}
@@ -564,14 +632,16 @@ function SectionsList({
 					style={{ flex: 1 }}
 					removeClippedSubviews
 					windowSize={21}
-					ListHeaderComponent={() => (
-						<CheckAll
-							ref={checkAllRef}
-							itemsRef={itemsRef}
-							dataLength={dataLength}
-							initialSelectedAmount={initialValue.length}
-						/>
-					)}
+					ListHeaderComponent={() =>
+						showSelectAllButton ? (
+							<CheckAll
+								ref={checkAllRef}
+								itemsRef={itemsRef}
+								data={dataItems}
+								initialSelectedAmount={initialValue.length}
+							/>
+						) : null
+					}
 					//stickyHeaderHiddenOnScroll
 					stickySectionHeadersEnabled
 					renderSectionHeader={({ section: { title } }) => (
@@ -597,7 +667,7 @@ interface CheckAllProps {
 		ref: React.RefObject<ListItemObject>;
 	}[];
 	initialSelectedAmount: number;
-	dataLength: number;
+	data: string[];
 }
 
 interface CheckAllObject {
@@ -605,7 +675,7 @@ interface CheckAllObject {
 }
 
 const CheckAll = forwardRef(function CheckAll(
-	{ itemsRef, dataLength, initialSelectedAmount }: CheckAllProps,
+	{ itemsRef, data, initialSelectedAmount }: CheckAllProps,
 	ref
 ) {
 	const [selectedAmount, setSelectedAmount] = useState(
@@ -616,34 +686,42 @@ const CheckAll = forwardRef(function CheckAll(
 		updateSelectedAmount: (checked: boolean) => {
 			if (checked) {
 				setSelectedAmount((prev) => prev + 1);
+				console.log(
+					selectedAmount,
+					"selectedAmount aumentou",
+					data.length
+				);
 			} else {
 				setSelectedAmount((prev) => prev - 1);
+				console.log(
+					selectedAmount,
+					"selectedAmount diminuiu",
+					data.length
+				);
 			}
-			console.log(selectedAmount);
 		},
 	}));
 
 	return (
 		<Checkbox
-			checked={selectedAmount === dataLength}
+			checked={selectedAmount === data.length}
 			title="Selecionar todos"
 			onPress={() => {
-				if (selectedAmount === dataLength) {
+				if (selectedAmount === data.length) {
 					itemsRef.forEach((item) => {
-						item.ref?.current?.uncheck();
+						if (data.includes(item.id)) {
+							item.ref?.current?.uncheck();
+						}
 					});
 					setSelectedAmount(0);
 				} else {
-					itemsRef.forEach((item) => {
-						const selectedIds = itemsRef
-							?.filter((item) => item.ref?.current?.isChecked())
-							.map((item) => item.id as string);
-
-						if (selectedIds && !selectedIds.includes(item.id)) {
-							item.ref?.current?.check();
+					itemsRef.forEach((item, index) => {
+						if (data.includes(item.id)) {
+							console.log(index);
+							item.ref?.current?.check(); // Gambiarra: não está checando todos quando a lista é muito longa
 						}
 					});
-					setSelectedAmount(dataLength);
+					setSelectedAmount(data.length);
 				}
 			}}
 			customKey={"select-all"}

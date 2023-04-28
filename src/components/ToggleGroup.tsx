@@ -189,11 +189,12 @@ export const ToggleGroupWithManualValue = forwardRef(
 									onFocus={() => {
 										setSelected(null);
 										if (manualValue.unit && value) {
-											const replacedValue =
-												value.replaceAll(
+											const replacedValue = value
+												.replaceAll(
 													manualValue.unit.label,
 													""
-												);
+												)
+												.replaceAll(" ", "");
 											onChange(replacedValue);
 										}
 									}}
@@ -205,19 +206,22 @@ export const ToggleGroupWithManualValue = forwardRef(
 												manualValue.maxValue
 												? manualValue.maxValue.toString()
 												: value;
-										if (manualValue.unit) {
+										if (
+											manualValue.unit &&
+											value.length > 0
+										) {
 											onChange(
 												`${
 													manualValue.unit &&
 													manualValue.unit
 														.position === "start"
-														? manualValue.unit.label
+														? `${manualValue.unit.label} `
 														: ""
 												}${reducedValue}${
 													manualValue.unit &&
 													manualValue.unit
 														.position === "end"
-														? manualValue.unit.label
+														? ` ${manualValue.unit.label}`
 														: ""
 												}`
 											);

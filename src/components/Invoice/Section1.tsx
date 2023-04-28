@@ -9,7 +9,7 @@ import {
 	ReviewSection,
 	WarrantyReview,
 } from "components/ScheduleForm/Sections/Section2";
-import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SectionWrapper";
 import { ActionButton } from "components/Button";
 
 // Utils

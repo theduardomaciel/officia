@@ -5,7 +5,7 @@ import { View } from "react-native";
 import Input, { borderErrorStyle } from "components/Input";
 import Toast from "components/Toast";
 import AddressFetch from "components/AddressFetch";
-import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SectionWrapper";
 import { BusinessScrollView } from "components/Container";
 
 import BusinessLayout, { ChangesObserver } from "../Layout";

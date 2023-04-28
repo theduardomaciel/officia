@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from "react";
-import { TouchableOpacity, View, Text } from "react-native";
+import { GEO_API_KEY } from "@env";
 
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
@@ -24,6 +24,11 @@ import { useAuth } from "context/AuthContext";
 import { api } from "lib/axios";
 import Toast from "components/Toast";
 import Dropdown from "components/Dropdown";
+import {
+	Geolocation,
+	ServiceForm,
+} from "screens/Main/Business/screens/Service";
+import axios from "axios";
 
 const sections = [
 	"registerSection0BottomSheet",
@@ -104,6 +109,35 @@ export default function BusinessRegister({ navigation }: any) {
 
 	const BOTTOM_SHEET_HEIGHT = "65%";
 
+	const [geoData, setGeoData] = React.useState<
+		Geolocation[] | undefined | null
+	>(undefined);
+
+	useEffect(() => {
+		async function getGeoData() {
+			console.log(GEO_API_KEY);
+			try {
+				const response = await axios.get(
+					`https://api.countrystatecity.in/v1/countries`,
+					{
+						headers: {
+							"X-CSCAPI-KEY": GEO_API_KEY.replaceAll("'", ""),
+						},
+					}
+				);
+
+				if (response.data) {
+					setGeoData(response.data);
+				}
+			} catch (error) {
+				console.log(error);
+				setGeoData(null);
+			}
+		}
+
+		getGeoData();
+	}, []);
+
 	return (
 		<Container style={{ rowGap: 0 }}>
 			<BackButton isEnabled={true} />
@@ -143,6 +177,7 @@ export default function BusinessRegister({ navigation }: any) {
 			</SectionBottomSheet>
 
 			<SectionBottomSheet id={sections[1]} height={BOTTOM_SHEET_HEIGHT}>
+				<ServiceForm geoData={geoData} />
 				<ActionButton
 					onPress={submitSection1Data}
 					preset="next"

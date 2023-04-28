@@ -7,7 +7,7 @@ import colors from "global/colors";
 import SearchBar from "components/SearchBar";
 import Modal from "./Modal";
 import { Preview, PreviewStatic } from "components/Preview";
-import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SectionWrapper";
 import { Empty } from "./StatusMessage";
 
 // Database

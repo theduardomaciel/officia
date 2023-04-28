@@ -24,7 +24,7 @@ import { ActionButton } from "components/Button";
 import BottomSheet, { BottomSheetActions } from "components/BottomSheet";
 import { Loading } from "components/StatusMessage";
 import { PreviewStatic } from "components/Preview";
-import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SectionWrapper";
 import { Tag } from "components/TagsSelector";
 
 import ClientAdd from "components/ClientForms/ClientAdd";

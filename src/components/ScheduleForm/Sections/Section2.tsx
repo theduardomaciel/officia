@@ -16,7 +16,7 @@ import {
 	Section,
 	SubSectionWrapper,
 	SubSectionWrapperProps,
-} from "../../Form/SubSectionWrapper";
+} from "../../Form/SectionWrapper";
 import { ActionButton } from "components/Button";
 
 // Utils

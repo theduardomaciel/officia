@@ -21,6 +21,7 @@ import {
 	BasicInfoSchemeType,
 	BusinessData,
 	FormHookProps,
+	FormProps,
 } from "screens/Main/Business/@types";
 import type { StateToWatch } from "hooks/useFormChangesObserver";
 
@@ -34,24 +35,23 @@ import {
 import { Loading } from "components/StatusMessage";
 import { api } from "lib/axios";
 
-interface FormProps {
-	control: any;
-	errors: any;
-	setValue?: any;
-	onStateChange?: (states: any[]) => void;
-}
-
 export function BasicInfoForm({
 	control,
 	errors,
 	setValue,
 	onStateChange,
 	dbSegments,
-}: FormProps & { dbSegments?: MultiselectCategory[] | null }) {
+	initialValues,
+}: FormProps & {
+	dbSegments?: MultiselectCategory[] | null;
+	initialValues?: { segments: string[] };
+}) {
 	const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] =
 		React.useState(false);
 
-	const [segments, setSegments] = React.useState<string[]>([]);
+	const [segments, setSegments] = React.useState<string[]>(
+		initialValues?.segments ?? []
+	);
 
 	// Gambiarra: ver se tem como fazer isso de forma mais performática, como por exemplo, fazer com que o hook seja condicionalmente chamado somente quando houver a propriedade 'onStateChange' no componente pai
 

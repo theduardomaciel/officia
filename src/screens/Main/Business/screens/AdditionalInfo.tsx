@@ -10,7 +10,7 @@ import colors from "global/colors";
 import { BusinessScrollView } from "components/Container";
 import Toast from "components/Toast";
 import Input, { borderErrorStyle } from "components/Input";
-import { SubSectionWrapper } from "components/Form/SubSectionWrapper";
+import { SubSectionWrapper } from "components/Form/SectionWrapper";
 
 import BusinessLayout, { ChangesObserver } from "../Layout";
 

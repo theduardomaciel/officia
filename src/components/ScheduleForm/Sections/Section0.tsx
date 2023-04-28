@@ -20,7 +20,7 @@ import Input from "components/Input";
 import BottomSheet from "components/BottomSheet";
 import Calendar, { CalendarDate } from "components/Calendar";
 
-import { Section, SubSectionWrapper } from "../../Form/SubSectionWrapper";
+import { Section, SubSectionWrapper } from "../../Form/SectionWrapper";
 import { ActionButton, SubActionButton } from "components/Button";
 import { Preview } from "components/Preview";
 
