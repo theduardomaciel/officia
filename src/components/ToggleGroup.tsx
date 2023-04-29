@@ -134,13 +134,17 @@ export const ToggleGroupWithManualValue = forwardRef(
 		);
 		//console.log(selected, defaultValue, data.flatMap(item => item.value));
 
-		useImperativeHandle(ref, () => ({
-			reset: () => {
-				setSelected(null);
-				inputRef.current?.blur();
-			},
-			getSelected: () => selected,
-		}));
+		useImperativeHandle(
+			ref,
+			() => ({
+				reset: () => {
+					setSelected(null);
+					inputRef.current?.blur();
+				},
+				getSelected: () => selected,
+			}),
+			[selected]
+		);
 
 		/* No caso de troca de tipo no parente, atualizamos o estado para o primeiro valor ou o valor padrão, caso exista */
 		/* useEffect(() => {
@@ -167,7 +171,7 @@ export const ToggleGroupWithManualValue = forwardRef(
 							}}
 							isSelected={selected === item.value}
 							applyMarginRight={
-								index !== data.length - 1 ||
+								(data && index !== data.length - 1) ||
 								(manualValue ? true : false)
 							}
 						/>
@@ -208,6 +212,7 @@ export const ToggleGroupWithManualValue = forwardRef(
 												: value;
 										if (
 											manualValue.unit &&
+											value &&
 											value.length > 0
 										) {
 											onChange(

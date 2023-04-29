@@ -141,55 +141,64 @@ const Section1 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 		(paymentCondition === "agreement" &&
 			remainingValue === "withInstallments");
 
-	useImperativeHandle(ref, () => ({
-		getData: () => {
-			const splitInitialValueFromInput =
-				splitInitialValueRef.current?.getSelected();
+	useImperativeHandle(
+		ref,
+		() => ({
+			getData: () => {
+				const splitInitialValueFromInput =
+					splitInitialValueRef.current?.getSelected();
 
-			const splitInitialPercentageFromInput =
-				splitInitialPercentageRef.current?.getSelected();
+				const splitInitialPercentageFromInput =
+					splitInitialPercentageRef.current?.getSelected();
 
-			const splitValue =
-				paymentCondition === "card"
+				const splitValue =
+					paymentCondition === "card"
+						? installmentsAmountRef.current?.getSelected()
+						: paymentCondition === "agreement" &&
+						  splitMethod === "money"
+						? splitInitialValueFromInput
+						: splitInitialPercentageFromInput;
+
+				const splitRemaining = hasInstallments
 					? installmentsAmountRef.current?.getSelected()
-					: paymentCondition === "agreement" &&
-					  splitMethod === "money"
-					? splitInitialValueFromInput
-					: splitInitialPercentageFromInput;
+					: "remaining";
 
-			const splitRemaining = hasInstallments
-				? installmentsAmountRef.current?.getSelected()
-				: "remaining";
+				const warrantyPeriod = warrantyPeriodRef.current?.getSelected();
 
-			const warrantyPeriod = warrantyPeriodRef.current?.getSelected();
+				const formDays = warrantyPeriod
+					? parseInt(warrantyPeriod) ||
+					  (parseInt(
+							getValues(`warrantyPeriod_${warrantyPeriodType}`)
+					  ) ??
+							90)
+					: 90;
 
-			const formDays = warrantyPeriod
-				? parseInt(warrantyPeriod) ||
-				  (parseInt(
-						getValues(`warrantyPeriod_${warrantyPeriodType}`)
-				  ) ??
-						90)
-				: 90;
+				const warrantyDays =
+					warrantyPeriodType === "days"
+						? formDays
+						: warrantyPeriodType === "months"
+						? formDays * 30
+						: formDays * 360;
 
-			const warrantyDays =
-				warrantyPeriodType === "days"
-					? formDays
-					: warrantyPeriodType === "months"
-					? formDays * 30
-					: formDays * 360;
+				const warrantyDetails = getValues("warrantyDetails");
 
-			const warrantyDetails = getValues("warrantyDetails");
-
-			return {
-				paymentCondition,
-				checkedPaymentMethods,
-				splitValue,
-				splitRemaining,
-				warrantyDays,
-				warrantyDetails,
-			};
-		},
-	}));
+				return {
+					paymentCondition,
+					checkedPaymentMethods,
+					splitValue,
+					splitRemaining,
+					warrantyDays,
+					warrantyDetails,
+				};
+			},
+		}),
+		[
+			checkedPaymentMethods,
+			hasInstallments,
+			paymentCondition,
+			warrantyPeriodType,
+		]
+	);
 
 	return (
 		<>

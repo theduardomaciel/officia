@@ -42,6 +42,8 @@ export interface BottomSheetProps {
 	onDismissed?: () => any;
 	onExpand?: () => any;
 	onExpanded?: () => any;
+	panRef?: React.Ref<any>;
+	simultaneousHandlers?: React.Ref<any> | React.Ref<any>[];
 }
 
 export interface BottomSheetActions {

@@ -13,7 +13,9 @@ import {
 	ReviewSection,
 	WarrantyReview,
 } from "components/ScheduleForm/Sections/Section2";
-import { SubSectionWrapper } from "components/Form/SectionWrapper";
+import SectionWrapper, {
+	SubSectionWrapper,
+} from "components/Form/SectionWrapper";
 import { ActionButton } from "components/Button";
 
 // Utils
@@ -40,14 +42,18 @@ const Section0 = forwardRef(({ onSubmit, order }: InvoiceSectionProps, ref) => {
 		showMaterialsImages: true,
 	});
 
-	useImperativeHandle(ref, () => ({
-		getValidity() {
-			return validity;
-		},
-		getSelectedOptions() {
-			return selectedOptions;
-		},
-	}));
+	useImperativeHandle(
+		ref,
+		() => ({
+			getValidity() {
+				return validity;
+			},
+			getSelectedOptions() {
+				return selectedOptions;
+			},
+		}),
+		[validity, selectedOptions]
+	);
 
 	return (
 		<>
@@ -76,8 +82,8 @@ const Section0 = forwardRef(({ onSubmit, order }: InvoiceSectionProps, ref) => {
 				}}
 			/>
 
-			<SubSectionWrapper
-				header={{
+			<SectionWrapper
+				headerProps={{
 					title: "Detalhes",
 				}}
 			>
@@ -172,7 +178,7 @@ const Section0 = forwardRef(({ onSubmit, order }: InvoiceSectionProps, ref) => {
 						customKey={"checkbox_7"}
 					/>
 				</View>
-			</SubSectionWrapper>
+			</SectionWrapper>
 
 			<View className="w-full items-center justify-center gap-y-8 mb-5">
 				<View className="w-3/5 h-[0px] border-dashed border-t border-gray-100" />

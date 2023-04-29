@@ -1,5 +1,6 @@
 import React, {
 	Dispatch,
+	RefObject,
 	SetStateAction,
 	createRef,
 	forwardRef,
@@ -15,12 +16,15 @@ import React, {
 } from "react";
 import {
 	TouchableOpacity,
-	TouchableOpacityProps,
 	View,
 	Text,
 	SectionList,
 	ViewProps,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { NativeViewGestureHandler } from "react-native-gesture-handler";
+import { FlashList } from "@shopify/flash-list";
+import { ScrollView } from "react-native-gesture-handler";
 
 import { useColorScheme } from "nativewind";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -28,17 +32,12 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 import clsx from "clsx";
 
+// Components
 import Label from "./Label";
 import BottomSheet, { BottomSheetProps } from "./BottomSheet/index";
-import CustomBackdrop from "./BottomSheet/CustomBackdrop";
 import SearchBar, { SearchBarProps } from "./SearchBar";
-import { Checkbox, checkboxesGroupReducer } from "./Checkbox";
+import { Checkbox } from "./Checkbox";
 import { ActionButton } from "./Button";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-	FlatList,
-	NativeViewGestureHandler,
-} from "react-native-gesture-handler";
 import { Error, Loading } from "./StatusMessage";
 
 interface TriggerProps {
@@ -75,7 +74,7 @@ function Trigger({
 			disabled={isDisabled}
 			onPress={onPress}
 		>
-			{children ? (
+			{children && !allSelectedPlaceholder ? (
 				<View
 					className="flex-1 flex-row items-start justify-start flex-wrap"
 					style={{
@@ -129,11 +128,7 @@ function TriggerHolder({ children, label, description }: TriggerHolderProps) {
 	);
 }
 
-interface MultiselectBottomSheetProps {
-	id: BottomSheetProps["id"];
-	children: React.ReactNode;
-	overDragAmount?: BottomSheetProps["overDragAmount"];
-	height?: BottomSheetProps["height"];
+interface MultiselectBottomSheetProps extends Partial<BottomSheetProps> {
 	title?: string;
 }
 
@@ -143,6 +138,7 @@ function MultiselectBottomSheet({
 	overDragAmount,
 	height,
 	title,
+	...rest
 }: MultiselectBottomSheetProps) {
 	const insets = useSafeAreaInsets();
 
@@ -152,7 +148,8 @@ function MultiselectBottomSheet({
 			height={height ?? "90%"}
 			/* suppressBackdrop={true}
 			backdropComponent={(props) => <CustomBackdrop {...props} />} */
-			id={id}
+			id={id as string}
+			{...rest}
 		>
 			<View
 				className="flex flex-1"
@@ -228,10 +225,17 @@ const Multiselect = React.forwardRef(
 			BottomSheet.close(id);
 		}, []);
 
-		useImperativeHandle(ref, () => ({
-			open: () => openHandler(),
-			close: () => closeHandler(),
-		}));
+		useImperativeHandle(
+			ref,
+			() => ({
+				open: () => openHandler(),
+				close: () => closeHandler(),
+			}),
+			[]
+		);
+
+		const listScrollRef = useRef();
+		const panRef = useRef();
 
 		return (
 			<>
@@ -272,7 +276,12 @@ const Multiselect = React.forwardRef(
 					</TriggerHolder>
 				)}
 
-				<MultiselectBottomSheet id={id} {...bottomSheetProps}>
+				<MultiselectBottomSheet
+					id={id}
+					simultaneousHandlers={listScrollRef}
+					panRef={panRef}
+					{...bottomSheetProps}
+				>
 					{data ? (
 						<List
 							data={data}
@@ -288,6 +297,8 @@ const Multiselect = React.forwardRef(
 							initialValue={parentSelected}
 							closeHandler={closeHandler}
 							showSelectAllButton={showSelectAllButton}
+							listScrollRef={listScrollRef}
+							panRef={panRef}
 						/>
 					) : data === undefined ? (
 						<Loading />
@@ -334,10 +345,17 @@ export const SectionsMultiselect = React.forwardRef(
 			BottomSheet.close(id);
 		}, []);
 
-		useImperativeHandle(ref, () => ({
-			open: () => openHandler(),
-			close: () => closeHandler(),
-		}));
+		useImperativeHandle(
+			ref,
+			() => ({
+				open: () => openHandler(),
+				close: () => closeHandler(),
+			}),
+			[]
+		);
+
+		const panRef = useRef();
+		const listScrollRef = useRef();
 
 		return (
 			<>
@@ -382,7 +400,12 @@ export const SectionsMultiselect = React.forwardRef(
 					</TriggerHolder>
 				)}
 
-				<MultiselectBottomSheet id={id} {...bottomSheetProps}>
+				<MultiselectBottomSheet
+					id={id}
+					{...bottomSheetProps}
+					simultaneousHandlers={listScrollRef}
+					panRef={panRef}
+				>
 					{data ? (
 						<SectionsList
 							data={data}
@@ -398,6 +421,8 @@ export const SectionsMultiselect = React.forwardRef(
 							initialValue={parentSelected}
 							closeHandler={closeHandler}
 							showSelectAllButton={showSelectAllButton}
+							panRef={panRef}
+							listScrollRef={listScrollRef}
 						/>
 					) : data === undefined ? (
 						<Loading />
@@ -428,6 +453,8 @@ interface ListProps {
 	initialValue: Props["selected"];
 	closeHandler: () => void;
 	showSelectAllButton?: boolean;
+	listScrollRef: RefObject<any>;
+	panRef: BottomSheetProps["panRef"];
 }
 
 function List({
@@ -437,6 +464,8 @@ function List({
 	initialValue,
 	closeHandler,
 	showSelectAllButton = true,
+	listScrollRef,
+	panRef,
 }: ListProps & { data: MultiselectData[] }) {
 	const [search, setSearch] = useState("");
 
@@ -457,39 +486,40 @@ function List({
 
 	const itemsRef = useMemo(
 		() =>
-			data.map((item) => ({
-				id: item.id,
-				ref: createRef<ListItemObject>(),
-			})),
+			Object.fromEntries(
+				data.map((item) => [item.id, createRef<ListItemRef>()])
+			),
 		[]
+	);
+	const itemsSelected = useRef(
+		Object.fromEntries(
+			data.map((item) => [item.id, initialValue.includes(item.id)])
+		)
 	);
 
 	const checkAllRef = useRef<CheckAllObject>(null);
 
-	const renderItem = useCallback(({ item }: { item: MultiselectData }) => {
-		const ref = itemsRef.find((ref) => ref.id === item.id)?.ref;
-
-		return (
+	const renderItem = useCallback(
+		({ item }: { item: MultiselectData }) => (
 			<ListItem
 				item={item}
-				ref={ref}
-				onPress={() => {
-					checkAllRef.current?.updateSelectedAmount(
-						!ref?.current?.isChecked()!
-					);
-					ref?.current?.toggle();
+				ref={itemsRef[item.id]}
+				onPress={(checked: boolean) => {
+					checkAllRef.current?.updateSelectedAmount(checked);
+					itemsSelected.current[item.id] = checked;
 				}}
-				initialChecked={initialValue.includes(item.id)}
+				initialChecked={itemsSelected.current[item.id]}
 			/>
-		);
-	}, []);
+		),
+		[]
+	);
 
 	const onSubmit = useCallback(() => {
-		const selectedIds = itemsRef
-			?.filter((item) => item.ref?.current?.isChecked())
-			.map((item) => item.id as string);
+		const selectedIds = Object.entries(itemsSelected.current)
+			.filter(([_, checked]) => checked === true)
+			.map(([id, _]) => id);
 
-		console.log(selectedIds.length, "tamanho");
+		//console.log(selectedIds.length, "Quantidade de elementos selecionados");
 
 		if (selectedIds) {
 			parentSetSelected(selectedIds);
@@ -497,6 +527,8 @@ function List({
 
 		closeHandler();
 	}, []);
+
+	const keyExtractor = useCallback((item: MultiselectData) => item.id, []);
 
 	return (
 		<>
@@ -507,27 +539,36 @@ function List({
 					{...searchBarProps}
 				/>
 			)}
-			<FlatList
-				data={filteredData}
-				keyExtractor={(_, index) => index.toString()}
-				showsVerticalScrollIndicator={false}
-				style={{ flex: 1 }}
-				removeClippedSubviews
-				ListHeaderComponent={() =>
-					showSelectAllButton ? (
-						<CheckAll
-							ref={checkAllRef}
-							itemsRef={itemsRef}
-							data={dataItems}
-							initialSelectedAmount={initialValue.length}
-						/>
-					) : null
-				}
-				ItemSeparatorComponent={() => (
-					<View className="w-full h-px bg-gray-300 dark:bg-gray-100 opacity-40" />
-				)}
-				renderItem={renderItem}
-			/>
+			{/* <NativeViewGestureHandler disallowInterruption> */}
+			<View className="flex-1">
+				<FlashList
+					ref={listScrollRef}
+					data={filteredData}
+					keyExtractor={keyExtractor}
+					overrideProps={
+						{
+							//simultaneousHandlers: panRef,
+							//disallowInterruption: true,
+						}
+					}
+					renderScrollComponent={ScrollView}
+					showsVerticalScrollIndicator={false}
+					estimatedItemSize={ITEM_HEIGHT}
+					ListHeaderComponent={() =>
+						showSelectAllButton ? (
+							<CheckAll
+								ref={checkAllRef}
+								itemsRef={itemsRef}
+								data={dataItems}
+								itemsSelected={itemsSelected}
+							/>
+						) : null
+					}
+					ItemSeparatorComponent={ListSeparator}
+					renderItem={renderItem}
+				/>
+			</View>
+			{/* </NativeViewGestureHandler> */}
 			<ActionButton label="Selecionar" onPress={onSubmit} />
 		</>
 	);
@@ -568,41 +609,50 @@ function SectionsList({
 
 	const itemsRef = useMemo(
 		() =>
-			data.flatMap((category) =>
-				category.data.map((item) => ({
-					id: item.id,
-					ref: createRef<ListItemObject>(),
-				}))
+			Object.fromEntries(
+				data.flatMap((category) =>
+					category.data.map((item) => [
+						item.id,
+						createRef<ListItemRef>(),
+					])
+				)
 			),
 		[]
+	);
+
+	const itemsSelected = useRef(
+		Object.fromEntries(
+			data.flatMap((category) =>
+				category.data.map((item) => [
+					item.id,
+					initialValue.includes(item.id),
+				])
+			)
+		)
 	);
 
 	const checkAllRef = useRef<CheckAllObject>(null);
 
 	const renderItem = useCallback(({ item }: { item: MultiselectData }) => {
-		const ref = itemsRef.find((ref) => ref.id === item.id)?.ref;
-
 		return (
 			<ListItem
 				item={item}
-				ref={ref}
-				onPress={() => {
-					checkAllRef.current?.updateSelectedAmount(
-						!ref?.current?.isChecked()!
-					);
-					ref?.current?.toggle();
+				ref={itemsRef[item.id]}
+				onPress={(checked: boolean) => {
+					checkAllRef.current?.updateSelectedAmount(checked);
+					itemsSelected.current[item.id] = checked;
 				}}
-				initialChecked={initialValue.includes(item.id)}
+				initialChecked={itemsSelected.current[item.id]}
 			/>
 		);
 	}, []);
 
 	const onSubmit = useCallback(() => {
-		const selectedIds = itemsRef
-			?.filter((item) => item.ref?.current?.isChecked())
-			.map((item) => item.id as string);
+		const selectedIds = Object.entries(itemsSelected.current)
+			.filter(([_, checked]) => checked === true)
+			.map(([id, _]) => id);
 
-		console.log(selectedIds.length);
+		// console.log(selectedIds.length, "Quantidade de elementos selecionados");
 
 		if (selectedIds) {
 			parentSetSelected(selectedIds);
@@ -614,6 +664,8 @@ function SectionsList({
 	// Gambiarra: a Section List só consegue ser rolada com o NativeViewGestureHandler e o "disallowInterruption" setado, no entanto,
 	// não é possível deslizar para fechar o BottomSheet ao chegar no topo da lista.
 	// Dar uma olhada em: https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/api/create-native-wrapper/
+
+	const keyExtractor = useCallback((item: MultiselectData) => item.id, []);
 
 	return (
 		<>
@@ -627,32 +679,27 @@ function SectionsList({
 			<NativeViewGestureHandler disallowInterruption>
 				<SectionList
 					sections={filteredData}
-					keyExtractor={(_, index) => index.toString()}
 					showsVerticalScrollIndicator={false}
+					keyExtractor={keyExtractor}
 					style={{ flex: 1 }}
 					removeClippedSubviews
 					windowSize={21}
+					getItemLayout={getItemLayout}
 					ListHeaderComponent={() =>
 						showSelectAllButton ? (
 							<CheckAll
 								ref={checkAllRef}
 								itemsRef={itemsRef}
 								data={dataItems}
-								initialSelectedAmount={initialValue.length}
+								itemsSelected={itemsSelected}
 							/>
 						) : null
 					}
 					//stickyHeaderHiddenOnScroll
 					stickySectionHeadersEnabled
-					renderSectionHeader={({ section: { title } }) => (
-						<Text className="text-text-100 text-sm font-titleBold py-3 dark:bg-gray-200">
-							{title}
-						</Text>
-					)}
+					renderSectionHeader={SectionHeader}
 					SectionSeparatorComponent={SectionSpace}
-					ItemSeparatorComponent={() => (
-						<View className="w-full h-px bg-gray-300 dark:bg-gray-100 opacity-40" />
-					)}
+					ItemSeparatorComponent={ListSeparator}
 					renderItem={renderItem}
 				/>
 			</NativeViewGestureHandler>
@@ -661,12 +708,21 @@ function SectionsList({
 	);
 }
 
+function SectionHeader({ section: { title } }: { section: { title: string } }) {
+	return (
+		<Text className="text-text-100 text-sm font-titleBold py-3 dark:bg-gray-200">
+			{title}
+		</Text>
+	);
+}
+
 interface CheckAllProps {
 	itemsRef: {
-		id: string;
-		ref: React.RefObject<ListItemObject>;
-	}[];
-	initialSelectedAmount: number;
+		[k: string]: React.RefObject<ListItemRef>;
+	};
+	itemsSelected: React.MutableRefObject<{
+		[k: string]: boolean;
+	}>;
 	data: string[];
 }
 
@@ -675,32 +731,40 @@ interface CheckAllObject {
 }
 
 const CheckAll = forwardRef(function CheckAll(
-	{ itemsRef, data, initialSelectedAmount }: CheckAllProps,
+	{ itemsRef, itemsSelected, data }: CheckAllProps,
 	ref
 ) {
+	const initialSelectedAmount = useMemo(() => {
+		return data?.filter((id) => itemsSelected?.current[id]).length;
+	}, [itemsSelected, data]);
+
 	const [selectedAmount, setSelectedAmount] = useState(
 		initialSelectedAmount ?? 0
 	);
 
-	useImperativeHandle(ref, () => ({
-		updateSelectedAmount: (checked: boolean) => {
-			if (checked) {
-				setSelectedAmount((prev) => prev + 1);
-				console.log(
-					selectedAmount,
-					"selectedAmount aumentou",
-					data.length
-				);
-			} else {
-				setSelectedAmount((prev) => prev - 1);
-				console.log(
-					selectedAmount,
-					"selectedAmount diminuiu",
-					data.length
-				);
-			}
-		},
-	}));
+	useImperativeHandle(
+		ref,
+		() => ({
+			updateSelectedAmount: (checked: boolean) => {
+				if (checked) {
+					setSelectedAmount((prev) => prev + 1);
+					console.log(
+						selectedAmount,
+						"selectedAmount aumentou",
+						data.length
+					);
+				} else {
+					setSelectedAmount((prev) => prev - 1);
+					console.log(
+						selectedAmount,
+						"selectedAmount diminuiu",
+						data.length
+					);
+				}
+			},
+		}),
+		[]
+	);
 
 	return (
 		<Checkbox
@@ -708,19 +772,24 @@ const CheckAll = forwardRef(function CheckAll(
 			title="Selecionar todos"
 			onPress={() => {
 				if (selectedAmount === data.length) {
-					itemsRef.forEach((item) => {
-						if (data.includes(item.id)) {
-							item.ref?.current?.uncheck();
+					for (const [id, ref] of Object.entries(itemsRef)) {
+						if (data.includes(id)) {
+							ref.current?.uncheck();
 						}
-					});
+					}
+					if (itemsSelected.current) itemsSelected.current = {};
 					setSelectedAmount(0);
 				} else {
-					itemsRef.forEach((item, index) => {
-						if (data.includes(item.id)) {
-							console.log(index);
-							item.ref?.current?.check(); // Gambiarra: não está checando todos quando a lista é muito longa
+					for (const [id, ref] of Object.entries(itemsRef)) {
+						if (data.includes(id)) {
+							ref.current?.check(); // Gambiarra: não está checando todos quando a lista é muito longa
 						}
-					});
+					}
+					if (itemsSelected.current) {
+						itemsSelected.current = data
+							.map((id) => ({ [id]: true }))
+							.reduce((prev, curr) => ({ ...prev, ...curr }), {});
+					}
 					setSelectedAmount(data.length);
 				}
 			}}
@@ -739,49 +808,52 @@ function SectionSpace() {
 interface ListItem {
 	item: MultiselectData;
 	initialChecked?: boolean;
-	onPress: () => void;
+	onPress: (checked: boolean) => void;
 }
 
-interface ListItemObject extends Omit<TouchableOpacity, "props"> {
+interface ListItemRef extends Omit<TouchableOpacity, "props"> {
 	check: () => void;
 	uncheck: () => void;
 	toggle: () => void;
-	isChecked: () => boolean;
 }
+
+const ITEM_HEIGHT = 75;
+
+const getItemLayout = (data: any, index: number) => ({
+	length: ITEM_HEIGHT,
+	offset: ITEM_HEIGHT * index,
+	index,
+});
 
 const ListItem = forwardRef(function ListItem(
 	{ item, onPress, initialChecked }: ListItem,
 	ref
 ) {
-	const { colorScheme } = useColorScheme();
 	const [isSelected, setIsSelected] = useState(initialChecked);
 
-	useImperativeHandle(ref, () => ({
-		check: () => setIsSelected(true),
-		uncheck: () => setIsSelected(false),
-		toggle: () => setIsSelected((prev) => !prev),
-		isChecked: () => isSelected,
-	}));
+	useImperativeHandle(
+		ref,
+		() => ({
+			check: () => setIsSelected(true),
+			uncheck: () => setIsSelected(false),
+			toggle: () => setIsSelected((prev) => !prev),
+		}),
+		[]
+	);
+
+	// console.log("List item rerender.");
 
 	return (
 		<TouchableOpacity
-			activeOpacity={0.8}
+			activeOpacity={0.4}
 			className="flex-row items-center justify-between w-full py-3"
-			onPress={onPress}
+			//style={{ height: ITEM_HEIGHT }}
+			onPress={() => {
+				onPress(!isSelected);
+				setIsSelected((prev) => !prev);
+			}}
 		>
 			<View className="flex-row items-center justify-start">
-				{item.icon && (
-					<MaterialIcons
-						name={item.icon as unknown as any}
-						size={18}
-						color={
-							colorScheme === "dark"
-								? colors.text[100]
-								: colors.white
-						}
-						style={{ marginRight: 10 }}
-					/>
-				)}
 				<Text
 					className={
 						"text-black dark:text-white text-sm font-semibold"
@@ -794,3 +866,9 @@ const ListItem = forwardRef(function ListItem(
 		</TouchableOpacity>
 	);
 });
+
+function ListSeparator() {
+	return (
+		<View className="w-full h-px bg-gray-300 dark:bg-gray-100 opacity-40" />
+	);
+}

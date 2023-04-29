@@ -147,25 +147,31 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 		},
 	});
 
-	useImperativeHandle(ref, () => ({
-		getData: () => {
-			const name = getValues("name");
-			const additionalInfo = getValues("additionalInfo");
-			const discount = parseInt(getValues("discount").replace("%", ""));
+	useImperativeHandle(
+		ref,
+		() => ({
+			getData: () => {
+				const name = getValues("name");
+				const additionalInfo = getValues("additionalInfo");
+				const discount = parseInt(
+					getValues("discount").replace("%", "")
+				);
 
-			console.log(name, additionalInfo, discount);
+				console.log(name, additionalInfo, discount);
 
-			return {
-				name,
-				products,
-				materials,
-				discount,
-				date,
-				time,
-				additionalInfo,
-			};
-		},
-	}));
+				return {
+					name,
+					products,
+					materials,
+					discount,
+					date,
+					time,
+					additionalInfo,
+				};
+			},
+		}),
+		[products, materials, date, time]
+	);
 
 	const [editableData, setEditableData] = useState<
 		ProductModel | MaterialModel | undefined

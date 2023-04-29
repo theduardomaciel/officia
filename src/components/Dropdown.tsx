@@ -67,10 +67,14 @@ const Dropdown = React.forwardRef(
 			BottomSheet.close(id);
 		}, []);
 
-		useImperativeHandle(ref, () => ({
-			open: () => openHandler(),
-			close: () => closeHandler(),
-		}));
+		useImperativeHandle(
+			ref,
+			() => ({
+				open: () => openHandler(),
+				close: () => closeHandler(),
+			}),
+			[]
+		);
 
 		return (
 			<>

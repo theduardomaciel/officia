@@ -56,6 +56,8 @@ const BottomSheetUI = forwardRef(
 			suppressBackdrop,
 			suppressHandle,
 			suppressPortal,
+			simultaneousHandlers,
+			panRef,
 		}: BottomSheetProps,
 		ref
 	) => {
@@ -431,7 +433,12 @@ const BottomSheetUI = forwardRef(
 						/>
 					) : null}
 					{/* <GestureDetector gesture={panGesture}> */}
-					<PanGestureHandler onGestureEvent={gestureHandler}>
+					<PanGestureHandler
+						ref={panRef}
+						onGestureEvent={gestureHandler}
+						waitFor={simultaneousHandlers}
+						//simultaneousHandlers={simultaneousHandlers}
+					>
 						<Animated.View
 							onLayout={(event) =>
 								(contentHeight.value =
