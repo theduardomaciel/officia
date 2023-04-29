@@ -332,7 +332,7 @@ export const SectionsMultiselect = React.forwardRef(
 			disabledPlaceholder,
 			pallette,
 			...rest
-		}: Props & { data?: MultiselectCategory[] | null },
+		}: Props & { data?: (string | MultiselectData)[] | null },
 		ref
 	) => {
 		const id = useId();
@@ -379,22 +379,21 @@ export const SectionsMultiselect = React.forwardRef(
 							}
 						>
 							{data && parentSelected.length > 0
-								? data.map((category) =>
-										category.data.map((item) => {
-											if (
-												parentSelected.includes(item.id)
-											) {
-												return (
-													<SelectItem
-														key={item.id}
-														item={item}
-													/>
-												);
-											} else {
-												return null;
-											}
-										})
-								  )
+								? data.map((item) => {
+										if (typeof item === "string")
+											return null;
+
+										if (parentSelected.includes(item.id)) {
+											return (
+												<SelectItem
+													key={item.id}
+													item={item}
+												/>
+											);
+										} else {
+											return null;
+										}
+								  })
 								: undefined}
 						</Trigger>
 					</TriggerHolder>
@@ -574,6 +573,8 @@ function List({
 	);
 }
 
+type SectionData = string | MultiselectData;
+
 function SectionsList({
 	data,
 	searchBarProps,
@@ -581,53 +582,74 @@ function SectionsList({
 	initialValue,
 	closeHandler,
 	showSelectAllButton,
-}: ListProps & { data: MultiselectCategory[] }) {
+	listScrollRef,
+}: ListProps & { data: SectionData[] }) {
 	const [search, setSearch] = useState("");
+
+	const dataContent = useMemo(
+		() =>
+			data.filter(
+				(item) => typeof item !== "string"
+			) as MultiselectData[],
+		[data]
+	);
 
 	const filteredData = useMemo(() => {
 		if (!search) return data;
-		return data
-			.map((category) => ({
-				...category,
-				data: category.data.filter((item) =>
-					item.name
-						.toLowerCase()
-						.replaceAll(" ", "")
-						.includes(search.toLocaleLowerCase().replace(/\s/g, ""))
-				),
-			}))
-			.filter((category) => category.data.length > 0);
+		return data.filter(
+			(item) =>
+				typeof item === "string" ||
+				item.name
+					.toLowerCase()
+					.replaceAll(" ", "")
+					.includes(search.toLocaleLowerCase().replace(/\s/g, ""))
+		);
 	}, [search, data]);
 
 	const dataItems = useMemo(
+		() => dataContent.map((item) => item.id),
+		[filteredData]
+	);
+
+	const listSeparator = useCallback(
+		({ leadingItem }: { leadingItem: MultiselectData }) =>
+			typeof leadingItem !== "string" &&
+			typeof filteredData[
+				filteredData.findIndex(
+					(item) =>
+						typeof item !== "string" && item.id === leadingItem.id
+				) + 1
+			] !== "string" ? (
+				<ListSeparator /> // Gambiarra: filtragem usada para não mostrar o separador no final da lista, pode causar problemas com desempenho
+			) : null,
+		[]
+	);
+
+	const stickyHeaderIndices = useMemo(
 		() =>
-			filteredData.flatMap((category) =>
-				category.data.map((item) => item.id)
-			),
+			filteredData
+				.map((item, index) => {
+					if (typeof item === "string") {
+						return index;
+					} else {
+						return null;
+					}
+				})
+				.filter((item) => item !== null) as number[],
 		[filteredData]
 	);
 
 	const itemsRef = useMemo(
 		() =>
 			Object.fromEntries(
-				data.flatMap((category) =>
-					category.data.map((item) => [
-						item.id,
-						createRef<ListItemRef>(),
-					])
-				)
+				dataContent.map((item) => [item.id, createRef<ListItemRef>()])
 			),
 		[]
 	);
 
 	const itemsSelected = useRef(
 		Object.fromEntries(
-			data.flatMap((category) =>
-				category.data.map((item) => [
-					item.id,
-					initialValue.includes(item.id),
-				])
-			)
+			dataContent.map((item) => [item.id, initialValue.includes(item.id)])
 		)
 	);
 
@@ -665,8 +687,12 @@ function SectionsList({
 	// não é possível deslizar para fechar o BottomSheet ao chegar no topo da lista.
 	// Dar uma olhada em: https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/api/create-native-wrapper/
 
-	const keyExtractor = useCallback((item: MultiselectData) => item.id, []);
+	const keyExtractor = useCallback(
+		(item: SectionData) => (typeof item === "string" ? item : item.id),
+		[]
+	);
 
+	console.log(filteredData);
 	return (
 		<>
 			{searchBarProps && (
@@ -676,33 +702,42 @@ function SectionsList({
 					{...searchBarProps}
 				/>
 			)}
-			<NativeViewGestureHandler disallowInterruption>
-				<SectionList
-					sections={filteredData}
-					showsVerticalScrollIndicator={false}
-					keyExtractor={keyExtractor}
-					style={{ flex: 1 }}
-					removeClippedSubviews
-					windowSize={21}
-					getItemLayout={getItemLayout}
-					ListHeaderComponent={() =>
-						showSelectAllButton ? (
-							<CheckAll
-								ref={checkAllRef}
-								itemsRef={itemsRef}
-								data={dataItems}
-								itemsSelected={itemsSelected}
-							/>
-						) : null
+			<FlashList
+				data={filteredData}
+				keyExtractor={keyExtractor}
+				ref={listScrollRef}
+				overrideProps={
+					{
+						//simultaneousHandlers: panRef,
+						//disallowInterruption: true,
 					}
-					//stickyHeaderHiddenOnScroll
-					stickySectionHeadersEnabled
-					renderSectionHeader={SectionHeader}
-					SectionSeparatorComponent={SectionSpace}
-					ItemSeparatorComponent={ListSeparator}
-					renderItem={renderItem}
-				/>
-			</NativeViewGestureHandler>
+				}
+				renderScrollComponent={ScrollView}
+				showsVerticalScrollIndicator={false}
+				ListHeaderComponent={() =>
+					showSelectAllButton ? (
+						<CheckAll
+							ref={checkAllRef}
+							itemsRef={itemsRef}
+							data={dataItems}
+							itemsSelected={itemsSelected}
+						/>
+					) : null
+				}
+				ItemSeparatorComponent={listSeparator}
+				renderItem={({ item }) => {
+					if (typeof item === "string") {
+						// Rendering header
+						return <SectionHeader section={{ title: item }} />;
+					} else return renderItem({ item });
+				}}
+				stickyHeaderIndices={stickyHeaderIndices}
+				getItemType={(item) => {
+					// To achieve better performance, specify the type based on the item
+					return typeof item === "string" ? "sectionHeader" : "row";
+				}}
+				estimatedItemSize={ITEM_HEIGHT}
+			/>
 			<ActionButton label="Selecionar" onPress={onSubmit} />
 		</>
 	);

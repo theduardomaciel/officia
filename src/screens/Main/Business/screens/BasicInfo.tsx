@@ -43,7 +43,7 @@ export function BasicInfoForm({
 	dbSegments,
 	initialValues,
 }: FormProps & {
-	dbSegments?: MultiselectCategory[] | null;
+	dbSegments?: (string | MultiselectData)[] | null;
 	initialValues?: { segments: string[] };
 }) {
 	const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] =
@@ -181,7 +181,7 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormHookProps) {
 	}, onError);
 
 	const [dbSegments, setDbSegments] = React.useState<
-		MultiselectCategory[] | undefined | null
+		(string | MultiselectData)[] | undefined | null
 	>(undefined);
 
 	useEffect(() => {
@@ -206,7 +206,7 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormHookProps) {
 						.sort((a, b) => a.title.localeCompare(b.title))
 				); */
 
-				let data = response.data as {
+				const data = response.data as {
 					name: string;
 					segments: MultiselectData[];
 				}[];
@@ -220,11 +220,24 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormHookProps) {
 
 				const lastSegment = organizedData.pop();
 
-				setDbSegments(
-					organizedData
-						.sort((a, b) => a.title.localeCompare(b.title))
-						.concat(lastSegment ? [lastSegment] : []) // o segmento com o nome "Outros" deve ser o último
-				);
+				const withOutroAsLastData = organizedData
+					.sort((a, b) => a.title.localeCompare(b.title))
+					.concat(lastSegment ? [lastSegment] : []); // o segmento com o nome "Outros" deve ser o último
+
+				let dataArray = [] as (string | MultiselectData)[];
+
+				withOutroAsLastData.forEach((item) => {
+					dataArray.push(item.title);
+					item.data.forEach((segment) => {
+						dataArray.push(segment);
+					});
+				});
+
+				/* organizedData
+					.sort((a, b) => a.title.localeCompare(b.title))
+                    .concat(lastSegment ? [lastSegment] : []); // o segmento com o nome "Outros" deve ser o último */
+
+				setDbSegments(dataArray);
 				console.log("Segmentos obtidos com sucesso.");
 			} catch (error) {
 				console.log(error);
