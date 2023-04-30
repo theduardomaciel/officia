@@ -81,11 +81,10 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 			const selectedProjectId =
 				globalStorage.getString("selectedProjectId");
-			if (!selectedProjectId)
-				throw CustomException(409, "No project selected in device.");
+
 			setAuthData({ id, selectedProjectId });
 		} catch (error) {
-			// console.log(error);
+			console.log(error);
 		} finally {
 			setLoading(false);
 		}

@@ -83,7 +83,7 @@ export function BasicInfoForm({
 				render={({ field: { onChange, onBlur, value } }) => (
 					<Input
 						label="Razão Social"
-						infoMessage={`termo registrado sob o qual uma pessoa jurídica (PJ) se individualiza e exerce suas atividades\nExemplo: Coca Cola Indústrias Ltda.`}
+						infoMessage={`termo registrado sob o qual sua empresa se individualiza das demais acerca de suas atividades\nExemplo: [SUA EMPRESA] Ltda.`}
 						value={value}
 						onBlur={onBlur}
 						onChangeText={(value) => onChange(value)}

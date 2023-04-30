@@ -38,7 +38,7 @@ import BottomSheet, { BottomSheetProps } from "./BottomSheet/index";
 import SearchBar, { SearchBarProps } from "./SearchBar";
 import { Checkbox } from "./Checkbox";
 import { ActionButton } from "./Button";
-import { Error, Loading } from "./StatusMessage";
+import { Empty, Error, Loading } from "./StatusMessage";
 
 interface TriggerProps {
 	children?: React.ReactNode;
@@ -278,7 +278,7 @@ const Multiselect = React.forwardRef(
 
 				<MultiselectBottomSheet
 					id={id}
-					simultaneousHandlers={listScrollRef}
+					scrollableContentRef={listScrollRef}
 					panRef={panRef}
 					{...bottomSheetProps}
 				>
@@ -402,7 +402,7 @@ export const SectionsMultiselect = React.forwardRef(
 				<MultiselectBottomSheet
 					id={id}
 					{...bottomSheetProps}
-					simultaneousHandlers={listScrollRef}
+					scrollableContentRef={listScrollRef}
 					panRef={panRef}
 				>
 					{data ? (
@@ -513,6 +513,11 @@ function List({
 		[]
 	);
 
+	const memoizedEmpty = useMemo(
+		() => <ListEmpty search={search} />,
+		[search]
+	);
+
 	const onSubmit = useCallback(() => {
 		const selectedIds = Object.entries(itemsSelected.current)
 			.filter(([_, checked]) => checked === true)
@@ -526,8 +531,6 @@ function List({
 
 		closeHandler();
 	}, []);
-
-	const keyExtractor = useCallback((item: MultiselectData) => item.id, []);
 
 	return (
 		<>
@@ -543,7 +546,6 @@ function List({
 				<FlashList
 					ref={listScrollRef}
 					data={filteredData}
-					keyExtractor={keyExtractor}
 					overrideProps={
 						{
 							//simultaneousHandlers: panRef,
@@ -563,6 +565,7 @@ function List({
 							/>
 						) : null
 					}
+					ListEmptyComponent={memoizedEmpty}
 					ItemSeparatorComponent={ListSeparator}
 					renderItem={renderItem}
 				/>
@@ -583,6 +586,7 @@ function SectionsList({
 	closeHandler,
 	showSelectAllButton,
 	listScrollRef,
+	panRef,
 }: ListProps & { data: SectionData[] }) {
 	const [search, setSearch] = useState("");
 
@@ -594,7 +598,7 @@ function SectionsList({
 		[data]
 	);
 
-	const filteredData = useMemo(() => {
+	/* const filteredData = useMemo(() => {
 		if (!search) return data;
 		return data.filter(
 			(item) =>
@@ -604,6 +608,37 @@ function SectionsList({
 					.replaceAll(" ", "")
 					.includes(search.toLocaleLowerCase().replace(/\s/g, ""))
 		);
+	}, [search, data]); */
+
+	// Cálculo de filtragem complexo para que os headers só apareçam caso haja algum item abaixo dele
+	const filteredData = useMemo(() => {
+		if (!search) return data;
+		return data
+			.filter(
+				(item) =>
+					typeof item === "string" ||
+					item.name
+						.toLowerCase()
+						.replaceAll(" ", "")
+						.includes(search.toLocaleLowerCase().replace(/\s/g, ""))
+			)
+			.filter((item, index, array) => {
+				const isHeader = typeof item === "string";
+				if (!isHeader) return true;
+				if (isHeader && array[index + 1]) {
+					const nextItem = array[index + 1];
+					return (
+						typeof nextItem !== "string" &&
+						nextItem.name
+							.toLowerCase()
+							.replaceAll(" ", "")
+							.includes(
+								search.toLocaleLowerCase().replace(/\s/g, "")
+							)
+					);
+				}
+				return false;
+			});
 	}, [search, data]);
 
 	const dataItems = useMemo(
@@ -653,6 +688,12 @@ function SectionsList({
 		)
 	);
 
+	/* console.log(
+		Object.values(itemsSelected.current).filter((item) => item === true)
+			.length,
+		"Quantidade de elementos selecionados inicial"
+	); */
+
 	const checkAllRef = useRef<CheckAllObject>(null);
 
 	const renderItem = useCallback(({ item }: { item: MultiselectData }) => {
@@ -668,6 +709,11 @@ function SectionsList({
 			/>
 		);
 	}, []);
+
+	const memoizedEmpty = useMemo(
+		() => <ListEmpty search={search} />,
+		[search]
+	);
 
 	const onSubmit = useCallback(() => {
 		const selectedIds = Object.entries(itemsSelected.current)
@@ -687,12 +733,6 @@ function SectionsList({
 	// não é possível deslizar para fechar o BottomSheet ao chegar no topo da lista.
 	// Dar uma olhada em: https://docs.swmansion.com/react-native-gesture-handler/docs/gesture-handlers/api/create-native-wrapper/
 
-	const keyExtractor = useCallback(
-		(item: SectionData) => (typeof item === "string" ? item : item.id),
-		[]
-	);
-
-	console.log(filteredData);
 	return (
 		<>
 			{searchBarProps && (
@@ -704,12 +744,10 @@ function SectionsList({
 			)}
 			<FlashList
 				data={filteredData}
-				keyExtractor={keyExtractor}
-				ref={listScrollRef}
 				overrideProps={
 					{
 						//simultaneousHandlers: panRef,
-						//disallowInterruption: true,
+						//disallowInterruption: false,
 					}
 				}
 				renderScrollComponent={ScrollView}
@@ -728,9 +766,13 @@ function SectionsList({
 				renderItem={({ item }) => {
 					if (typeof item === "string") {
 						// Rendering header
-						return <SectionHeader section={{ title: item }} />;
+						//return <SectionHeader section={{ title: item }} />;
+						return filteredData.includes(item) ? (
+							<SectionHeader section={{ title: item }} />
+						) : null; // Gambiarra: filtragem usada para não mostrar os títulos das seções após filtrar com a busca, pode causar problemas com desempenho
 					} else return renderItem({ item });
 				}}
+				ListEmptyComponent={memoizedEmpty}
 				stickyHeaderIndices={stickyHeaderIndices}
 				getItemType={(item) => {
 					// To achieve better performance, specify the type based on the item
@@ -740,6 +782,19 @@ function SectionsList({
 			/>
 			<ActionButton label="Selecionar" onPress={onSubmit} />
 		</>
+	);
+}
+
+function ListEmpty({ search }: { search: string }) {
+	return (
+		<Empty
+			style={{ paddingTop: 25 }}
+			message={
+				search && search.length > 0
+					? "Nenhum item encontrado com base em sua pesquisa."
+					: "Nenhum item foi encontrado."
+			}
+		/>
 	);
 }
 
@@ -840,7 +895,7 @@ function SectionSpace() {
 	return <View className="w-full h-2 bg-transparent" />;
 }
 
-interface ListItem {
+interface ListItemProps {
 	item: MultiselectData;
 	initialChecked?: boolean;
 	onPress: (checked: boolean) => void;
@@ -861,10 +916,16 @@ const getItemLayout = (data: any, index: number) => ({
 });
 
 const ListItem = forwardRef(function ListItem(
-	{ item, onPress, initialChecked }: ListItem,
+	{ item, onPress, initialChecked = false }: ListItemProps,
 	ref
 ) {
+	const lastItemId = useRef(item.id);
 	const [isSelected, setIsSelected] = useState(initialChecked);
+
+	if (item.id !== lastItemId.current) {
+		lastItemId.current = item.id;
+		setIsSelected(initialChecked);
+	}
 
 	useImperativeHandle(
 		ref,

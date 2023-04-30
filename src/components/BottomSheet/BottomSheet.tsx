@@ -56,8 +56,9 @@ const BottomSheetUI = forwardRef(
 			suppressBackdrop,
 			suppressHandle,
 			suppressPortal,
-			simultaneousHandlers,
+			scrollableContentRef,
 			panRef,
+			ignoreBottomRequirementToFixContentHeight, // Gambiarra: melhorar esse nome
 		}: BottomSheetProps,
 		ref
 	) => {
@@ -436,14 +437,45 @@ const BottomSheetUI = forwardRef(
 					<PanGestureHandler
 						ref={panRef}
 						onGestureEvent={gestureHandler}
-						waitFor={simultaneousHandlers}
+						//waitFor={simultaneousHandlers}
 						//simultaneousHandlers={simultaneousHandlers}
 					>
 						<Animated.View
-							onLayout={(event) =>
-								(contentHeight.value =
-									event.nativeEvent.layout.height)
-							}
+							onLayout={(event) => {
+								const newHeight =
+									event.nativeEvent.layout.height;
+
+								const outOfBoundsHeight =
+									contentHeight.value - activeHeight;
+								if (
+									heightLimitBehaviour === "contentHeight" &&
+									newHeight < contentHeight.value &&
+									(ignoreBottomRequirementToFixContentHeight
+										? true
+										: topAnimation.value <=
+										  newActiveHeight - outOfBoundsHeight)
+								) {
+									topAnimation.value = Math.max(
+										newActiveHeight -
+											outOfBoundsHeight +
+											(contentHeight.value - newHeight) // altura antiga - altura nova
+									);
+									/* console.log(
+										`Corrigindo posição do bottom sheet após diminuição do tamanho do conteúdo:
+                                        - Altura antiga: ${contentHeight.value}
+                                        - Altura nova: ${newHeight}
+                                        - Altura Ativa: ${newActiveHeight}
+                                        - Fora da tela: ${outOfBoundsHeight}
+                                        - Posição atual: ${topAnimation.value}
+                                        - Posição corrigida (altura limite): ${
+											newActiveHeight - outOfBoundsHeight
+										}
+                                        `
+									); */
+								}
+
+								contentHeight.value = newHeight;
+							}}
 							style={[
 								animationStyle,
 								heightLimitBehaviour === "contentHeight"

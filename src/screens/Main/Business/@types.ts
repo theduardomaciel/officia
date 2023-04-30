@@ -72,7 +72,9 @@ type DAYS =
 	| "sunday";
 
 export const serviceScheme = z.object({
-	businessModel: z.string().optional(),
+	businessModels: z
+		.array(z.enum(["in_person", "online", "delivery"]))
+		.optional(),
 	agenda: z
 		.string()
 		.optional()

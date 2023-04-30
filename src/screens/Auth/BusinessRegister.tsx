@@ -115,7 +115,6 @@ export default function BusinessRegister({ navigation }: any) {
 
 	useEffect(() => {
 		async function getGeoData() {
-			console.log(GEO_API_KEY);
 			try {
 				const response = await axios.get(
 					`https://api.countrystatecity.in/v1/countries`,
@@ -167,6 +166,7 @@ export default function BusinessRegister({ navigation }: any) {
 					expanded: true,
 				}}
 				height={BOTTOM_SHEET_HEIGHT}
+				ignoreBottomRequirementToFixContentHeight
 			>
 				<BasicInfoForm {...hookProps} />
 				<ActionButton

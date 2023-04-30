@@ -1,5 +1,4 @@
 import {
-	TextInput,
 	Text,
 	TextInputProps,
 	View,
@@ -7,6 +6,7 @@ import {
 	Alert,
 	ViewStyle,
 } from "react-native";
+import { TextInput } from "react-native-gesture-handler";
 
 import { useColorScheme } from "nativewind";
 import colors from "global/colors";

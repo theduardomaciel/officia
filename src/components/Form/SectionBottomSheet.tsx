@@ -35,8 +35,8 @@ export default function SectionBottomSheet({
 			colors={{
 				background: colors.gray[500],
 			}}
-			{...rest}
 			defaultValues={defaultValues}
+			{...rest}
 		>
 			<View
 				className="flex flex-1"

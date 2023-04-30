@@ -82,14 +82,14 @@ export const SubSectionWrapper = React.memo(
 	({ headerProps, children, style }: WrapperProps) => {
 		return (
 			<View
-				className="w-full flex-1 flex-col items-start justify-start"
+				className="flex flex-col items-center justify-start w-full"
 				style={[style, { rowGap: 10 }]}
 			>
 				<View
-					className="flex-1 flex-row items-center justify-between"
+					className="w-full flex-row items-center justify-between"
 					style={headerProps.style}
 				>
-					<View className="flex-1 flex-col items-start justify-start">
+					<View className="flex flex-col items-start justify-start">
 						<Label
 							icon={
 								headerProps.icon &&
@@ -109,7 +109,7 @@ export const SubSectionWrapper = React.memo(
 							style={[
 								{
 									marginRight: 10,
-									fontSize: 14,
+									fontSize: 13,
 									lineHeight: 16,
 									fontFamily: "Inter_500Medium",
 								},

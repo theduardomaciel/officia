@@ -25,7 +25,7 @@ export default function Label({
 	return (
 		<View
 			className="flex flex-row items-center justify-start"
-			style={{ columnGap: 10, width: "100%" }}
+			style={{ columnGap: 10 }}
 		>
 			{CustomIcon && (
 				<CustomIcon fontSize={18} color={colors.text[100]} />
@@ -44,7 +44,7 @@ export default function Label({
 				/>
 			)}
 			<Text
-				className="flex flex-1 font-semibold text-[15px] text-black dark:text-text-100"
+				className="flex font-semibold text-[15px] text-black dark:text-text-100"
 				{...rest}
 			>
 				{children}

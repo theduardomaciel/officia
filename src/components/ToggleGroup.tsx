@@ -1,22 +1,17 @@
 import React, {
-	Dispatch,
 	forwardRef,
-	memo,
-	SetStateAction,
 	useCallback,
-	useEffect,
 	useImperativeHandle,
-	useMemo,
 	useRef,
 	useState,
 } from "react";
 import {
-	TouchableOpacity,
 	View,
 	Text,
 	TextInput,
 	TextInputProps,
 	TouchableOpacityProps,
+	TouchableOpacity,
 } from "react-native";
 
 import colors from "global/colors";
@@ -63,7 +58,7 @@ interface DataProps {
 
 interface ToggleGroupProps {
 	data: DataProps[];
-	selected: string | null;
+	selected: string | string[] | null;
 	updateState: (value: any) => void;
 	children?: React.ReactNode;
 }
@@ -83,7 +78,13 @@ const ToggleGroup = React.memo(
 								key={index.toString()}
 								item={item}
 								onPress={update}
-								isSelected={selected === item.value}
+								isSelected={
+									typeof selected === "string"
+										? selected === item.value
+										: selected
+										? selected.includes(item.value)
+										: false
+								}
 								applyMarginRight={index !== data.length - 1}
 							/>
 						);

@@ -38,12 +38,13 @@ export interface BottomSheetProps {
 	suppressHandle?: boolean;
 	suppressBackdrop?: boolean;
 	suppressPortal?: boolean;
+	ignoreBottomRequirementToFixContentHeight?: boolean;
 	onDismiss?: () => any;
 	onDismissed?: () => any;
 	onExpand?: () => any;
 	onExpanded?: () => any;
 	panRef?: React.Ref<any>;
-	simultaneousHandlers?: React.Ref<any> | React.Ref<any>[];
+	scrollableContentRef?: React.Ref<any>;
 }
 
 export interface BottomSheetActions {

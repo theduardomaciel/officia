@@ -33,6 +33,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Multiselect from "components/Multiselect";
 import axios from "axios";
+import Collapsible from "components/Collapsible";
 
 type BusinessModel = "in_person" | "delivery" | "online";
 type Days =
@@ -136,8 +137,10 @@ export function ServiceForm({
 		/* onSubmit({ ...data }); */
 	}, onError);
 
-	const [businessModel, setBusinessModel] = React.useState<BusinessModel>(
-		(initialValues?.businessModel as BusinessModel) ?? "in_person"
+	/* Basic */
+
+	const [businessModel, setBusinessModel] = React.useState<BusinessModel[]>(
+		(initialValues?.businessModels as BusinessModel[]) ?? ["in_person"]
 	);
 	const [agendaPreset, setAgendaPreset] = React.useState<
 		"everyday" | "working_days" | "custom"
@@ -147,6 +150,13 @@ export function ServiceForm({
 		checkboxesGroupReducer,
 		initialValues?.agenda ?? []
 	);
+
+	/* Advanced */
+	const [autoHoliday, setAutoHoliday] = React.useState<boolean>(
+		initialValues?.autoHolidayUnavailability ?? false
+	);
+
+	/* Service Zone */
 
 	const [selectedCountriesIds, setSelectedCountriesIds] = React.useState<
 		string[]
@@ -169,15 +179,17 @@ export function ServiceForm({
 	useEffect(() => {
 		async function checkCountry() {
 			if (selectedCountriesIds.length === 1) {
-				const states = await fetchStates({
+				const states = (await fetchStates({
 					ciso: geoData?.find(
 						(country) =>
 							country.id === Number(selectedCountriesIds[0])
 					)?.iso2 as string,
-				});
+				})) as Geolocation[];
 
 				if (states) {
-					setStatesData(states);
+					setStatesData(
+						states.sort((a, b) => a.name.localeCompare(b.name))
+					);
 				} else {
 					setStatesData(null);
 				}
@@ -190,7 +202,7 @@ export function ServiceForm({
 	useEffect(() => {
 		async function checkStates() {
 			if (selectedStatesIds.length === 1) {
-				const cities = await fetchCities({
+				const cities = (await fetchCities({
 					ciso: geoData?.find(
 						(country) =>
 							country.id === Number(selectedCountriesIds[0])
@@ -198,10 +210,12 @@ export function ServiceForm({
 					siso: statesData?.find(
 						(state) => state.id === Number(selectedStatesIds[0])
 					)?.iso2 as string,
-				});
+				})) as Geolocation[];
 
 				if (cities) {
-					setCitiesData(cities);
+					setCitiesData(
+						cities.sort((a, b) => a.name.localeCompare(b.name))
+					);
 				} else {
 					setCitiesData(null);
 				}
@@ -220,7 +234,16 @@ export function ServiceForm({
 			>
 				<ToggleGroup
 					selected={businessModel}
-					updateState={setBusinessModel}
+					updateState={(item: BusinessModel) => {
+						console.log(item);
+						setBusinessModel((prev) =>
+							prev.includes(item)
+								? prev.filter(
+										(i) => i !== (item as BusinessModel)
+								  )
+								: [...prev, item as BusinessModel]
+						);
+					}}
 					data={[
 						{
 							label: "presencial",
@@ -283,79 +306,87 @@ export function ServiceForm({
 						]}
 					/>
 				)}
-				<Checkbox
-					title="Tornar feriados indisponíveis automaticamente"
-					checked
-					customKey="holidayCheckbox"
-				/>
-				<SubSectionWrapper
-					headerProps={{
-						title: "Com quantos pedidos um dia deve tornar-se ocupado?",
-					}}
+				<Collapsible
+					label="Configurações Avançadas"
+					contentViewStyle={{ rowGap: 20 }}
+					additionalSize={5}
 				>
-					<ToggleGroupWithManualValue
-						data={[
-							{
-								label: "1",
-								value: "1",
-							},
-							{
-								label: "2",
-								value: "2",
-							},
-						]}
-						control={control}
-						name="manualBusyAmount"
-						manualValue={{
-							inputProps: {
-								placeholder: "Outro (pedidos)",
-								keyboardType: "numeric",
-							},
-							maxValue: 100000,
-							unit: {
-								label: "pedidos",
-								position: "end",
-							},
-						}}
-						defaultValue={
-							initialValues?.busyAmount?.toString() ?? "1"
-						}
+					<Checkbox
+						title="Tornar feriados indisponíveis automaticamente"
+						checked={autoHoliday}
+						onPress={() => setAutoHoliday((prev) => !prev)}
+						customKey="holidayCheckbox"
 					/>
-				</SubSectionWrapper>
-				<SubSectionWrapper
-					headerProps={{
-						title: "Com quantos pedidos um dia deve tornar-se indisponível?",
-					}}
-				>
-					<ToggleGroupWithManualValue
-						data={[
-							{
-								label: "3",
-								value: "3",
-							},
-							{
-								label: "5",
-								value: "5",
-							},
-						]}
-						control={control}
-						name="manualUnavailableAmount"
-						manualValue={{
-							inputProps: {
-								placeholder: "Outro (pedidos)",
-								keyboardType: "numeric",
-							},
-							maxValue: 100000,
-							unit: {
-								label: "pedidos",
-								position: "end",
-							},
+					<SubSectionWrapper
+						headerProps={{
+							title: "Com quantos pedidos um dia deve tornar-se ocupado?",
 						}}
-						defaultValue={
-							initialValues?.unavailableAmount?.toString() ?? "3"
-						}
-					/>
-				</SubSectionWrapper>
+					>
+						<ToggleGroupWithManualValue
+							data={[
+								{
+									label: "1",
+									value: "1",
+								},
+								{
+									label: "2",
+									value: "2",
+								},
+							]}
+							control={control}
+							name="manualBusyAmount"
+							manualValue={{
+								inputProps: {
+									placeholder: "Outro (pedidos)",
+									keyboardType: "numeric",
+								},
+								maxValue: 100000,
+								unit: {
+									label: "pedidos",
+									position: "end",
+								},
+							}}
+							defaultValue={
+								initialValues?.busyAmount?.toString() ?? "1"
+							}
+						/>
+					</SubSectionWrapper>
+					<SubSectionWrapper
+						headerProps={{
+							title: "Com quantos pedidos um dia deve tornar-se indisponível?",
+						}}
+					>
+						<ToggleGroupWithManualValue
+							data={[
+								{
+									label: "3",
+									value: "3",
+								},
+								{
+									label: "5",
+									value: "5",
+								},
+							]}
+							control={control}
+							name="manualUnavailableAmount"
+							manualValue={{
+								inputProps: {
+									placeholder: "Outro (pedidos)",
+									keyboardType: "numeric",
+								},
+								maxValue: 100000,
+								unit: {
+									label: "pedidos",
+									position: "end",
+								},
+							}}
+							defaultValue={
+								initialValues?.unavailableAmount?.toString() ??
+								"3"
+							}
+						/>
+					</SubSectionWrapper>
+				</Collapsible>
 			</SectionWrapper>
 
 			<SectionWrapper
