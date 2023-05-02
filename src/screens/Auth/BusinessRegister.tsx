@@ -1,7 +1,4 @@
 import React, { useCallback, useEffect } from "react";
-import { GEO_API_KEY } from "@env";
-
-import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 // Components
@@ -11,6 +8,7 @@ import { SectionsNavigator } from "components/SectionsNavigator";
 
 import {
 	BasicInfoForm,
+	fetchSegments,
 	useBasicInfoForm,
 } from "screens/Main/Business/screens/BasicInfo";
 import { ActionButton } from "components/Button";
@@ -23,18 +21,20 @@ import useUpdateHandler from "hooks/useUpdateHandler";
 import { useAuth } from "context/AuthContext";
 import { api } from "lib/axios";
 import Toast from "components/Toast";
-import Dropdown from "components/Dropdown";
+
 import {
 	Geolocation,
 	ServiceForm,
+	fetchCountries,
 } from "screens/Main/Business/screens/Service";
-import axios from "axios";
 
 const sections = [
 	"registerSection0BottomSheet",
 	"registerSection1BottomSheet",
 	"registerSection2BottomSheet",
 ];
+
+import { globalStorage } from "context/AuthContext";
 
 export default function BusinessRegister({ navigation }: any) {
 	const { updateSelectedProject } = useAuth();
@@ -109,32 +109,42 @@ export default function BusinessRegister({ navigation }: any) {
 
 	const BOTTOM_SHEET_HEIGHT = "65%";
 
-	const [geoData, setGeoData] = React.useState<
-		Geolocation[] | undefined | null
-	>(undefined);
-
 	useEffect(() => {
-		async function getGeoData() {
+		const getSegmentsData = async () => {
+			globalStorage.set("segmentsData", "pending");
 			try {
-				const response = await axios.get(
-					`https://api.countrystatecity.in/v1/countries`,
-					{
-						headers: {
-							"X-CSCAPI-KEY": GEO_API_KEY.replaceAll("'", ""),
-						},
-					}
-				);
-
-				if (response.data) {
-					setGeoData(response.data);
+				const response = await fetchSegments();
+				if (response) {
+					globalStorage.set("segmentsData", JSON.stringify(response));
+				} else {
+					globalStorage.delete("segmentsData");
 				}
 			} catch (error) {
+				globalStorage.delete("segmentsData");
 				console.log(error);
-				setGeoData(null);
 			}
-		}
+		};
 
-		getGeoData();
+		const getCountriesData = async () => {
+			globalStorage.set("countriesData", "pending");
+			try {
+				const response = await fetchCountries();
+				if (response) {
+					globalStorage.set(
+						"countriesData",
+						JSON.stringify(response)
+					);
+				} else {
+					globalStorage.delete("countriesData");
+				}
+			} catch (error) {
+				globalStorage.delete("countriesData");
+				console.log(error);
+			}
+		};
+
+		getSegmentsData();
+		getCountriesData();
 	}, []);
 
 	return (
@@ -177,7 +187,7 @@ export default function BusinessRegister({ navigation }: any) {
 			</SectionBottomSheet>
 
 			<SectionBottomSheet id={sections[1]} height={BOTTOM_SHEET_HEIGHT}>
-				<ServiceForm geoData={geoData} />
+				<ServiceForm />
 				<ActionButton
 					onPress={submitSection1Data}
 					preset="next"

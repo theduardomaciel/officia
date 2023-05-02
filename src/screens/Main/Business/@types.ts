@@ -82,12 +82,15 @@ export const serviceScheme = z.object({
 	autoHolidayUnavailability: z.boolean().default(false).optional(),
 	busyAmount: z.number().default(1).optional(),
 	unavailableAmount: z.number().default(3).optional(),
-	serviceZoneCountries: z.string().optional(),
-	serviceZoneStates: z.string().optional(),
-	serviceZoneCities: z.string().optional(),
 });
 
-export type OrderSchemeType = z.infer<typeof serviceScheme>;
+export type ServiceSchemeInputsType = z.infer<typeof serviceScheme>;
+
+export interface ServiceSchemeType extends ServiceSchemeInputsType {
+	serviceZoneCountries: string[];
+	serviceZoneStates: string[];
+	serviceZoneCities: string[];
+}
 
 /*  */
 
@@ -147,7 +150,7 @@ export type Category = {
 
 export type BusinessData = BasicInfoSchemeType &
 	AdditionalInfoSchemeType &
-	OrderSchemeType &
+	ServiceSchemeType &
 	ContactSchemeType &
 	BrandingSchemeType &
 	AddressSchemeType &

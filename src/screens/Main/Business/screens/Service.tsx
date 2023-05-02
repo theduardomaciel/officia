@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from "react";
+import React, { useEffect, useReducer, useRef } from "react";
 import { GEO_API_KEY } from "@env";
 
 // Components
@@ -7,13 +7,18 @@ import Toast from "components/Toast";
 import Input, { borderErrorStyle } from "components/Input";
 import Dropdown from "components/Dropdown";
 import { Checkbox, CheckboxesGroup } from "components/Checkbox";
+import Collapsible from "components/Collapsible";
+import Multiselect, {
+	MultiselectItem,
+	MultiselectProps,
+} from "components/Multiselect";
 
 import BusinessLayout from "../Layout";
 
 // Types
 import {
 	serviceScheme,
-	OrderSchemeType,
+	ServiceSchemeType,
 	BusinessData,
 	FormProps,
 } from "screens/Main/Business/@types";
@@ -31,19 +36,14 @@ import { checkboxesGroupReducer } from "components/Checkbox";
 import { SubmitErrorHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Multiselect from "components/Multiselect";
 import axios from "axios";
-import Collapsible from "components/Collapsible";
+
+import countries_pt from "assets/countries_pt.json";
+import { globalStorage } from "context/AuthContext";
+import { MultiselectData } from "components/Multiselect";
+import { safeJsonParse } from "utils";
 
 type BusinessModel = "in_person" | "delivery" | "online";
-type Days =
-	| "monday"
-	| "tuesday"
-	| "wednesday"
-	| "thursday"
-	| "friday"
-	| "saturday"
-	| "sunday";
 
 const schema = z.object({
 	manualBusyAmount: z.string().optional(),
@@ -56,6 +56,42 @@ export interface Geolocation {
 	name: string;
 	id: number;
 	iso2?: string;
+}
+
+export async function fetchCountries() {
+	try {
+		const response = await axios.get(
+			`https://api.countrystatecity.in/v1/countries`,
+			{
+				headers: {
+					"X-CSCAPI-KEY": GEO_API_KEY.replaceAll("'", ""),
+				},
+			}
+		);
+
+		const data = response.data as Geolocation[];
+		if (data) {
+			console.log("Dados de geolocalização obtidos com sucesso.");
+
+			const parsedData = data.map((geo) => ({
+				id: geo.id.toString(),
+				name:
+					countries_pt.find(
+						(translationCountry) =>
+							translationCountry.id == geo.id.toString()
+					)?.name ?? geo.name,
+				iso2: geo.iso2,
+			}));
+
+			return parsedData;
+		} else {
+			console.log("Erro ao obter dados de geolocalização.");
+			return null;
+		}
+	} catch (error) {
+		console.log(error);
+		return null;
+	}
 }
 
 async function fetchStates({ ciso }: { ciso: string }) {
@@ -93,11 +129,11 @@ async function fetchCities({ ciso, siso }: { ciso: string; siso: string }) {
 	}
 }
 
+type AdaptedGeolocation = MultiselectItem & { id: string; iso2: string }[];
+
 export function ServiceForm({
-	geoData,
 	initialValues,
 }: {
-	geoData: Geolocation[] | undefined | null;
 	initialValues?: Partial<BusinessData>;
 }) {
 	const {
@@ -140,7 +176,7 @@ export function ServiceForm({
 	/* Basic */
 
 	const [businessModel, setBusinessModel] = React.useState<BusinessModel[]>(
-		(initialValues?.businessModels as BusinessModel[]) ?? ["in_person"]
+		(initialValues?.businessModels as BusinessModel[]) ?? []
 	);
 	const [agendaPreset, setAgendaPreset] = React.useState<
 		"everyday" | "working_days" | "custom"
@@ -158,40 +194,52 @@ export function ServiceForm({
 
 	/* Service Zone */
 
+	const rawCountriesData = globalStorage.getString("countriesData");
+	const countriesData = useRef<MultiselectData | undefined | null>(
+		rawCountriesData
+			? rawCountriesData === "undefined"
+				? undefined
+				: safeJsonParse(rawCountriesData)
+			: null
+	);
+
 	const [selectedCountriesIds, setSelectedCountriesIds] = React.useState<
 		string[]
-	>([]);
+	>(initialValues?.serviceZoneCountries ?? []);
 
+	const statesData = useRef<MultiselectData | undefined | null>(undefined);
 	const [selectedStatesIds, setSelectedStatesIds] = React.useState<string[]>(
-		[]
+		initialValues?.serviceZoneStates ?? []
 	);
-	const [statesData, setStatesData] = React.useState<
-		Geolocation[] | undefined | null
-	>(undefined);
 
+	const citiesData = useRef<MultiselectData | undefined | null>(undefined);
 	const [selectedCitiesIds, setSelectedCitiesIds] = React.useState<string[]>(
-		[]
+		initialValues?.serviceZoneCities ?? []
 	);
-	const [citiesData, setCitiesData] = React.useState<
-		Geolocation[] | undefined | null
-	>(undefined);
 
 	useEffect(() => {
 		async function checkCountry() {
 			if (selectedCountriesIds.length === 1) {
+				const typedCountriesData =
+					countriesData.current as unknown as MultiselectItem &
+						{ id: string; iso2: string }[];
+
 				const states = (await fetchStates({
-					ciso: geoData?.find(
-						(country) =>
-							country.id === Number(selectedCountriesIds[0])
+					ciso: typedCountriesData?.find(
+						(country) => country.id === selectedCountriesIds[0]
 					)?.iso2 as string,
 				})) as Geolocation[];
 
 				if (states) {
-					setStatesData(
-						states.sort((a, b) => a.name.localeCompare(b.name))
-					);
+					statesData.current = states
+						.sort((a, b) => a.name.localeCompare(b.name))
+						.map((state) => ({
+							id: state.id.toString(),
+							name: state.name,
+							iso2: state.iso2,
+						})) as unknown as MultiselectData;
 				} else {
-					setStatesData(null);
+					statesData.current = null;
 				}
 			}
 		}
@@ -202,28 +250,36 @@ export function ServiceForm({
 	useEffect(() => {
 		async function checkStates() {
 			if (selectedStatesIds.length === 1) {
+				const typedCountriesData =
+					countriesData.current as unknown as AdaptedGeolocation;
+				const typedStatesData =
+					statesData.current as unknown as AdaptedGeolocation;
+
 				const cities = (await fetchCities({
-					ciso: geoData?.find(
-						(country) =>
-							country.id === Number(selectedCountriesIds[0])
+					ciso: typedCountriesData?.find(
+						(country) => country.id === selectedCountriesIds[0]
 					)?.iso2 as string,
-					siso: statesData?.find(
-						(state) => state.id === Number(selectedStatesIds[0])
+					siso: typedStatesData?.find(
+						(state) => state.id === selectedStatesIds[0]
 					)?.iso2 as string,
 				})) as Geolocation[];
 
 				if (cities) {
-					setCitiesData(
-						cities.sort((a, b) => a.name.localeCompare(b.name))
-					);
+					citiesData.current = cities
+						.sort((a, b) => a.name.localeCompare(b.name))
+						.map((city) => ({
+							id: city.id.toString(),
+							name: city.name,
+							iso2: city.iso2,
+						}));
 				} else {
-					setCitiesData(null);
+					citiesData.current = null;
 				}
 			}
 		}
 
 		checkStates();
-	}, [selectedCitiesIds]);
+	}, [selectedStatesIds]);
 
 	return (
 		<BusinessScrollView>
@@ -235,7 +291,6 @@ export function ServiceForm({
 				<ToggleGroup
 					selected={businessModel}
 					updateState={(item: BusinessModel) => {
-						console.log(item);
 						setBusinessModel((prev) =>
 							prev.includes(item)
 								? prev.filter(
@@ -401,14 +456,7 @@ export function ServiceForm({
 					bottomSheetProps={{
 						title: "Selecione os países que você atende",
 					}}
-					data={
-						geoData
-							? geoData?.map((geo) => ({
-									id: geo.id.toString(),
-									name: geo.name,
-							  }))
-							: geoData
-					}
+					data={countriesData as MultiselectProps["data"]}
 					searchBarProps={{
 						placeholder: "Pesquisar países",
 					}}
@@ -424,10 +472,7 @@ export function ServiceForm({
 							title: "Selecione os estados que você atende",
 						}}
 						label="Estados"
-						data={statesData?.map((state) => ({
-							id: state.id.toString(),
-							name: state.name,
-						}))}
+						data={statesData}
 						searchBarProps={{
 							placeholder: "Pesquisar estados",
 						}}
@@ -444,10 +489,7 @@ export function ServiceForm({
 							title: "Selecione as cidades que você atende",
 						}}
 						label="Cidades"
-						data={citiesData?.map((city) => ({
-							id: city.id.toString(),
-							name: city.name,
-						}))}
+						data={citiesData}
 						searchBarProps={{
 							placeholder: "Pesquisar cidades",
 						}}
@@ -471,7 +513,7 @@ export default function ServiceScreen() {
 
 	const memoizedCurrentBusiness = React.useMemo(() => currentBusiness, []);
 
-	const onSubmit = async (data: OrderSchemeType) => {
+	const onSubmit = async (data: ServiceSchemeType) => {
 		setCurrentBusiness((prevData) => ({ ...prevData, ...data }));
 		// TODO: enviar dados para o servidor
 	};

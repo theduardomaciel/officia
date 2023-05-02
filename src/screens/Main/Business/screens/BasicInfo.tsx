@@ -1,4 +1,4 @@
-import React, { SetStateAction, useCallback, useEffect } from "react";
+import React, { SetStateAction, useCallback, useEffect, useRef } from "react";
 
 // Components
 import { BusinessScrollView } from "components/Container";
@@ -27,23 +27,61 @@ import type { StateToWatch } from "hooks/useFormChangesObserver";
 
 // MMKV
 import { useMMKVObject } from "react-native-mmkv";
-import {
-	MultiselectCategory,
+import MultiSelect, {
+	MultiselectProps,
+	MultiselectItem,
 	MultiselectData,
-	SectionsMultiselect,
 } from "components/Multiselect";
 import { Loading } from "components/StatusMessage";
 import { api } from "lib/axios";
+import { globalStorage } from "context/AuthContext";
+import { safeJsonParse } from "utils";
+
+export async function fetchSegments() {
+	try {
+		const response = await api.get(`/projects/segments`);
+		if (!response.data) return null;
+
+		const data = response.data as {
+			name: string;
+			segments: MultiselectItem[];
+		}[];
+
+		const organizedData = data.map((item) => ({
+			title: item.name,
+			data: item.segments.sort((a, b) => a.name.localeCompare(b.name)),
+		}));
+
+		const lastSegment = organizedData.pop();
+
+		const withOutroAsLastData = organizedData
+			.sort((a, b) => a.title.localeCompare(b.title))
+			.concat(lastSegment ? [lastSegment] : []); // o segmento com o nome "Outros" deve ser o último
+
+		let dataArray = [] as MultiselectData;
+
+		withOutroAsLastData.forEach((item) => {
+			dataArray && dataArray.push(item.title);
+			item.data.forEach((segment) => {
+				dataArray && dataArray.push(segment);
+			});
+		});
+
+		console.log("Segmentos obtidos com sucesso.");
+		return dataArray;
+	} catch (error) {
+		console.log(error);
+		return null;
+	}
+}
 
 export function BasicInfoForm({
 	control,
 	errors,
 	setValue,
 	onStateChange,
-	dbSegments,
 	initialValues,
 }: FormProps & {
-	dbSegments?: (string | MultiselectData)[] | null;
 	initialValues?: { segments: string[] };
 }) {
 	const [isFormalCheckboxChecked, setIsFormalCheckboxChecked] =
@@ -61,6 +99,15 @@ export function BasicInfoForm({
 			onStateChange(segments);
 		}
 	}, [segments]);
+
+	const rawSegmentsData = globalStorage.getString("segmentsData");
+	const segmentsData = useRef<MultiselectData>(
+		rawSegmentsData
+			? rawSegmentsData === "undefined"
+				? undefined
+				: safeJsonParse(rawSegmentsData)
+			: null
+	);
 
 	return (
 		<>
@@ -126,9 +173,9 @@ export function BasicInfoForm({
 					setValue && setValue("juridicalPerson", "");
 				}}
 			/>
-			<SectionsMultiselect
+			<MultiSelect
+				type="sections"
 				label="Segmentos"
-				data={dbSegments}
 				placeholder="Nenhum segmento selecionado"
 				bottomSheetProps={{
 					title: "Selecione os segmentos da sua empresa",
@@ -136,9 +183,15 @@ export function BasicInfoForm({
 				searchBarProps={{
 					placeholder: "Pesquisar segmentos",
 				}}
+				data={segmentsData}
+				fetchData={fetchSegments}
 				selected={segments}
 				setSelected={setSegments}
 				pallette="dark"
+				fetchErrorProps={{
+					defaultText: `Não foi possível carregar os segmentos. Tente novamente mais tarde.`,
+					iconSize: 32,
+				}}
 			/>
 		</>
 	);
@@ -180,77 +233,8 @@ export function useBasicInfoForm({ defaultValues, onSubmit }: FormHookProps) {
 		onSubmit({ ...data });
 	}, onError);
 
-	const [dbSegments, setDbSegments] = React.useState<
-		(string | MultiselectData)[] | undefined | null
-	>(undefined);
-
-	useEffect(() => {
-		const getSegments = async () => {
-			try {
-				const response = await api.get(`/projects/segments`);
-				if (!response.data) return setDbSegments(null);
-
-				/* const data = response.data as {
-					name: string;
-					segments: MultiselectData[];
-				}[];
-
-				setDbSegments(
-					data
-						.map((item) => ({
-							title: item.name,
-							data: item.segments.sort((a, b) =>
-								a.name.localeCompare(b.name)
-							),
-						}))
-						.sort((a, b) => a.title.localeCompare(b.title))
-				); */
-
-				const data = response.data as {
-					name: string;
-					segments: MultiselectData[];
-				}[];
-
-				const organizedData = data.map((item) => ({
-					title: item.name,
-					data: item.segments.sort((a, b) =>
-						a.name.localeCompare(b.name)
-					),
-				}));
-
-				const lastSegment = organizedData.pop();
-
-				const withOutroAsLastData = organizedData
-					.sort((a, b) => a.title.localeCompare(b.title))
-					.concat(lastSegment ? [lastSegment] : []); // o segmento com o nome "Outros" deve ser o último
-
-				let dataArray = [] as (string | MultiselectData)[];
-
-				withOutroAsLastData.forEach((item) => {
-					dataArray.push(item.title);
-					item.data.forEach((segment) => {
-						dataArray.push(segment);
-					});
-				});
-
-				/* organizedData
-					.sort((a, b) => a.title.localeCompare(b.title))
-                    .concat(lastSegment ? [lastSegment] : []); // o segmento com o nome "Outros" deve ser o último */
-
-				setDbSegments(dataArray);
-				console.log("Segmentos obtidos com sucesso.");
-			} catch (error) {
-				console.log(error);
-				setDbSegments(null);
-			}
-		};
-
-		getSegments();
-	}, []);
-
 	return {
 		control,
-		dbSegments,
 		errors,
 		submitData,
 		setValue,

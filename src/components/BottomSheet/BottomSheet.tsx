@@ -40,6 +40,7 @@ export const animProps = {
 const BottomSheetUI = forwardRef(
 	(
 		{
+			id,
 			children,
 			onDismiss,
 			onDismissed,
@@ -99,7 +100,7 @@ const BottomSheetUI = forwardRef(
 			};
 		});
 
-		console.log("rerender bottomsheet");
+		console.log(`BottomSheet rerendered (${id})`);
 
 		const DISMISS_TOLERANCE = 50;
 

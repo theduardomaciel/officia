@@ -1,8 +1,23 @@
-import { View, Text, ViewStyle, ActivityIndicator } from "react-native";
+import {
+	View,
+	Text,
+	ViewStyle,
+	ActivityIndicator,
+	useAnimatedValue,
+	TouchableOpacityProps,
+	TouchableOpacity,
+} from "react-native";
 
 import { useColorScheme } from "nativewind";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import colors from "global/colors";
+import Animated, {
+	cancelAnimation,
+	useAnimatedStyle,
+	useSharedValue,
+	withRepeat,
+	withSpring,
+} from "react-native-reanimated";
 
 interface EmptyMessageProps {
 	message?: string;
@@ -31,26 +46,79 @@ export function Empty({ message, style }: EmptyMessageProps) {
 	);
 }
 
-interface ErrorMessageProps {
-	message: string;
+export interface ErrorStatusProps extends TouchableOpacityProps {
 	onPress?: () => void;
+	isLoading?: boolean;
+	iconSize?: number;
+	defaultText?: string;
 }
 
-export function Error({ message, onPress }: ErrorMessageProps) {
+export function ErrorStatus({
+	onPress,
+	iconSize = 24,
+	isLoading,
+	children,
+	style,
+	defaultText,
+	...rest
+}: ErrorStatusProps) {
+	const refreshIconRotation = useSharedValue(0);
+	const refreshIconAnimatedStyle = useAnimatedStyle(() => {
+		return {
+			transform: [
+				{
+					rotate: `${refreshIconRotation.value}deg`,
+				},
+			],
+		};
+	});
+
 	return (
-		<View className="items-center justify-center flex-1">
-			<Text className="text-zinc-400 text-xl font-bold text-center">
-				{message}
-			</Text>
-			{onPress && (
-				<MaterialCommunityIcons
-					onPress={onPress}
-					name="reload"
-					size={32}
-					color={colors.text[100]}
-				/>
+		<TouchableOpacity
+			className="items-center justify-center w-full px-4"
+			activeOpacity={!onPress ? 1 : isLoading ? 0.5 : 0.7}
+			disabled={!onPress || isLoading}
+			style={[style, { opacity: isLoading ? 0.5 : 1 }]}
+			onPress={
+				onPress
+					? async () => {
+							refreshIconRotation.value = withRepeat(
+								withSpring(refreshIconRotation.value + 360, {
+									damping: 10,
+									mass: 0.65,
+									stiffness: 100,
+								}),
+								-1
+							);
+							await onPress();
+							cancelAnimation(refreshIconRotation);
+							refreshIconRotation.value = withSpring(0);
+					  }
+					: undefined
+			}
+			{...rest}
+		>
+			{children ? (
+				children
+			) : defaultText ? (
+				<Text className="text-zinc-400 text-xl font-bold text-center mb-4">
+					{defaultText}
+				</Text>
+			) : (
+				<Text className="text-zinc-400 text-xl font-bold text-center mb-4">
+					Erro ao carregar
+				</Text>
 			)}
-		</View>
+			{onPress && (
+				<Animated.View style={refreshIconAnimatedStyle}>
+					<MaterialIcons
+						name="replay"
+						size={iconSize}
+						color={colors.text[200]}
+					/>
+				</Animated.View>
+			)}
+		</TouchableOpacity>
 	);
 }
 

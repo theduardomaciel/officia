@@ -21,14 +21,16 @@ import Logo from "src/assets/logo.svg";
 import Input from "components/Input";
 import BottomSheet from "components/BottomSheet";
 import { ActionButton } from "components/Button";
-import { Loading } from "components/StatusMessage";
+import { ErrorStatus, Loading } from "components/StatusMessage";
 
 // Animations
 import Animated, {
+	Easing,
 	useAnimatedStyle,
 	useSharedValue,
 	withRepeat,
 	withSpring,
+	withTiming,
 } from "react-native-reanimated";
 
 // Authentication
@@ -81,7 +83,7 @@ const validateEmail = async (email: string) => {
 };
 
 const SPRING_CONFIG = {
-	damping: 10,
+	damping: 5,
 	mass: 0.1,
 	stiffness: 25,
 };
@@ -97,17 +99,6 @@ export default function Login({ navigation }: any) {
 			transform: [
 				{
 					translateY: withSpring(viewPosition.value, SPRING_CONFIG),
-				},
-			],
-		};
-	});
-
-	const refreshIconRotation = useSharedValue(0);
-	const refreshIconAnimatedStyle = useAnimatedStyle(() => {
-		return {
-			transform: [
-				{
-					rotate: `${refreshIconRotation.value}deg`,
 				},
 			],
 		};
@@ -151,13 +142,13 @@ export default function Login({ navigation }: any) {
 		}
 	}, []);
 
-	const refreshConnection = useCallback(() => {
+	const refreshConnection = useCallback(async () => {
 		setStatus("loading");
-		refreshIconRotation.value = withSpring(refreshIconRotation.value + 360);
-		NetInfo.fetch().then((state) => {
-			setIsOnline(state.isConnected === true);
-			setStatus(undefined);
-		});
+
+		const state = await NetInfo.fetch();
+
+		setIsOnline(state.isConnected === true);
+		setStatus(undefined);
 	}, []);
 
 	/* useEffect(() => {
@@ -231,29 +222,18 @@ export default function Login({ navigation }: any) {
 							}
 						</View>
 					) : (
-						<TouchableOpacity
-							className="flex flex-col items-center justify-center w-full"
-							activeOpacity={0.7}
+						<ErrorStatus
 							onPress={refreshConnection}
-							style={{
-								opacity: status === "loading" ? 0.5 : 1,
-							}}
+							isLoading={status === "loading"}
 						>
-							<Text className=" w-full text-center text-text-200 opacity-80 mb-4">
+							<Text className="w-full text-center text-text-200 opacity-80 mb-4">
 								É necessário ter uma conexão ativa com a
 								Internet para fazer login ou registrar-se.{"\n"}
 								<Text className="font-semibold">
 									Tente conectar-se novamente
 								</Text>
 							</Text>
-							<Animated.View style={refreshIconAnimatedStyle}>
-								<MaterialIcons
-									name="replay"
-									size={24}
-									color={colors.text[200]}
-								/>
-							</Animated.View>
-						</TouchableOpacity>
+						</ErrorStatus>
 					)}
 				</View>
 				<View

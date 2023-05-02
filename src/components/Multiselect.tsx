@@ -1,7 +1,5 @@
 import React, {
-	Dispatch,
 	RefObject,
-	SetStateAction,
 	createRef,
 	forwardRef,
 	memo,
@@ -10,17 +8,10 @@ import React, {
 	useId,
 	useImperativeHandle,
 	useMemo,
-	useReducer,
 	useRef,
 	useState,
 } from "react";
-import {
-	TouchableOpacity,
-	View,
-	Text,
-	SectionList,
-	ViewProps,
-} from "react-native";
+import { TouchableOpacity, View, Text, ViewProps, Button } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeViewGestureHandler } from "react-native-gesture-handler";
 import { FlashList } from "@shopify/flash-list";
@@ -38,7 +29,7 @@ import BottomSheet, { BottomSheetProps } from "./BottomSheet/index";
 import SearchBar, { SearchBarProps } from "./SearchBar";
 import { Checkbox } from "./Checkbox";
 import { ActionButton } from "./Button";
-import { Empty, Error, Loading } from "./StatusMessage";
+import { Empty, ErrorStatus, ErrorStatusProps, Loading } from "./StatusMessage";
 
 interface TriggerProps {
 	children?: React.ReactNode;
@@ -128,6 +119,16 @@ function TriggerHolder({ children, label, description }: TriggerHolderProps) {
 	);
 }
 
+function TriggerSelectedItem({ item }: { item: MultiselectItem }) {
+	return (
+		<View className="flex flex-col items-center justify-center px-4 py-1 bg-transparent border border-primary rounded-3xl">
+			<Text className="text-text-100 text-sm font-titleSemiBold">
+				{item.name}
+			</Text>
+		</View>
+	);
+}
+
 interface MultiselectBottomSheetProps extends Partial<BottomSheetProps> {
 	title?: string;
 }
@@ -168,22 +169,22 @@ function MultiselectBottomSheet({
 	);
 }
 
-export type MultiselectCategory = {
-	title: string;
-	data: MultiselectData[];
-};
-
-export type MultiselectData = {
+export interface MultiselectItem {
 	id: string;
 	name: string;
 	icon?: string;
 	color?: string;
-};
+}
 
-interface Props extends ViewProps {
+export type MultiselectData = (string | MultiselectItem)[] | null | undefined;
+
+export interface MultiselectProps extends ViewProps {
 	label?: string;
 	description?: string;
 	placeholder: string;
+	data: React.MutableRefObject<MultiselectData>;
+	fetchData?: () => Promise<MultiselectData>;
+	type?: "sections";
 	selected: string[];
 	setSelected: React.Dispatch<React.SetStateAction<string[]>>;
 	bottomSheetProps?: Omit<MultiselectBottomSheetProps, "children" | "id">;
@@ -193,263 +194,195 @@ interface Props extends ViewProps {
 	searchBarProps?: SearchBarProps;
 	disabled?: boolean;
 	disabledPlaceholder?: string;
+	fetchErrorProps?: ErrorStatusProps;
 }
 
-const Multiselect = React.forwardRef(
-	(
-		{
-			label,
-			description,
-			placeholder,
-			data,
-			bottomSheetProps,
-			searchBarProps,
-			selected: parentSelected,
-			setSelected: parentSetSelected,
-			showSelectAllButton = true,
-			pallette,
-			disabled,
-			disabledPlaceholder,
-			allSelectedPlaceholder,
-			...rest
-		}: Props & { data?: MultiselectData[] | null },
-		ref
-	) => {
-		const id = useId();
+export default function MultiSelect({
+	label,
+	description,
+	placeholder,
+	data: initialData,
+	fetchData,
+	type,
+	bottomSheetProps,
+	searchBarProps,
+	selected: parentSelected,
+	setSelected: parentSetSelected,
+	showSelectAllButton = true,
+	pallette,
+	disabled,
+	disabledPlaceholder,
+	allSelectedPlaceholder,
+	fetchErrorProps,
+	...rest
+}: MultiselectProps) {
+	const id = useId();
 
-		const openHandler = useCallback(() => {
-			BottomSheet.expand(id);
-		}, []);
+	const [data, setData] = useState<MultiselectData>(
+		initialData ? initialData.current : undefined
+	);
 
-		const closeHandler = useCallback(() => {
-			BottomSheet.close(id);
-		}, []);
+	const cachedData = useRef<MultiselectData>(undefined);
 
-		useImperativeHandle(
-			ref,
-			() => ({
-				open: () => openHandler(),
-				close: () => closeHandler(),
-			}),
-			[]
-		);
+	const openHandler = useCallback(() => {
+		1;
+		BottomSheet.expand(id);
+	}, []);
 
-		const listScrollRef = useRef();
-		const panRef = useRef();
+	const closeHandler = useCallback(() => {
+		BottomSheet.close(id);
+	}, []);
 
-		return (
-			<>
-				{!ref && (
-					<TriggerHolder
-						label={label}
-						description={description}
-						{...rest}
-					>
-						<Trigger
-							onPress={openHandler}
-							placeholder={placeholder}
-							palette={pallette}
-							isDisabled={disabled}
-							disabledPlaceholder={disabledPlaceholder}
-							allSelectedPlaceholder={
-								allSelectedPlaceholder &&
-								parentSelected.length === data?.length
-									? allSelectedPlaceholder
-									: undefined
-							}
-						>
-							{data && parentSelected.length > 0
-								? data.map((item) => {
-										if (parentSelected.includes(item.id)) {
-											return (
-												<SelectItem
-													key={item.id}
-													item={item}
-												/>
-											);
-										} else {
-											return null;
-										}
-								  })
-								: undefined}
-						</Trigger>
-					</TriggerHolder>
-				)}
+	const listScrollRef = useRef();
+	const panRef = useRef();
 
-				<MultiselectBottomSheet
-					id={id}
-					scrollableContentRef={listScrollRef}
-					panRef={panRef}
-					{...bottomSheetProps}
-				>
-					{data ? (
-						<List
-							data={data}
-							searchBarProps={
-								searchBarProps
-									? {
-											palette: pallette,
-											...searchBarProps,
-									  }
-									: undefined
-							}
-							parentSetSelected={parentSetSelected}
-							initialValue={parentSelected}
-							closeHandler={closeHandler}
-							showSelectAllButton={showSelectAllButton}
-							listScrollRef={listScrollRef}
-							panRef={panRef}
-						/>
-					) : data === undefined ? (
-						<Loading />
-					) : (
-						<Error
-							message={`Um erro no servidor nos impediu de obter os segmentos disponíveis para seleção.\nPor favor, tente novamente mais tarde.`}
-						/>
-					)}
-				</MultiselectBottomSheet>
-			</>
-		);
-	}
-);
+	const BottomSheetContent = memo(function BottomSheetContent() {
+		if (data) {
+			if (type === "sections") {
+				return (
+					<SectionsList
+						data={data}
+						searchBarProps={
+							searchBarProps
+								? {
+										palette: pallette,
+										...searchBarProps,
+								  }
+								: undefined
+						}
+						parentSetSelected={parentSetSelected}
+						initialValue={parentSelected}
+						closeHandler={closeHandler}
+						showSelectAllButton={showSelectAllButton}
+						panRef={panRef}
+						listScrollRef={listScrollRef}
+					/>
+				);
+			} else {
+				return (
+					<List
+						data={data as MultiselectItem[]}
+						searchBarProps={
+							searchBarProps
+								? {
+										palette: pallette,
+										...searchBarProps,
+								  }
+								: undefined
+						}
+						parentSetSelected={parentSetSelected}
+						initialValue={parentSelected}
+						closeHandler={closeHandler}
+						showSelectAllButton={showSelectAllButton}
+						listScrollRef={listScrollRef}
+						panRef={panRef}
+					/>
+				);
+			}
+		} else if (data === null) {
+			if (fetchErrorProps && fetchData) {
+				const { onPress, ...rest } = fetchErrorProps;
 
-export default Multiselect;
+				return (
+					<View className="flex-1 items-center justify-center">
+						<ErrorStatus onPress={fetchHandler} {...rest} />
+					</View>
+				);
+			} else {
+				return (
+					<View className="flex-1 items-center justify-center">
+						<ErrorStatus defaultText="Não foi possível obter os dados." />
+					</View>
+				);
+			}
+		} else {
+			return (
+				<View className="flex-1 items-center justify-center">
+					<Loading />
+				</View>
+			);
+		}
+	});
 
-export const SectionsMultiselect = React.forwardRef(
-	(
-		{
-			label,
-			description,
-			placeholder,
-			data,
-			bottomSheetProps,
-			searchBarProps,
-			selected: parentSelected,
-			setSelected: parentSetSelected,
-			showSelectAllButton = true,
-			allSelectedPlaceholder,
-			disabled,
-			disabledPlaceholder,
-			pallette,
-			...rest
-		}: Props & { data?: (string | MultiselectData)[] | null },
-		ref
-	) => {
-		const id = useId();
+	console.log("Multiselect holder rerender");
 
-		const openHandler = useCallback(() => {
-			BottomSheet.expand(id);
-		}, []);
+	const fetchHandler = async () => {
+		if (!cachedData.current && fetchData) {
+			console.log("Atualizando dados...");
 
-		const closeHandler = useCallback(() => {
-			BottomSheet.close(id);
-		}, []);
+			setData(undefined);
 
-		useImperativeHandle(
-			ref,
-			() => ({
-				open: () => openHandler(),
-				close: () => closeHandler(),
-			}),
-			[]
-		);
+			const updatedData = await fetchData();
+			if (updatedData) {
+				cachedData.current = updatedData;
+				setData(updatedData);
+			} else {
+				setData(null);
+			}
+		}
+	};
 
-		const panRef = useRef();
-		const listScrollRef = useRef();
+	const updateData = useCallback(() => {
+		if (!cachedData.current && initialData.current) {
+			console.log("Atualizando dados internos do MultiSelect...");
+			setData(initialData.current);
+			cachedData.current = initialData.current;
+		}
+	}, []);
 
-		return (
-			<>
-				{!ref && (
-					<TriggerHolder
-						label={label}
-						description={description}
-						{...rest}
-					>
-						<Trigger
-							onPress={openHandler}
-							placeholder={placeholder}
-							palette={pallette}
-							disabledPlaceholder={disabledPlaceholder}
-							isDisabled={disabled}
-							allSelectedPlaceholder={
-								allSelectedPlaceholder &&
-								parentSelected.length === data?.length
-									? allSelectedPlaceholder
-									: undefined
-							}
-						>
-							{data && parentSelected.length > 0
-								? data.map((item) => {
-										if (typeof item === "string")
-											return null;
-
-										if (parentSelected.includes(item.id)) {
-											return (
-												<SelectItem
-													key={item.id}
-													item={item}
-												/>
-											);
-										} else {
-											return null;
-										}
-								  })
-								: undefined}
-						</Trigger>
-					</TriggerHolder>
-				)}
-
-				<MultiselectBottomSheet
-					id={id}
-					{...bottomSheetProps}
-					scrollableContentRef={listScrollRef}
-					panRef={panRef}
-				>
-					{data ? (
-						<SectionsList
-							data={data}
-							searchBarProps={
-								searchBarProps
-									? {
-											palette: pallette,
-											...searchBarProps,
-									  }
-									: undefined
-							}
-							parentSetSelected={parentSetSelected}
-							initialValue={parentSelected}
-							closeHandler={closeHandler}
-							showSelectAllButton={showSelectAllButton}
-							panRef={panRef}
-							listScrollRef={listScrollRef}
-						/>
-					) : data === undefined ? (
-						<Loading />
-					) : (
-						<Error
-							message={`Um erro no servidor nos impediu de obter os segmentos disponíveis para seleção.\nPor favor, tente novamente mais tarde.`}
-						/>
-					)}
-				</MultiselectBottomSheet>
-			</>
-		);
-	}
-);
-
-function SelectItem({ item }: { item: MultiselectData }) {
 	return (
-		<View className="flex flex-col items-center justify-center px-4 py-1 bg-transparent border border-primary rounded-3xl">
-			<Text className="text-text-100 text-sm font-titleSemiBold">
-				{item.name}
-			</Text>
-		</View>
+		<>
+			<TriggerHolder label={label} description={description} {...rest}>
+				<Trigger
+					onPress={openHandler}
+					placeholder={placeholder}
+					palette={pallette}
+					isDisabled={disabled}
+					disabledPlaceholder={disabledPlaceholder}
+					allSelectedPlaceholder={
+						allSelectedPlaceholder &&
+						parentSelected.length === data?.length
+							? allSelectedPlaceholder
+							: undefined
+					}
+				>
+					{data && parentSelected.length > 0
+						? data.map((item) => {
+								if (typeof item === "string") return null;
+
+								if (parentSelected.includes(item.id)) {
+									return (
+										<TriggerSelectedItem
+											key={item.id}
+											item={item}
+										/>
+									);
+								} else {
+									return null;
+								}
+						  })
+						: undefined}
+				</Trigger>
+			</TriggerHolder>
+
+			<MultiselectBottomSheet
+				id={id}
+				scrollableContentRef={listScrollRef}
+				panRef={panRef}
+				onExpand={updateData}
+				//onExpanded={fetchHandler}
+				{...bottomSheetProps}
+			>
+				<BottomSheetContent />
+			</MultiselectBottomSheet>
+		</>
 	);
 }
 
 interface ListProps {
 	searchBarProps?: SearchBarProps;
-	parentSetSelected: Props["setSelected"];
-	initialValue: Props["selected"];
+	parentSetSelected: MultiselectProps["setSelected"];
+	initialValue: MultiselectProps["selected"];
 	closeHandler: () => void;
 	showSelectAllButton?: boolean;
 	listScrollRef: RefObject<any>;
@@ -465,7 +398,7 @@ function List({
 	showSelectAllButton = true,
 	listScrollRef,
 	panRef,
-}: ListProps & { data: MultiselectData[] }) {
+}: ListProps & { data: MultiselectItem[] }) {
 	const [search, setSearch] = useState("");
 
 	const filteredData = useMemo(() => {
@@ -499,7 +432,7 @@ function List({
 	const checkAllRef = useRef<CheckAllObject>(null);
 
 	const renderItem = useCallback(
-		({ item }: { item: MultiselectData }) => (
+		({ item }: { item: MultiselectItem }) => (
 			<ListItem
 				item={item}
 				ref={itemsRef[item.id]}
@@ -576,7 +509,7 @@ function List({
 	);
 }
 
-type SectionData = string | MultiselectData;
+type SectionData = string | MultiselectItem;
 
 function SectionsList({
 	data,
@@ -594,7 +527,7 @@ function SectionsList({
 		() =>
 			data.filter(
 				(item) => typeof item !== "string"
-			) as MultiselectData[],
+			) as MultiselectItem[],
 		[data]
 	);
 
@@ -647,7 +580,7 @@ function SectionsList({
 	);
 
 	const listSeparator = useCallback(
-		({ leadingItem }: { leadingItem: MultiselectData }) =>
+		({ leadingItem }: { leadingItem: MultiselectItem }) =>
 			typeof leadingItem !== "string" &&
 			typeof filteredData[
 				filteredData.findIndex(
@@ -696,7 +629,7 @@ function SectionsList({
 
 	const checkAllRef = useRef<CheckAllObject>(null);
 
-	const renderItem = useCallback(({ item }: { item: MultiselectData }) => {
+	const renderItem = useCallback(({ item }: { item: MultiselectItem }) => {
 		return (
 			<ListItem
 				item={item}
@@ -742,6 +675,7 @@ function SectionsList({
 					{...searchBarProps}
 				/>
 			)}
+			{/* <NativeViewGestureHandler disallowInterruption={true}> */}
 			<FlashList
 				data={filteredData}
 				overrideProps={
@@ -780,6 +714,7 @@ function SectionsList({
 				}}
 				estimatedItemSize={ITEM_HEIGHT}
 			/>
+			{/* </NativeViewGestureHandler> */}
 			<ActionButton label="Selecionar" onPress={onSubmit} />
 		</>
 	);
@@ -838,18 +773,18 @@ const CheckAll = forwardRef(function CheckAll(
 			updateSelectedAmount: (checked: boolean) => {
 				if (checked) {
 					setSelectedAmount((prev) => prev + 1);
-					console.log(
+					/* console.log(
 						selectedAmount,
 						"selectedAmount aumentou",
 						data.length
-					);
+					); */
 				} else {
 					setSelectedAmount((prev) => prev - 1);
-					console.log(
+					/* console.log(
 						selectedAmount,
 						"selectedAmount diminuiu",
 						data.length
-					);
+					); */
 				}
 			},
 		}),
@@ -896,7 +831,7 @@ function SectionSpace() {
 }
 
 interface ListItemProps {
-	item: MultiselectData;
+	item: MultiselectItem;
 	initialChecked?: boolean;
 	onPress: (checked: boolean) => void;
 }
