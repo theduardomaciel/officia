@@ -59,9 +59,9 @@ export const ActionButton = ({
 			activeOpacity={isLoading ? 1 : 0.8}
 			disabled={isLoading || disabled}
 			className={clsx(
-				"flex-row items-center justify-center w-full py-4 rounded bg-primary",
+				"flex-row items-center justify-center w-full py-3 rounded bg-primary",
 				{
-					"bg-gray-200": isLoading || preset === "next",
+					"bg-gray-200 py-4": isLoading || preset === "next",
 				}
 			)}
 			style={[style, { columnGap: 10, opacity: disabled ? 0.5 : 1 }]}

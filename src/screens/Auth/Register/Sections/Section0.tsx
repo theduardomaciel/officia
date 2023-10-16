@@ -7,7 +7,7 @@ import colors from "global/colors";
 
 // Components
 import Modal, { ModalProps } from "components/Modal";
-import Input, { borderErrorStyle } from "components/Input";
+import Input, { Trigger, borderErrorStyle } from "components/Input";
 import ToggleGroup from "components/ToggleGroup";
 import Toast from "components/Toast";
 import { SubSectionWrapper } from "components/Form/SectionWrapper";
@@ -19,6 +19,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import formatWithMask, { MASKS } from "utils/maskHandler";
+
+// Utils
+import { genderOptions } from "global/constants";
+import { isAdult } from "utils";
 
 // Types
 import type { GENDER } from "context/AuthContext";
@@ -38,33 +42,8 @@ export const personalDataScheme = z.object({
 
 type PersonalDataSchemeInputsType = z.infer<typeof personalDataScheme>;
 
-const isAdult = (birthDate: Date) => {
-	const today = new Date();
-	let age = today.getFullYear() - birthDate.getFullYear();
-	const m = today.getMonth() - birthDate.getMonth();
-	if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-		age--;
-	}
-	return age >= 18;
-};
-
-const genderOptions = [
-	{
-		label: "Masculino",
-		value: "male",
-	},
-	{
-		label: "Feminino",
-		value: "female",
-	},
-	{
-		label: "Outro",
-		value: "other",
-	},
-];
-
 export interface PersonalDataSchemeType extends PersonalDataSchemeInputsType {
-	birthDate: Date | undefined;
+	birthday: Date | undefined;
 	gender: GENDER | null;
 }
 
@@ -94,22 +73,22 @@ export default function RegisterSection0({ onSubmit }: Props) {
 		Toast.show({
 			preset: "error",
 			title: "Algo está errado com os dados inseridos.",
-			message: Object.values(errors)
+			description: Object.values(errors)
 				.map((error) => error.message)
 				.join("\n"),
 		});
 	};
 
-	const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
+	const [birthday, setBirthday] = useState<Date | undefined>(undefined);
 	const [gender, setGender] = useState<GENDER | null>(null);
 
 	const submitSection0Data = section0HandleSubmit((data) => {
 		let errorsMessage = "";
-		if (!birthDate) {
+		if (!birthday) {
 			errorsMessage += `É necessário inserir uma data de nascimento. \n`;
 		}
 
-		if (birthDate && !isAdult(birthDate)) {
+		if (birthday && !isAdult(birthday)) {
 			errorsMessage += `É necessário ser maior de idade para criar uma conta.${
 				errorsMessage.length > 0 ? " \n" : ""
 			}`;
@@ -125,14 +104,14 @@ export default function RegisterSection0({ onSubmit }: Props) {
 			Toast.show({
 				preset: "error",
 				title: "Algo está errado com os dados inseridos.",
-				message: errorsMessage,
+				description: errorsMessage,
 			});
 			return;
 		}
 
 		onSubmit({
 			...data,
-			birthDate,
+			birthday,
 			gender,
 		});
 	}, onError);
@@ -178,15 +157,14 @@ export default function RegisterSection0({ onSubmit }: Props) {
 				)}
 				name="phone"
 			/>
-			<Input
+			<Trigger
 				label="Data de Nascimento"
-				value={birthDate?.toLocaleDateString("pt-BR") ?? ""}
+				value={birthday?.toLocaleDateString("pt-BR") ?? ""}
 				placeholder="DD/MM/AAAA"
 				onPress={() => {
 					setDatePickerModalVisible(true);
 					Keyboard.dismiss();
 				}}
-				editable={false}
 				pallette="dark"
 			/>
 			<SubSectionWrapper
@@ -218,8 +196,11 @@ export default function RegisterSection0({ onSubmit }: Props) {
 
 			<DatePickerModal
 				isVisible={isDatePickerVisible}
-				toggleVisibility={() => setDatePickerModalVisible(false)}
-				onDateChange={(date) => setBirthDate(date)}
+				hasCancelButton
+				toggleVisibility={() =>
+					setDatePickerModalVisible(!isDatePickerVisible)
+				}
+				onDateChange={(date) => setBirthday(date)}
 			/>
 		</>
 	);
@@ -228,17 +209,21 @@ export default function RegisterSection0({ onSubmit }: Props) {
 interface DatePickerModal {
 	isVisible: boolean;
 	toggleVisibility: ModalProps["toggleVisibility"];
+	initialDate?: Date;
 	onDateChange: (date: Date | undefined) => void;
+	hasCancelButton?: boolean;
 }
 
-function DatePickerModal({
+export function DatePickerModal({
 	isVisible,
 	toggleVisibility,
+	initialDate,
 	onDateChange,
+	hasCancelButton,
 }: DatePickerModal) {
 	const { colorScheme } = useColorScheme();
 
-	const newDate = useRef(new Date());
+	const newDate = useRef(initialDate ?? new Date());
 
 	const onChange = useCallback((date: Date) => {
 		newDate.current = date;
@@ -254,25 +239,31 @@ function DatePickerModal({
 		onDateChange(undefined);
 	};
 
+	const CONFIRM_BUTTON = {
+		label: "Confirmar",
+		onPress: onConfirm,
+		closeOnPress: true,
+	};
+
 	return (
 		<Modal
 			isVisible={isVisible}
 			toggleVisibility={toggleVisibility}
 			title={"Selecione a data de nascimento"}
 			icon="calendar-today"
-			buttons={[
-				{
-					label: "Cancelar",
-					onPress: onClean,
-					closeOnPress: true,
-					color: colors.red,
-				},
-				{
-					label: "Confirmar",
-					onPress: onConfirm,
-					closeOnPress: true,
-				},
-			]}
+			buttons={
+				hasCancelButton
+					? [
+							{
+								label: "Cancelar",
+								onPress: onClean,
+								closeOnPress: true,
+								color: colors.red,
+							},
+							CONFIRM_BUTTON,
+					  ]
+					: [CONFIRM_BUTTON]
+			}
 		>
 			<View className="flex flex-1 w-full items-center justify-center">
 				<DatePicker

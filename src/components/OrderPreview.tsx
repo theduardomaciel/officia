@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { OrderModel } from "database/models/orderModel";
+import { OrderModel } from "database/models/order.model";
 import {
 	TouchableOpacity,
 	View,
@@ -11,7 +11,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
-import { ProductModel } from "database/models/productModel";
+import { ProductModel } from "database/models/product.model";
 import { Preview, PreviewStatic } from "./Preview";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 

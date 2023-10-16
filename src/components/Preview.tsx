@@ -7,8 +7,8 @@ import clsx from "clsx";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
-import { ProductModel } from "database/models/productModel";
-import { MaterialModel } from "database/models/materialModel";
+import { ProductModel } from "database/models/product.model";
+import { MaterialModel } from "database/models/material.model";
 
 // Tyoes
 import type { Category } from "screens/Main/Business/@types";

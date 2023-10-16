@@ -1,7 +1,7 @@
 import React from "react";
 
 // Components
-import { BusinessScrollView } from "components/Container";
+import { ContainerScrollView } from "components/Container";
 import Toast from "components/Toast";
 import Input, { borderErrorStyle } from "components/Input";
 
@@ -65,7 +65,7 @@ export default function SocialMedia({ route, navigation }: any) {
 		Toast.show({
 			preset: "error",
 			title: "Algo está errado com os dados inseridos.",
-			message: Object.values(errors)
+			description: Object.values(errors)
 				.map((error) => error.message)
 				.join("\n"),
 		});
@@ -93,7 +93,7 @@ export default function SocialMedia({ route, navigation }: any) {
 				currentData={screenData}
 				watch={watch}
 			>
-				<BusinessScrollView>
+				<ContainerScrollView>
 					<Controller
 						control={control}
 						render={({ field: { onChange, onBlur, value } }) => (
@@ -205,7 +205,7 @@ export default function SocialMedia({ route, navigation }: any) {
 						name="tiktok"
 						rules={{ maxLength: 50 }}
 					/>
-				</BusinessScrollView>
+				</ContainerScrollView>
 			</ChangesObserver>
 		</BusinessLayout>
 	);

@@ -4,7 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 // Components
-import Container, { BusinessScrollView } from "components/Container";
+import Container, { ContainerScrollView } from "components/Container";
 import Header from "components/Header";
 
 import { useAuth } from "context/AuthContext";
@@ -19,7 +19,7 @@ export default function Settings() {
 	return (
 		<Container>
 			<Header title="Configurações" returnButton />
-			<BusinessScrollView>
+			<ContainerScrollView>
 				<NavigationButton
 					title="Tema"
 					description="Escolha entre os modos de exibição claro e escuro"
@@ -29,7 +29,7 @@ export default function Settings() {
 					title="Idioma"
 					onPress={() => console.log("to-do")}
 				/>
-			</BusinessScrollView>
+			</ContainerScrollView>
 			<Modal
 				title="Excluir conta"
 				isVisible={isDeleteModalVisible}
@@ -37,7 +37,7 @@ export default function Settings() {
 				toggleVisibility={() =>
 					setIsDeleteModalVisible(!isDeleteModalVisible)
 				}
-				message="Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita."
+				description="Tem certeza que deseja excluir sua conta? Essa ação não pode ser desfeita."
 				buttons={[
 					{
 						label: "Excluir",

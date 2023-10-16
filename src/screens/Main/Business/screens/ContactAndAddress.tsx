@@ -6,7 +6,7 @@ import Input, { borderErrorStyle } from "components/Input";
 import Toast from "components/Toast";
 import AddressFetch from "components/AddressFetch";
 import { SubSectionWrapper } from "components/Form/SectionWrapper";
-import { BusinessScrollView } from "components/Container";
+import { ContainerScrollView } from "components/Container";
 
 import BusinessLayout, { ChangesObserver } from "../Layout";
 import { updateData } from "screens/Main/Business";
@@ -41,7 +41,7 @@ export function ContactAndAddress({
 		: undefined;
 
 	return (
-		<BusinessScrollView>
+		<ContainerScrollView>
 			<Controller
 				control={control}
 				render={({ field: { onChange, onBlur, value } }) => (
@@ -213,7 +213,7 @@ export function ContactAndAddress({
 					</View>
 				)}
 			</SubSectionWrapper>
-		</BusinessScrollView>
+		</ContainerScrollView>
 	);
 }
 
@@ -270,7 +270,7 @@ export default function ContactAndAddressScreen({ route }: any) {
 		Toast.show({
 			preset: "error",
 			title: "Algo está errado com os dados inseridos.",
-			message: Object.values(errors)
+			description: Object.values(errors)
 				.map((error) => error.message)
 				.join("\n"),
 		});

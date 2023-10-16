@@ -7,8 +7,8 @@ import colors from "global/colors";
 import WhatsAppIcon from "src/assets/icons/whatsapp.svg";
 
 // Types
-import type { ClientModel } from "database/models/clientModel";
-import type { OrderModel } from "database/models/orderModel";
+import type { ClientModel } from "database/models/client.model";
+import type { OrderModel } from "database/models/order.model";
 
 // Components
 import { ActionButton, SubActionButton } from "components/Button";

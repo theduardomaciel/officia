@@ -30,8 +30,8 @@ import { Q } from "@nozbe/watermelondb";
 import { database } from "database/index.native";
 
 // Types
-import type { OrderModel } from "database/models/orderModel";
-import type { ProductModel } from "database/models/productModel";
+import type { OrderModel } from "database/models/order.model";
+import type { ProductModel } from "database/models/product.model";
 
 interface MonthWithOrders {
 	month: string;

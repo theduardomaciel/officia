@@ -15,7 +15,7 @@ import { PreviewStatic } from "components/Preview";
 import {
 	Section,
 	SubSectionWrapper,
-	SubSectionWrapperProps,
+	WrapperProps,
 } from "../../Form/SectionWrapper";
 import { ActionButton } from "components/Button";
 
@@ -31,9 +31,9 @@ async function getOrderNumber() {
 }
 
 // Types
-import type { MaterialModel } from "database/models/materialModel";
-import type { OrderModel } from "database/models/orderModel";
-import type { ProductModel } from "database/models/productModel";
+import type { MaterialModel } from "database/models/material.model";
+import type { OrderModel } from "database/models/order.model";
+import type { ProductModel } from "database/models/product.model";
 import type {
 	Section0Props,
 	Section0RefProps,
@@ -47,7 +47,7 @@ import { scheduleOrderNotification } from "utils/notificationHandler";
 import { getPaymentCondition } from "utils/pdfHandler";
 
 interface ReviewSectionProps {
-	wrapperProps: SubSectionWrapperProps;
+	wrapperProps: WrapperProps;
 	value: string;
 	multiline?: boolean;
 }
@@ -57,10 +57,7 @@ export const ReviewSection = ({
 	value,
 	multiline,
 }: ReviewSectionProps) => (
-	<SubSectionWrapper
-		{...wrapperProps}
-		preset={wrapperProps.preset ? wrapperProps.preset : "smallMargin"}
-	>
+	<SubSectionWrapper {...wrapperProps}>
 		<View
 			className={clsx(
 				"w-full px-4 py-3 rounded-lg border border-gray-300 bg-black dark:bg-gray-300",
@@ -77,9 +74,9 @@ export const ReviewSection = ({
 export const PaymentMethodsReview = ({ value }: { value: string }) => (
 	<ReviewSection
 		wrapperProps={{
-			header: {
+			headerProps: {
 				title: "Métodos de Pagamento",
-				customIcon: PaymentMethodsIcon as any,
+				icon: PaymentMethodsIcon,
 			},
 			style: { flex: 1 },
 		}}
@@ -90,7 +87,7 @@ export const PaymentMethodsReview = ({ value }: { value: string }) => (
 export const WarrantyReview = ({ value }: { value?: string }) => (
 	<ReviewSection
 		wrapperProps={{
-			header: { title: "Garantia", customIcon: WarrantyIcon as any },
+			headerProps: { title: "Garantia", icon: WarrantyIcon },
 			style: { flex: 1 },
 		}}
 		value={value ?? "---"}
@@ -259,7 +256,7 @@ export default function Section2({
 
 						const productsModel =
 							await database.collections.get<ProductModel>(
-								"sub_orders"
+								"orders"
 							);
 
 						const productsToCreate = createFilter(
@@ -386,7 +383,7 @@ export default function Section2({
 						]);
 
 						const productsAmount = await database
-							.get<ProductModel>(`sub_orders`)
+							.get<ProductModel>(`orders`)
 							.query(Q.where("order_id", updatedOrder.id))
 							.fetchCount();
 						const typedUpdateOrder = updatedOrder as any;
@@ -436,7 +433,7 @@ export default function Section2({
 					const batchProducts = await Promise.all(
 						data.products.map(async (product) => {
 							const newProduct = await database
-								.get<ProductModel>("sub_orders")
+								.get<ProductModel>("orders")
 								.prepareCreate((sub_service_db: any) => {
 									sub_service_db.order.set(newOrder);
 									sub_service_db.description =
@@ -496,7 +493,8 @@ export default function Section2({
 
 	return (
 		<SectionBottomSheet
-			bottomSheet={bottomSheet}
+			id={bottomSheet}
+			height="67%"
 			onExpanded={onExpanded}
 			onDismissed={onDismissed}
 		>
@@ -512,7 +510,9 @@ export default function Section2({
 					</View>
 
 					<ReviewSection
-						wrapperProps={{ header: { title: "Nome do Serviço" } }}
+						wrapperProps={{
+							headerProps: { title: "Nome do Serviço" },
+						}}
 						value={
 							data.name ||
 							`Serviço n.0${
@@ -524,7 +524,9 @@ export default function Section2({
 					{data.additionalInfo && (
 						<ReviewSection
 							wrapperProps={{
-								header: { title: "Informações Adicionais" },
+								headerProps: {
+									title: "Informações Adicionais",
+								},
 							}}
 							value={data.additionalInfo ?? "[vazio]"}
 						/>
@@ -533,7 +535,7 @@ export default function Section2({
 					<View className="flex-row w-full">
 						<ReviewSection
 							wrapperProps={{
-								header: { title: "Data" },
+								headerProps: { title: "Data" },
 								style: { flex: 1, marginRight: 10 },
 							}}
 							value={new Date(
@@ -548,7 +550,7 @@ export default function Section2({
 						/>
 						<ReviewSection
 							wrapperProps={{
-								header: { title: "Hora" },
+								headerProps: { title: "Hora" },
 								style: { flex: 1 },
 							}}
 							value={
@@ -565,7 +567,10 @@ export default function Section2({
 
 					<ReviewSection
 						wrapperProps={{
-							header: { title: "Desconto", icon: "money-off" },
+							headerProps: {
+								title: "Desconto",
+								icon: "money-off",
+							},
 							style: { flex: 1 },
 						}}
 						value={data.discount ? `${data.discount}%` : "Nenhum"}
@@ -573,7 +578,7 @@ export default function Section2({
 
 					<ReviewSection
 						wrapperProps={{
-							header: {
+							headerProps: {
 								title: "Condições de Pagamento",
 								icon: "credit-card",
 							},
@@ -603,7 +608,7 @@ export default function Section2({
 					{data.warrantyDetails && (
 						<ReviewSection
 							wrapperProps={{
-								header: { title: "Condições da Garantia" },
+								headerProps: { title: "Condições da Garantia" },
 							}}
 							value={data.warrantyDetails ?? "[vazio]"}
 						/>
@@ -612,7 +617,7 @@ export default function Section2({
 					{data.products && data.products.length > 0 && (
 						<SubSectionWrapper
 							style={{ flex: 1 }}
-							header={{ title: "Serviços" }}
+							headerProps={{ title: "Serviços" }}
 						>
 							<View className="w-full">
 								{data.products.map((product, index) => (
@@ -630,7 +635,7 @@ export default function Section2({
 					{data.materials && data.materials.length > 0 && (
 						<SubSectionWrapper
 							style={{ flex: 1 }}
-							header={{ title: "Materiais" }}
+							headerProps={{ title: "Materiais" }}
 						>
 							<View className="w-full">
 								{data.materials.map((material, index) => (

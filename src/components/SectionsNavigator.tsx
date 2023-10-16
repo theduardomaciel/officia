@@ -29,7 +29,7 @@ export function SectionsNavigator({ sections, selectedId }: Props) {
 	return (
 		<Animated.View
 			className="flex-row w-full items-center justify-between mt-5"
-			layout={FadeOutDown}
+			exiting={FadeOutDown}
 		>
 			{sections.map((section, index) => {
 				const lineAnimationStyle = useAnimatedStyle(() => {

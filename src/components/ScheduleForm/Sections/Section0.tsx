@@ -16,7 +16,7 @@ import colors from "global/colors";
 
 // Components
 import Modal from "components/Modal";
-import Input from "components/Input";
+import Input, { Trigger } from "components/Input";
 import BottomSheet from "components/BottomSheet";
 import Calendar, { CalendarDate } from "components/Calendar";
 
@@ -25,8 +25,8 @@ import { ActionButton, SubActionButton } from "components/Button";
 import { Preview } from "components/Preview";
 
 // Types
-import { ProductModel } from "database/models/productModel";
-import { MaterialModel } from "database/models/materialModel";
+import { ProductModel } from "database/models/product.model";
+import { MaterialModel } from "database/models/material.model";
 
 // Forms
 import { Controller, useForm } from "react-hook-form";
@@ -200,7 +200,7 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 			/>
 
 			<SubSectionWrapper
-				header={{
+				headerProps={{
 					title: "Serviços",
 					children: products && products?.length > 0 && (
 						<Text className="font-medium text-red text-xs opacity-80">
@@ -257,7 +257,7 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 			</SubSectionWrapper>
 
 			<SubSectionWrapper
-				header={{
+				headerProps={{
 					title: "Materiais",
 				}}
 			>
@@ -308,7 +308,7 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 				</View>
 			</SubSectionWrapper>
 
-			<SubSectionWrapper header={{ title: "Data" }}>
+			<SubSectionWrapper headerProps={{ title: "Data" }}>
 				<Calendar
 					isStatic
 					selectedDate={date}
@@ -317,10 +317,9 @@ const Section0 = forwardRef(({ updateHandler, initialValue }: Section, ref) => {
 				/>
 			</SubSectionWrapper>
 
-			<Input
+			<Trigger
 				label="Horário"
 				onPress={() => setTimeModalVisible(true)}
-				editable={false}
 				value={
 					time
 						? `${time?.toLocaleTimeString("pt-BR", {

@@ -30,7 +30,7 @@ import {
 import Toast from "components/Toast";
 
 // Types
-import type { ProductModel } from "database/models/productModel";
+import type { ProductModel } from "database/models/product.model";
 import type { BusinessData, Category } from "screens/Main/Business/@types";
 
 import { database } from "database/index.native";
@@ -67,7 +67,8 @@ export default function ProductForm({ onSubmitForm, editableData }: Props) {
 		Toast.show({
 			preset: "error",
 			title: "Por favor, preencha os campos corretamente.",
-			message: errorMessage || "Não foi possível adicionar o serviço.",
+			description:
+				errorMessage || "Não foi possível adicionar o serviço.",
 		});
 	};
 

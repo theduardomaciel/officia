@@ -7,11 +7,12 @@ import {
 	relation,
 	json,
 	writer,
+	text,
 } from "@nozbe/watermelondb/decorators";
 import { Associations } from "@nozbe/watermelondb/Model";
-import { ClientModel } from "./clientModel";
-import { MaterialModel } from "./materialModel";
-import { ProductModel } from "./productModel";
+import { ClientModel } from "./client.model";
+import { MaterialModel } from "./material.model";
+import { ProductModel } from "./product.model";
 
 const sanitizePaymentMethods = (rawReactions: string[]) => {
 	return Array.isArray(rawReactions) ? rawReactions.map(String) : [];
@@ -27,10 +28,10 @@ export class OrderModel extends Model {
 		clients: { type: "has_many", foreignKey: "order_id" },
 	};
 
-	@field("name") name!: string;
+	@text("name") name!: string;
 	@date("date") date!: Date;
 	@field("status") status!: string;
-	@field("additionalInfo") additionalInfo!: string | null;
+	@text("additionalInfo") additionalInfo!: string | null;
 
 	// Payment
 	@field("paymentCondition") paymentCondition!: string;
@@ -40,7 +41,7 @@ export class OrderModel extends Model {
 	@field("splitRemaining") splitRemaining!: string | null;
 	// Warranty
 	@field("warrantyPeriod") warrantyPeriod!: number;
-	@field("warrantyDetails") warrantyDetails!: string | null;
+	@text("warrantyDetails") warrantyDetails!: string | null;
 
 	// Invoice
 	@field("invoiceValidity") invoiceValidity!: number | null;

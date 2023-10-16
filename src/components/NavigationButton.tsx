@@ -1,14 +1,19 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import {
+	Text,
+	TouchableOpacity,
+	TouchableOpacityProps,
+	View,
+} from "react-native";
 
 import { useColorScheme } from "nativewind";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
-interface NavigationButtonProps {
+interface NavigationButtonProps extends TouchableOpacityProps {
 	title: string;
 	description?: string;
 	children?: React.ReactNode;
-	onPress: () => void;
+	onPress?: () => void;
 	colorScheme?: "dark" | "light";
 }
 
@@ -17,12 +22,13 @@ export default function NavigationButton({
 	description,
 	children,
 	onPress,
+	...rest
 }: NavigationButtonProps) {
 	const { colorScheme } = useColorScheme();
 
 	return (
 		<TouchableOpacity
-			activeOpacity={0.6}
+			activeOpacity={rest.activeOpacity ?? 0.6}
 			onPress={onPress}
 			className="w-full flex-row items-center justify-between"
 		>

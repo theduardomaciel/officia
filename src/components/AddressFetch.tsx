@@ -34,7 +34,7 @@ export default function AddressFetch({
 				await Location.requestForegroundPermissionsAsync();
 			if (status !== "granted") {
 				Toast.show({
-					message:
+					description:
 						"É necessário que a permissão de localização seja concedida para que o endereço do CEP seja identificado automaticamente.",
 					title: "Permissão negada",
 					preset: "error",
@@ -79,7 +79,7 @@ export default function AddressFetch({
 			console.log(error);
 			Toast.show({
 				title: "Ops! Algo deu errado.",
-				message:
+				description:
 					"Não foi possível obter o endereço do seu negócio. Por favor, tente novamente.",
 				preset: "error",
 			});

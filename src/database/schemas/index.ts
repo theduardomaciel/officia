@@ -1,13 +1,13 @@
 import { appSchema } from "@nozbe/watermelondb";
 
-import { orderSchema } from "./orderSchema";
-import { productSchema } from "./productSchema";
-import { materialSchema } from "./materialSchema";
-import { clientSchema } from "./clientSchema";
-import { projectSchema } from "./projectSchema";
+import { orderSchema } from "./order.schema";
+import { productSchema } from "./product.schema";
+import { materialSchema } from "./material.schema";
+import { clientSchema } from "./client.schema";
+import { projectSchema } from "./project.schema";
 
-export const schemas = appSchema({
-	version: 24,
+export default appSchema({
+	version: 25,
 	tables: [
 		orderSchema,
 		productSchema,

@@ -25,7 +25,7 @@ import Toast from "components/Toast";
 import ImagePicker from "components/ImagePicker";
 
 // Types
-import type { MaterialModel } from "database/models/materialModel";
+import type { MaterialModel } from "database/models/material.model";
 
 const schema = z.object({
 	name: z.string({
@@ -68,7 +68,8 @@ export default function MaterialForm({
 		Toast.show({
 			preset: "error",
 			title: "Por favor, preencha os campos corretamente.",
-			message: errorMessage || "Não foi possível adicionar o serviço.",
+			description:
+				errorMessage || "Não foi possível adicionar o serviço.",
 		});
 	};
 

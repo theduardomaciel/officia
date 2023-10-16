@@ -14,7 +14,8 @@ import type { BusinessData } from "screens/Main/Business/@types";
 
 interface Props {
 	imageUri?: string;
-	onUpdate: (imageUri: string | undefined) => void;
+	onUpdate?: (imageUri: string | undefined) => void;
+	onPress?: () => void;
 	showDeleteButton?: boolean;
 	label: string;
 }
@@ -22,6 +23,7 @@ interface Props {
 export default function ImagePicker({
 	imageUri,
 	onUpdate,
+	onPress,
 	showDeleteButton,
 	label,
 }: Props) {
@@ -38,14 +40,14 @@ export default function ImagePicker({
 		if (result.assets) {
 			const { uri } = result.assets[0];
 			//console.log("Nova imagem selecionada ", uri)
-			onUpdate(uri);
+			onUpdate && onUpdate(uri);
 		}
 	}
 
 	async function removeBusinessLogo() {
 		if (imageUri) {
 			FileSystem.deleteAsync(imageUri, { idempotent: true });
-			onUpdate(undefined);
+			onUpdate && onUpdate(undefined);
 		}
 	}
 
@@ -58,16 +60,16 @@ export default function ImagePicker({
 				activeOpacity={0.8}
 				className="w-full flex-col items-center justify-center border"
 				style={{
-					paddingTop: imageUri ? 0 : 50,
-					paddingBottom: imageUri ? 0 : 50,
-					paddingLeft: imageUri ? 20 : 50,
-					paddingRight: imageUri ? 20 : 50,
+					paddingTop: imageUri ? 0 : 0,
+					paddingBottom: imageUri ? 0 : 0,
+					paddingLeft: imageUri ? 20 : 0,
+					paddingRight: imageUri ? 20 : 0,
 					borderRadius: 8,
 					borderColor: colors.primary,
 					borderWidth: 1,
 					borderStyle: "dashed",
 				}}
-				onPress={getBusinessLogo}
+				onPress={onPress ?? getBusinessLogo}
 			>
 				{imageUri ? (
 					<Image
@@ -77,7 +79,7 @@ export default function ImagePicker({
 						transition={1000}
 					/>
 				) : (
-					<>
+					<View className="w-full h-[165px] items-center justify-center relative flex-col">
 						<MaterialIcons
 							name="add-photo-alternate"
 							size={32}
@@ -90,7 +92,19 @@ export default function ImagePicker({
 						<Text className="font-medium text-sm text-black dark:text-white">
 							{label}
 						</Text>
-					</>
+						<Image
+							source={require("src/assets/images/pattern_rectangle.png")}
+							style={{
+								width: "100%",
+								height: "100%",
+								position: "absolute",
+								top: 0,
+								left: 0,
+								opacity: 0.35,
+							}}
+							contentFit="cover"
+						/>
+					</View>
 				)}
 			</TouchableOpacity>
 			{showDeleteButton && imageUri && (

@@ -5,12 +5,13 @@ import {
 	date,
 	relation,
 	json,
+	text,
 } from "@nozbe/watermelondb/decorators";
 import { Associations } from "@nozbe/watermelondb/Model";
 
 // Types
-import type { OrderModel } from "./orderModel";
-import type { ProjectModel } from "./projectModel";
+import type { OrderModel } from "./order.model";
+import type { ProjectModel } from "./project.model";
 
 // Category
 import { Category } from "screens/Main/Business/@types";
@@ -24,12 +25,12 @@ export class ProductModel extends Model {
 		projects: { type: "belongs_to", key: "project_id" },
 	};
 
-	@field("description") description!: string;
-	@field("details") details!: string | null;
+	@text("description") description!: string;
+	@text("details") details!: string | null;
 	@json("types", sanitizeTypes) types!: Category[];
 	@field("price") price!: number;
 	@field("amount") amount!: number;
-	@field("saved") saved!: boolean;
+	@field("is_bookmarked") isBookmarked!: boolean;
 
 	@relation("orders", "order_id") order!: OrderModel;
 	@relation("projects", "project_id") project!: ProjectModel;

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Image, ViewStyle } from "react-native";
+import { View, Text, Image, ViewStyle, TouchableOpacity } from "react-native";
 import { RectButton } from "react-native-gesture-handler";
 import Animated, {
 	useAnimatedStyle,
@@ -7,6 +7,7 @@ import Animated, {
 	withSpring,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
 
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import colors from "global/colors";
@@ -16,7 +17,7 @@ import colors from "global/colors";
 import Logo from "src/assets/logo_gradient.svg";
 
 // Components
-import Container, { BusinessScrollView } from "components/Container";
+import Container, { ContainerScrollView } from "components/Container";
 import Header from "components/Header";
 
 const SPRING_CONFIG = {
@@ -49,7 +50,7 @@ export default function SubscriptionScreen() {
 		>
 			<Container style={{ rowGap: 0 }}>
 				<Header title="" returnButton />
-				<BusinessScrollView style={{ paddingBottom: 180 }}>
+				<ContainerScrollView style={{ paddingBottom: 180 }}>
 					<Text className="font-logoRegular text-white text-5xl w-full text-center pt-2 mt-12 mb-4">
 						officia+
 					</Text>
@@ -140,7 +141,7 @@ export default function SubscriptionScreen() {
 					</View>
 					<BasicPlan isActual />
 					<PremiumPlan />
-				</BusinessScrollView>
+				</ContainerScrollView>
 				<View
 					className="w-screen rounded-tl-3xl rounded-tr-3xl bg-gray-600 p-6 absolute left-0 bottom-0"
 					style={{ rowGap: 15 }}
@@ -285,3 +286,34 @@ export const PremiumPlan = ({
 • Suporte técnico a qualquer momento`}
 	/>
 );
+
+export function SubscriptionAppeal({ style }: { style?: ViewStyle }) {
+	const navigation = useNavigation();
+
+	return (
+		<TouchableOpacity
+			className="flex-row items-center justify-between p-4 rounded bg-gray-300 w-full"
+			activeOpacity={0.8}
+			onPress={() => navigation.navigate("subscription")}
+			style={[{ rowGap: 10 }, style]}
+		>
+			<View
+				className="flex-col items-start justify-start flex-1"
+				style={{ columnGap: 10 }}
+			>
+				<Text className="font-logoRegular text-white text-md text-left">
+					officia+
+				</Text>
+				<Text className="font-normal text-sm text-white text-left">
+					Veja todas as novas possibilidades adicionadas ao assinar o{" "}
+					<Text className="font-logoRegular">officia+</Text>
+				</Text>
+			</View>
+			<MaterialCommunityIcons
+				name="chevron-right"
+				size={18}
+				color={colors.text[100]}
+			/>
+		</TouchableOpacity>
+	);
+}

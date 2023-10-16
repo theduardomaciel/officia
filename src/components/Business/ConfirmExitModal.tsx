@@ -6,7 +6,7 @@ export interface ConfirmExitModalProps {
 	toggleVisibility: () => void;
 	onExitConfirmation: () => void;
 	title?: string;
-	message?: string;
+	description?: string;
 }
 
 export default function ConfirmExitModal({
@@ -14,7 +14,7 @@ export default function ConfirmExitModal({
 	toggleVisibility,
 	onExitConfirmation,
 	title,
-	message,
+	description,
 }: ConfirmExitModalProps) {
 	return (
 		<Modal
@@ -22,8 +22,8 @@ export default function ConfirmExitModal({
 			toggleVisibility={toggleVisibility}
 			title={title ?? "Você tem alterações não salvas."}
 			icon="warning"
-			message={
-				message ??
+			description={
+				description ??
 				"Tem certeza que deseja sair sem salvar? As alterações serão perdidas."
 			}
 			buttons={[

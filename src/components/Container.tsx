@@ -20,13 +20,16 @@ export default function Container({
 		<View
 			className="flex-1 min-h-full px-6 pt-12 relative"
 			style={[{ rowGap: 20 }, style]}
+			//style={[style]}
+			//contentContainerStyle={[{ rowGap: 20 }, style]}
+			//showsVerticalScrollIndicator={false}
 		>
 			{children}
 		</View>
 	);
 }
 
-export function BusinessScrollView({ children, style }: Props) {
+export function ContainerScrollView({ children, style }: Props) {
 	return (
 		<ScrollView
 			showsVerticalScrollIndicator={false}

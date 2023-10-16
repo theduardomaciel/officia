@@ -17,7 +17,7 @@ import { EnhancedOrderPreview } from "./Main/Home";
 import { database } from "database/index.native";
 import { Q } from "@nozbe/watermelondb";
 
-import type { OrderModel } from "database/models/orderModel";
+import type { OrderModel } from "database/models/order.model";
 
 export default function DayAgenda({ route, navigation }: any) {
 	const { dateString } = route.params as { dateString: string };

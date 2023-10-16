@@ -35,6 +35,7 @@ export interface BottomSheetProps {
 	defaultValues?: {
 		expanded?: boolean;
 	};
+	includeWrapper?: boolean;
 	suppressHandle?: boolean;
 	suppressBackdrop?: boolean;
 	suppressPortal?: boolean;

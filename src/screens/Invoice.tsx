@@ -27,10 +27,10 @@ import { updateData } from "./Main/Business";
 import { database } from "database/index.native";
 
 // Types
-import type { ClientModel } from "database/models/clientModel";
-import type { MaterialModel } from "database/models/materialModel";
-import type { OrderModel } from "database/models/orderModel";
-import type { ProductModel } from "database/models/productModel";
+import type { ClientModel } from "database/models/client.model";
+import type { MaterialModel } from "database/models/material.model";
+import type { OrderModel } from "database/models/order.model";
+import type { ProductModel } from "database/models/product.model";
 import type { BusinessData } from "./Main/Business/@types";
 
 // PDF
@@ -285,7 +285,7 @@ export default function Invoice({ route, navigation }: any) {
 				isVisible={modalProps.status === "success"}
 				toggleVisibility={() => setModalProps({ status: false })}
 				title={"O orçamento foi criado com sucesso."}
-				message={`Compartilhe-o com seu cliente clicando no botão Visualizar.`}
+				description={`Compartilhe-o com seu cliente clicando no botão Visualizar.`}
 				icon="article"
 				buttons={[
 					{
@@ -303,7 +303,7 @@ export default function Invoice({ route, navigation }: any) {
 				isVisible={modalProps.status === "error"}
 				toggleVisibility={() => setModalProps({ status: false })}
 				title={"Não foi possível gerar o orçamento."}
-				message={`${modalProps.data}`}
+				description={`${modalProps.data}`}
 				icon="error"
 				cancelButton
 			/>

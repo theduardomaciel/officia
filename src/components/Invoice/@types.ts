@@ -1,7 +1,7 @@
 // Types
-import { OrderModel } from "database/models/orderModel";
-import { ProductModel } from "database/models/productModel";
-import { MaterialModel } from "database/models/materialModel";
+import { OrderModel } from "database/models/order.model";
+import { ProductModel } from "database/models/product.model";
+import { MaterialModel } from "database/models/material.model";
 
 export interface InvoiceSectionProps {
 	onSubmit: () => void;

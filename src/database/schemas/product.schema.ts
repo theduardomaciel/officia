@@ -12,7 +12,7 @@ export const productSchema = tableSchema({
 		{ name: "types", type: "string" },
 		{ name: "price", type: "number", isOptional: true },
 		{ name: "amount", type: "number" },
-		{ name: "saved", type: "boolean" },
+		{ name: "is_bookmarked", type: "boolean" },
 		{ name: "created_at", type: "number" },
 		{ name: "order_id", type: "string", isIndexed: true },
 	],

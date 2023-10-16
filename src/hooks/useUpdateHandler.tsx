@@ -30,8 +30,18 @@ const SPRING_OPTIONS = {
 
 interface UpdateHandlerProps {
 	sections: string[];
+	sectionsConfig?: {
+		[key: string]: {
+			backButtonProps?: {
+				label?: string;
+				isVisible?: boolean;
+				disabled?: boolean;
+				suppressBackButton?: boolean;
+			};
+		};
+	};
 	HEADERS: Header[];
-	onLimitReached: () => void;
+	onLimitReached?: () => void;
 	initialValue?: number;
 }
 
@@ -79,7 +89,7 @@ export default function useUpdateHandler({
 			// Open next section bottom sheet
 			BottomSheet.expand(sections[id]);
 		} else {
-			onLimitReached();
+			onLimitReached && onLimitReached();
 		}
 	}, []);
 
@@ -106,28 +116,45 @@ export default function useUpdateHandler({
 		</Animated.View>
 	));
 
-	const BackButton = memo(({ isEnabled }: { isEnabled?: boolean }) =>
-		isEnabled ? (
-			<View className="w-full flex-col items-center justify-center">
-				<TouchableOpacity
-					className="flex-row bg-gray-200 items-center justify-center rounded-sm p-[5px]"
-					style={{
-						columnGap: 5,
-						opacity: 1,
-					}}
-					onPress={() => updateHandler(selectedSectionId.value - 1)}
-				>
-					<MaterialIcons
-						name="arrow-back"
-						size={14}
-						color={colors.white}
-					/>
-					<Text className="text-white text-sm">Voltar</Text>
-				</TouchableOpacity>
-			</View>
-		) : (
-			<View className="py-1.5" />
-		)
+	const BackButton = memo(
+		({
+			customConfig,
+		}: {
+			customConfig?: {
+				label?: string;
+				isHidden?: boolean;
+				disabled?: boolean;
+				suppressIcon?: boolean;
+			};
+		}) =>
+			!customConfig?.isHidden ? (
+				<View className="w-full flex-col items-center justify-center">
+					<TouchableOpacity
+						className="flex-row bg-gray-200 items-center justify-center rounded-sm p-[5px]"
+						style={{
+							columnGap: 5,
+							opacity: 1,
+						}}
+						disabled={customConfig?.disabled}
+						onPress={() =>
+							updateHandler(selectedSectionId.value - 1)
+						}
+					>
+						{!customConfig?.suppressIcon && (
+							<MaterialIcons
+								name="arrow-back"
+								size={14}
+								color={colors.white}
+							/>
+						)}
+						<Text className="text-white text-sm">
+							{customConfig?.label ?? "Voltar"}
+						</Text>
+					</TouchableOpacity>
+				</View>
+			) : (
+				<View className="py-1.5" />
+			)
 	);
 
 	return {

@@ -276,7 +276,7 @@ function CategoryForm({
 			Toast.show({
 				preset: "error",
 				title: "Opa! Algo está errado...",
-				message: "O nome da categoria não pode estar vazio",
+				description: "O nome da categoria não pode estar vazio",
 			});
 		}
 	}

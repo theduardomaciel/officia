@@ -110,7 +110,7 @@ export default function App() {
 								setIsUpdateModalVisible(!isUpdateModalVisible)
 							}
 							title="Há uma nova versão disponível"
-							message="Deseja atualizar agora?"
+							description="Deseja atualizar agora?"
 							buttons={[
 								{
 									label: "Atualizar",
@@ -123,7 +123,7 @@ export default function App() {
 							maxDragDistance={50}
 							toastOffset={"15%"}
 						/>
-						<PortalHost name="ToastHost" />
+						<PortalHost name="ToastsHost" />
 					</PortalProvider>
 				</SafeAreaProvider>
 			</GestureHandlerRootView>

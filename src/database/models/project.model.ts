@@ -4,17 +4,14 @@ import {
 	readonly,
 	date,
 	children,
-	relation,
-	json,
-	writer,
 } from "@nozbe/watermelondb/decorators";
 import { Associations } from "@nozbe/watermelondb/Model";
 
 // Types
-import type { ClientModel } from "./clientModel";
-import type { MaterialModel } from "./materialModel";
-import type { ProductModel } from "./productModel";
-import { OrderModel } from "./orderModel";
+import type { ClientModel } from "./client.model";
+import type { MaterialModel } from "./material.model";
+import type { ProductModel } from "./product.model";
+import { OrderModel } from "./order.model";
 
 export class ProjectModel extends Model {
 	static table = "projects";

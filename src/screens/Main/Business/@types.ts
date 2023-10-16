@@ -1,18 +1,25 @@
 import { z } from "zod";
 
-export interface FormHookProps {
-	onSubmit: (data: Partial<BusinessData>) => void;
-	defaultValues?: Partial<BusinessData>;
+export interface FormRef {
+	submitForm: () => Promise<unknown>;
+	getFormWatch?: () => any;
 }
 
 export interface FormProps {
-	control: any;
-	errors: any;
-	setValue?: any;
 	onStateChange?: (states: any[]) => void;
+	onSubmit: (data: Partial<BusinessData>) => void;
+	palette?: "dark";
 }
 
 /* ============ Form Validation */
+
+export const refineJuridicalPerson = (value: string | undefined) => {
+	if (value && value.length > 1 && value.length < 18) {
+		return false;
+	} else {
+		return true;
+	}
+};
 
 export const basicInfoScheme = z.object({
 	name: z
@@ -22,20 +29,11 @@ export const basicInfoScheme = z.object({
 		.string({
 			required_error: "A razão social da empresa deve ser informada.",
 		})
-		.max(80, "A razão social deve ter no máximo 80 caracteres."),
-	juridicalPerson: z
-		.string()
-		.optional()
-		.refine(
-			(value) => {
-				if (value && value.length > 1 && value.length < 18) {
-					return false;
-				} else {
-					return true;
-				}
-			},
-			{ message: "O CNPJ inserido não é válido." }
-		),
+		.max(80, "A razão social deve ter no máximo 80 caracteres.")
+		.optional(),
+	juridicalPerson: z.string().optional().refine(refineJuridicalPerson, {
+		message: "O CNPJ inserido não é válido.",
+	}),
 });
 
 type BasicInfoSchemeInputsType = z.infer<typeof basicInfoScheme>;
@@ -62,35 +60,30 @@ export interface AdditionalInfoSchemeType
 
 /*  */
 
-type DAYS =
-	| "monday"
-	| "tuesday"
-	| "wednesday"
-	| "thursday"
-	| "friday"
-	| "saturday"
-	| "sunday";
-
 export const serviceScheme = z.object({
-	businessModels: z
-		.array(z.enum(["in_person", "online", "delivery"]))
-		.optional(),
-	agenda: z
-		.string()
-		.optional()
-		.default("sunday,monday,tuesday,wednesday,thursday,friday,saturday"),
-	autoHolidayUnavailability: z.boolean().default(false).optional(),
-	busyAmount: z.number().default(1).optional(),
-	unavailableAmount: z.number().default(3).optional(),
+	manualBusyAmount: z.string().optional(),
+	manualUnavailableAmount: z.string().optional(),
 });
 
 export type ServiceSchemeInputsType = z.infer<typeof serviceScheme>;
+
+export type BusinessModel = "in_person" | "delivery" | "online";
 
 export interface ServiceSchemeType extends ServiceSchemeInputsType {
 	serviceZoneCountries: string[];
 	serviceZoneStates: string[];
 	serviceZoneCities: string[];
+	businessModels?: BusinessModel[];
+	agenda?: string[]; //
+	autoHolidayUnavailability?: boolean;
+	busyAmount: number;
+	unavailableAmount: number;
 }
+
+export type ProjectObject = [
+	BusinessData,
+	React.Dispatch<React.SetStateAction<BusinessData>>
+];
 
 /*  */
 
@@ -148,7 +141,7 @@ export type Category = {
 	color: string;
 };
 
-export type BusinessData = BasicInfoSchemeType &
+export type BusinessData = { id: string } & BasicInfoSchemeType &
 	AdditionalInfoSchemeType &
 	ServiceSchemeType &
 	ContactSchemeType &

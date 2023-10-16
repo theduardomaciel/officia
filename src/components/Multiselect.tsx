@@ -195,6 +195,7 @@ export interface MultiselectProps extends ViewProps {
 	disabled?: boolean;
 	disabledPlaceholder?: string;
 	fetchErrorProps?: ErrorStatusProps;
+	updateDataOnExpand?: boolean;
 }
 
 export default function MultiSelect({
@@ -214,6 +215,7 @@ export default function MultiSelect({
 	disabledPlaceholder,
 	allSelectedPlaceholder,
 	fetchErrorProps,
+	updateDataOnExpand,
 	...rest
 }: MultiselectProps) {
 	const id = useId();
@@ -308,8 +310,6 @@ export default function MultiSelect({
 
 	const fetchHandler = async () => {
 		if (!cachedData.current && fetchData) {
-			console.log("Atualizando dados...");
-
 			setData(undefined);
 
 			const updatedData = await fetchData();
@@ -328,6 +328,10 @@ export default function MultiSelect({
 			setData(initialData.current);
 			cachedData.current = initialData.current;
 		}
+	}, []);
+
+	useEffect(() => {
+		updateData();
 	}, []);
 
 	return (
@@ -369,7 +373,7 @@ export default function MultiSelect({
 				id={id}
 				scrollableContentRef={listScrollRef}
 				panRef={panRef}
-				onExpand={updateData}
+				onExpand={updateDataOnExpand ? updateData : undefined}
 				//onExpanded={fetchHandler}
 				{...bottomSheetProps}
 			>

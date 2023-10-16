@@ -111,6 +111,7 @@ interface ToggleGroupWithManualValueProps {
 	};
 	defaultValue?: string;
 	name: string;
+	error?: boolean;
 }
 
 export interface ToggleGroupWithManualValueRef {
@@ -126,6 +127,7 @@ export const ToggleGroupWithManualValue = forwardRef(
 			control,
 			manualValue,
 			name,
+			error,
 		}: ToggleGroupWithManualValueProps,
 		ref
 	) => {
@@ -239,18 +241,25 @@ export const ToggleGroupWithManualValue = forwardRef(
 										paddingHorizontal: 0,
 										flex: 1,
 										textAlign: "center",
-										borderWidth: selected === null ? 1 : 0,
+										borderWidth:
+											selected === null || error ? 1 : 0,
 										borderTopColor:
 											selected === null
 												? colors.primary
+												: error
+												? colors.red
 												: colors.gray[200],
 										borderBottomColor:
 											selected === null
 												? colors.primary
+												: error
+												? colors.red
 												: colors.gray[200],
 										borderColor:
 											selected === null
 												? colors.primary
+												: error
+												? colors.red
 												: colors.gray[200],
 									}}
 									{...manualValue.inputProps}

@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+	useCallback,
+	useMemo,
+	useRef,
+	useState,
+	forwardRef,
+} from "react";
 import {
 	ActivityIndicator,
 	Linking,
@@ -8,25 +14,26 @@ import {
 	View,
 } from "react-native";
 
-import { useColorScheme } from "nativewind";
+import clsx from "clsx";
 import colors from "global/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import MailLockIcon from "assets/icons/mail_lock.svg";
 
 // Components
+import { ActionButton } from "components/Button";
 import Input, { borderErrorStyle } from "components/Input";
 import Toast from "components/Toast";
-import { ActionButton } from "components/Button";
+import Modal from "components/Modal";
 
 // Form
 import { Controller, SubmitErrorHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Modal from "components/Modal";
-import clsx from "clsx";
+
+// Utils
 import { useAuth } from "context/AuthContext";
-import { forwardRef } from "react";
+import { censorEmail } from "utils";
 
 export const loginDataScheme = z
 	.object({
@@ -55,14 +62,6 @@ export const loginDataScheme = z
 
 export type LoginDataSchemeType = z.infer<typeof loginDataScheme>;
 
-export const censorEmail = (email: string) => {
-	const [firstPart, secondPart] = email.split("@");
-	const firstPartLength = firstPart.length;
-	const firstPartCensored =
-		firstPart.slice(0, 3) + "*".repeat(firstPartLength - 3);
-	return `${firstPartCensored}@${secondPart}`;
-};
-
 const formatSecondsToTimer = (seconds: number) => {
 	const minutes = Math.floor(seconds / 60);
 	const secondsLeft = seconds % 60;
@@ -83,7 +82,7 @@ const EMAIL_RESEND_DELAY = 90;
 const CODE_CHARACTERS_AMOUNT = 4;
 
 export default function RegisterSection1({ onSubmit, email }: Props) {
-	const { verify } = useAuth();
+	const { verifyEmail } = useAuth();
 
 	const {
 		handleSubmit: section1HandleSubmit,
@@ -106,7 +105,7 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 		Toast.show({
 			preset: "error",
 			title: "Algo está errado com os dados inseridos.",
-			message: Object.values(errors)
+			description: Object.values(errors)
 				.map((error) => error.message)
 				.join("\n"),
 		});
@@ -150,7 +149,7 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 		return timer;
 	};
 
-	const lastInterval = useRef<NodeJS.Timeout>();
+	const lastInterval = useRef<any>(); /* NodeJS.Timeout */
 
 	const sendEmail = useCallback(
 		async (email: string, isResending?: boolean) => {
@@ -163,7 +162,7 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 			emailsSent.current += 1;
 
 			try {
-				const verificationCode = await verify(email);
+				const verificationCode = await verifyEmail(email);
 
 				setVerificationData({
 					email,
@@ -187,7 +186,7 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 					Toast.show({
 						preset: "success",
 						title: "E-mail reenviado com sucesso!",
-						message: `O código de verificação foi enviado novamente para ${censorEmail(
+						description: `O código de verificação foi enviado novamente para ${censorEmail(
 							email
 						)}.\nLembre-se de conferir o spam!`,
 					});
@@ -196,7 +195,7 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 				Toast.show({
 					preset: "error",
 					title: "Algo deu errado ao concluir o cadastro de sua conta",
-					message:
+					description:
 						"Um problema com o serviço de e-mails nos impediu de criar sua conta. Tente novamente mais tarde.",
 				});
 			} finally {
@@ -218,7 +217,7 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 			Toast.show({
 				preset: "error",
 				title: "Algo está errado com os dados inseridos.",
-				message: errorsMessage,
+				description: errorsMessage,
 			});
 			return;
 		}
@@ -456,7 +455,7 @@ export default function RegisterSection1({ onSubmit, email }: Props) {
 				isVisible={!!verificationData?.verificationCode}
 				toggleVisibility={() => setVerificationData(undefined)}
 				title={"Verifique seu e-mail"}
-				message={
+				description={
 					<Text className="text-white text-sm text-left">
 						Insira o código enviado para o e-mail{` `}
 						<Text className="font-bold">
@@ -557,7 +556,7 @@ const CodeCharacterInput = forwardRef<
 	return (
 		<TextInput
 			ref={ref}
-			className="text-center text-6xl font-bold text-text-100 bg-transparent border border-text-100 rounded-md px-4 py-4 min-h-[100px]"
+			className="text-center text-6xl font-bold text-text-100 bg-transparent border border-text-100 rounded-md py-4 min-h-[100px]"
 			style={{
 				width: `${100 / CODE_CHARACTERS_AMOUNT - 1}%`,
 			}}

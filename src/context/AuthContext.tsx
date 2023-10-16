@@ -4,7 +4,7 @@ import { ENCRYPTION_KEY } from "@env";
 import { api } from "lib/axios";
 
 // Types
-import type { ProjectModel } from "database/models/projectModel";
+import type { ProjectModel } from "database/models/project.model";
 
 // Original base code by: https://github.com/LucasGarcez/react-native-auth-flow
 
@@ -15,11 +15,11 @@ export interface Account {
 	password: string;
 	image_url?: string;
 
-	plan: "free" | "premium";
+	planExpiresAt?: string;
 
 	name: string;
 	phone: string;
-	birthday: Date;
+	birthday: string;
 	gender: GENDER;
 	pin: string;
 
@@ -33,18 +33,21 @@ export interface AuthData {
 	email: Account["email"];
 	password: Account["password"];
 	registerData?: Partial<Account>;
+	reactivating?: boolean;
 }
 
 type AuthContextData = {
-	authData?: {
-		id: string;
-		selectedProjectId?: string;
-	};
+	id?: string;
+	selectedProjectId?: string;
 	loading: boolean;
 	signIn: (data: AuthData) => Promise<void>;
 	signOut: () => void;
-	updateSelectedProject: (projectId: string) => Promise<void>;
-	verify: (email: string) => Promise<string>;
+	updateSelectedProject: (
+		projectId: string,
+		project?: ProjectModel
+	) => Promise<void>;
+	verifyEmail: (email: string) => Promise<string>;
+	verifyPassword: (password: string) => Promise<string>;
 };
 
 //Create the Auth Context with the data type specified
@@ -53,7 +56,7 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 // Initialize the MMKV Storage
 import { MMKV } from "react-native-mmkv";
-import { CustomException } from "utils";
+import { CustomException, safeJsonParse } from "utils";
 
 export const globalStorage = new MMKV();
 
@@ -63,8 +66,9 @@ export const userStorage = new MMKV({
 });
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-	const [authData, setAuthData] = useState<
-		AuthContextData["authData"] | undefined
+	const [id, setId] = useState<string | undefined>(undefined);
+	const [selectedProjectId, setSelectedProjectId] = useState<
+		string | undefined
 	>(undefined);
 	const [loading, setLoading] = useState(true);
 
@@ -76,13 +80,22 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 	async function loadStorageData(): Promise<void> {
 		try {
-			const id = userStorage.getString("user.id");
+			const id = userStorage.getString("id");
 			if (!id) throw CustomException(409, "Invalid id stored in device.");
 
-			const selectedProjectId =
-				globalStorage.getString("selectedProjectId");
+			const currentProjectId =
+				globalStorage.getString("currentProjectId");
 
-			setAuthData({ id, selectedProjectId });
+			const access_token = userStorage.getString("access_token");
+
+			if (access_token) {
+				api.defaults.headers.Authorization = `Bearer ${access_token}`;
+				setId(id);
+				setSelectedProjectId(currentProjectId);
+			} else {
+				setId(undefined);
+				setSelectedProjectId(undefined);
+			}
 		} catch (error) {
 			console.log(error);
 		} finally {
@@ -93,60 +106,60 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const signIn = async (data: AuthData) => {
 		try {
 			// Login or create the account
-			console.log(data, "data");
+			//console.log(data, "data");
 			const response = await api.post("/accounts", {
 				...data,
+				reactivating: data.reactivating || false,
 			});
 
-			if (response.data) {
-				const access_token = response.data.access_token;
-				api.defaults.headers.Authorization = `Bearer ${access_token}`;
+			const access_token = response.data.access_token;
 
-				const {
-					id,
-					selectedProjectId,
-					plan,
-					email,
-					password,
-					projects,
-					...rest
-				} = response.data.body as Account;
+			// Set the access token in the api headers
+			api.defaults.headers.Authorization = `Bearer ${access_token}`;
+			userStorage.set("access_token", access_token);
 
-				console.log(response.data, "response.data");
+			const account = response.data.body as Account;
 
-				// Save the selected project in the device
-				if (selectedProjectId) {
-					globalStorage.set("selectedProjectId", selectedProjectId);
-					globalStorage.set("projects", JSON.stringify(projects));
+			// Save the main user data in the device
+			if (account.planExpiresAt)
+				userStorage.set("planExpiresAt", account.planExpiresAt);
 
-					// For performance sake, we save the current project in the device
-					globalStorage.set(
-						"currentProject",
-						JSON.stringify(
-							projects.find(
-								(project) => project.id === selectedProjectId
-							)
-						)
-					);
-				}
+			userStorage.set("email", account.email);
+			userStorage.set("password", account.password);
 
-				// Save the main user data in the device
-				userStorage.set("user.id", id);
-				userStorage.set("user.plan", plan as string);
-				userStorage.set("user.email", email);
-				userStorage.set("user.password", password);
+			userStorage.set("name", account.name);
+			userStorage.set("phone", account.phone);
+			userStorage.set("birthday", account.birthday);
+			if (account.gender) {
+				userStorage.set("gender", account.gender as string);
+			}
 
-				// Save the remaining user data in the device
-				userStorage.set("user.data", JSON.stringify(rest));
+			// Save the projects in the device
+			if (account.projects.length > 0) {
+				// We store a local cache copy of the projects for fast and optimistic project switching
+				globalStorage.set("projects", JSON.stringify(account.projects));
 
-				setAuthData({ id, selectedProjectId });
-			} else {
-				throw CustomException(500, "Erro desconhecido no servidor.");
+				const newSelectedProjectId =
+					account.selectedProjectId ?? account.projects[0].id;
+
+				// We update the currentProjectId in the globalStorage
+				globalStorage.set("currentProjectId", newSelectedProjectId);
+				setSelectedProjectId(newSelectedProjectId);
+			}
+
+			// Não podemos atualizar o estado do "id" pois isso faria com que o SelectionStack fosse renderizado, e isso não é o que queremos
+			// Somente atualizamos o valor do id no userStorage, e o resto é feito pelo loadStorageData
+			userStorage.set("id", account.id);
+
+			// Somente atualizamos o estado do "id" se o usuário estiver logando na conta sem projetos criados
+			if (account.projects.length === 0 || !data.registerData) {
+				setId(account.id);
 			}
 		} catch (error: any) {
-			console.log(error);
+			console.log(error, "erro");
 			throw CustomException(
-				error.response && error.response.data.statusCode
+				error.response && error.response.data.statusCode,
+				error.response && error.response.data.message.split("/")[1]
 			);
 		}
 	};
@@ -154,8 +167,10 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const signOut = async () => {
 		// Remove data from context, so the App can be notified
 		// and send the user to the AuthStack
-		await setAuthData(undefined);
+		await setId(undefined);
+		await setSelectedProjectId(undefined);
 		await userStorage.clearAll();
+		await globalStorage.clearAll();
 	};
 
 	const updateSelectedProject = async (
@@ -163,40 +178,30 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		newProject?: ProjectModel
 	) => {
 		const projectsString = globalStorage.getString("projects");
-		let projects = projectsString
-			? (JSON.parse(projectsString) as ProjectModel[])
-			: undefined;
+		const storageProjects = safeJsonParse(projectsString);
 
-		// Caso o projeto seja novo, ele já foi adicionado ao servidor, então só precisamos atualizar o projeto localmente
+		// Caso o projeto tenha sido criado no momento, ele já foi adicionado ao servidor, então só precisamos atualizar o projeto localmente
 		if (newProject) {
-			projects = projects?.map((project) => {
-				if (project.id === newProject.id) {
-					return newProject;
-				}
-				return project;
-			});
-			globalStorage.set("projects", JSON.stringify(projects));
-			setAuthData((prevData) =>
-				prevData
-					? { ...prevData, selectedProjectId: projectId }
-					: undefined
-			);
+			const updatedProjects = [...(storageProjects || []), newProject];
+
+			globalStorage.set("projects", JSON.stringify(updatedProjects));
+			globalStorage.set("currentProjectId", projectId);
+			setSelectedProjectId(projectId);
 		} else {
+			// Caso o projeto não seja novo, precisamos atualizar o projeto no servidor e localmente
 			try {
-				if (!projects) {
+				const accountId = userStorage.getString("id");
+
+				// Checamos se o usuário está logado e se há projetos salvos em cache local
+				if (!storageProjects || !accountId) {
 					throw new Error("Erro ao atualizar o projeto selecionado");
 				}
 
-				// Update the selected project id locally
-				globalStorage.set("selectedProjectId", projectId);
-				setAuthData((prevData) =>
-					prevData
-						? { ...prevData, selectedProjectId: projectId }
-						: undefined
-				);
+				// Update the selected project locally
+				setSelectedProjectId(projectId);
 
 				// Update the selected project id in the server
-				api.patch("/accounts", {
+				api.patch(`/projects/${projectId}`, {
 					selectedProjectId: projectId,
 				})
 					.then(() => {
@@ -218,10 +223,22 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		}
 	};
 
-	const verify = async (email: string) => {
+	const verifyEmail = async (email: string) => {
 		try {
 			const response = await api.post("/auth/verify/email", {
 				email,
+			});
+			return response.data;
+		} catch (error) {
+			console.log(error);
+			throw new Error(error as string);
+		}
+	};
+
+	const verifyPassword = async (password: string) => {
+		try {
+			const response = await api.post("/auth/verify/password", {
+				password,
 			});
 			return response.data;
 		} catch (error) {
@@ -235,12 +252,14 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		//so all components will have access to the Context
 		<AuthContext.Provider
 			value={{
-				authData,
+				id,
+				selectedProjectId,
 				loading,
 				signIn,
 				signOut,
 				updateSelectedProject,
-				verify,
+				verifyEmail,
+				verifyPassword,
 			}}
 		>
 			{children}

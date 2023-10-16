@@ -16,13 +16,8 @@ import useLoadingModal from "hooks/useLoadingModal";
 
 // Sections
 import RegisterSection0, { PersonalDataSchemeType } from "./Sections/Section0";
-import RegisterSection1, {
-	LoginDataSchemeType,
-	censorEmail,
-} from "./Sections/Section1";
+import RegisterSection1, { LoginDataSchemeType } from "./Sections/Section1";
 import RegisterSection2 from "./Sections/Section2";
-
-import { StackActions } from "@react-navigation/native";
 
 interface RegisterProps extends PersonalDataSchemeType, LoginDataSchemeType {}
 
@@ -113,7 +108,6 @@ export default function Register({ route, navigation }: any) {
 			await signIn(accountData);
 
 			updateHandler(2);
-			setLoadingModalVisible(false);
 			setRegisterCompleted(true);
 		} catch (error) {
 			console.log(error);
@@ -121,40 +115,33 @@ export default function Register({ route, navigation }: any) {
 			Toast.show({
 				preset: "error",
 				title: "Erro ao criar conta",
-				message:
+				description:
 					"Não foi possível criar sua conta. Tente novamente mais tarde.",
 			});
 
-			navigation.goBack();
+			navigation.navigate("login");
+		} finally {
+			setLoadingModalVisible(false);
 		}
 	};
 
 	const BOTTOM_SHEET_HEIGHT = "62%";
-	const loggedUserEmail = userStorage.getString("user.email");
+	const loggedUserEmail = userStorage.getString("email");
 
 	return (
 		<Container style={{ rowGap: 10 }}>
-			<BackButton isEnabled={!!email && !registerCompleted} />
+			<BackButton
+				customConfig={
+					registerCompleted
+						? {
+								label: "Sua Conta",
+								disabled: true,
+								suppressIcon: true,
+						  }
+						: undefined
+				}
+			/>
 			<Header />
-
-			{!email && (
-				<Text className="text-sm text-text-100 text-center font-regular">
-					Logado como{" "}
-					{loggedUserEmail ? censorEmail(loggedUserEmail) : "..."}
-					{"  "}
-					<Text
-						className="text-red font-medium underline"
-						onPress={() => {
-							signOut();
-
-							// Gambiarra: por conta do delay da alteração do estado "authData" pelo signOut, o usuário não consegue é levado de volta para a tela de login após o primeiro toque. Por enquanto, será necessário tocar duas vezes para voltar para a tela de login.
-							navigation.navigate("login");
-						}}
-					>
-						Sair
-					</Text>
-				</Text>
-			)}
 
 			{email && (
 				<>
@@ -171,7 +158,10 @@ export default function Register({ route, navigation }: any) {
 							{
 								id: 1,
 								title: "Dados de Login",
-								onPress: () => updateHandler(1),
+							},
+							{
+								id: 2,
+								title: "Pronto!",
 							},
 						]}
 					/>
@@ -204,7 +194,7 @@ export default function Register({ route, navigation }: any) {
 
 					<ConfirmExitModal
 						title={"Voltar agora cancelará seu registro."}
-						message="Após voltar, todas as informações terão que ser inseridas novamente."
+						description="Após voltar, todas as informações terão que ser inseridas novamente."
 					/>
 				</>
 			)}
@@ -214,13 +204,13 @@ export default function Register({ route, navigation }: any) {
 				defaultValues={{
 					expanded: !email,
 				}}
-				height={email ? "69%" : "67%"}
+				height={registerCompleted || !email ? "67%" : "69%"}
 				rowGap={20}
 			>
 				<RegisterSection2 navigation={navigation} />
 			</SectionBottomSheet>
 
-			<LoadingModal message="Estamos apertando uns parafusos e pressionando alguns botões para que sua conta seja criada..." />
+			<LoadingModal description="Estamos apertando uns parafusos e pressionando alguns botões para que sua conta seja criada..." />
 		</Container>
 	);
 }

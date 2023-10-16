@@ -37,6 +37,8 @@ export const animProps = {
 	stiffness: 400,
 } as WithSpringConfig;
 
+const NEW_HEIGHT_ERROR_MARGIN = 3;
+
 const BottomSheetUI = forwardRef(
 	(
 		{
@@ -58,6 +60,7 @@ const BottomSheetUI = forwardRef(
 			suppressHandle,
 			suppressPortal,
 			scrollableContentRef,
+			includeWrapper,
 			panRef,
 			ignoreBottomRequirementToFixContentHeight, // Gambiarra: melhorar esse nome
 		}: BottomSheetProps,
@@ -354,25 +357,34 @@ const BottomSheetUI = forwardRef(
 			},
 		});
 
-		const expand = useCallback(() => {
+		const expandWorklet = () => {
 			"worklet";
-			onExpand && runOnJS(onExpand)();
 			topAnimation.value = withSpring(newActiveHeight, animProps, () => {
 				onExpanded && runOnJS(onExpanded)();
 			});
+		};
+
+		const expand = useCallback(() => {
+			"worklet";
+			onExpand && runOnJS(onExpand)();
+			runOnUI(expandWorklet)();
 		}, []);
+
+		const closeWorklet = () => {
+			"worklet";
+			topAnimation.value = withSpring(screenHeight, animProps, () => {
+				onDismissed && runOnJS(onDismissed)();
+			});
+		};
 
 		const close = useCallback(() => {
 			"worklet";
 			/* onDismiss && runOnJS(onDismiss)(); */
-			topAnimation.value = withSpring(screenHeight, animProps, () => {
-				onDismissed && runOnJS(onDismissed)();
-			});
+			runOnUI(closeWorklet)();
 		}, []);
 
-		const update = useCallback((updateFunction: () => void) => {
+		const updateWorklet = (updateFunction: () => void) => {
 			"worklet";
-			onExpand && runOnJS(onExpand)();
 			topAnimation.value = withSpring(screenHeight, animProps, () => {
 				if (updateFunction) {
 					runOnJS(updateFunction)();
@@ -380,6 +392,12 @@ const BottomSheetUI = forwardRef(
 				onExpanded && runOnJS(onExpanded)();
 				topAnimation.value = withSpring(newActiveHeight, animProps);
 			});
+		};
+
+		const update = useCallback((updateFunction: () => void) => {
+			"worklet";
+			onExpand && runOnJS(onExpand)();
+			runOnUI(updateWorklet)(updateFunction);
 		}, []);
 
 		const onBackdropPress = useCallback(() => {
@@ -422,7 +440,7 @@ const BottomSheetUI = forwardRef(
 										? { backgroundColor: colors?.backdrop }
 										: {},
 								]}
-								className="bg-black absolute top-0 bottom-0 right-0 left-0"
+								className="bg-black absolute top-0 bottom-0 right-0 left-0 z-0"
 							/>
 						</TouchableWithoutFeedback>
 					)}
@@ -443,14 +461,25 @@ const BottomSheetUI = forwardRef(
 					>
 						<Animated.View
 							onLayout={(event) => {
-								const newHeight =
-									event.nativeEvent.layout.height;
+								const newHeight = Math.round(
+									event.nativeEvent.layout.height
+								);
 
 								const outOfBoundsHeight =
 									contentHeight.value - activeHeight;
+
+								/* console.log(
+									`Altura do conteúdo: ${contentHeight.value}`
+								);
+								console.log(
+									`Nova altura do conteúdo: ${newHeight}`
+								); */
+
 								if (
 									heightLimitBehaviour === "contentHeight" &&
-									newHeight < contentHeight.value &&
+									newHeight <
+										contentHeight.value -
+											NEW_HEIGHT_ERROR_MARGIN &&
 									(ignoreBottomRequirementToFixContentHeight
 										? true
 										: topAnimation.value <=
@@ -461,6 +490,9 @@ const BottomSheetUI = forwardRef(
 											outOfBoundsHeight +
 											(contentHeight.value - newHeight) // altura antiga - altura nova
 									);
+									/* console.log(
+										`Corrigindo posição do bottom sheet após diminuição do tamanho do conteúdo`
+									); */
 									/* console.log(
 										`Corrigindo posição do bottom sheet após diminuição do tamanho do conteúdo:
                                         - Altura antiga: ${contentHeight.value}
@@ -486,14 +518,28 @@ const BottomSheetUI = forwardRef(
 									? { backgroundColor: colors?.background }
 									: {},
 							]}
-							className="flex flex-col bg-white dark:bg-gray-200 absolute left-0 right-0 rounded-tl-3xl rounded-tr overflow-auto"
+							className="flex flex-col bg-white dark:bg-gray-200 absolute left-0 right-0 rounded-tl-3xl rounded-tr overflow-auto z-10"
 						>
 							{!suppressHandle && (
 								<View className="my-3 items-center">
 									<View className="w-12 h-1 bg-black dark:bg-gray-100 rounded-2xl my-1" />
 								</View>
 							)}
-							{children}
+							{includeWrapper ? (
+								<View
+									className="flex flex-1"
+									style={{
+										paddingLeft: 24,
+										paddingRight: 24,
+										paddingBottom: 12 + insets.bottom + 10,
+										rowGap: 20,
+									}}
+								>
+									{children}
+								</View>
+							) : (
+								children
+							)}
 							{/* <View className='w-full bottom-0 bg-blue-800' style={{ height: overDrag + insets.bottom }} /> */}
 							<View
 								className="w-full bg-transparent"

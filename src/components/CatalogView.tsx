@@ -15,8 +15,8 @@ import { database } from "database/index.native";
 import { Q } from "@nozbe/watermelondb";
 
 // Types
-import type { MaterialModel } from "database/models/materialModel";
-import type { ProductModel } from "database/models/productModel";
+import type { MaterialModel } from "database/models/material.model";
+import type { ProductModel } from "database/models/product.model";
 
 interface Props {
 	palette?: "dark";
@@ -45,7 +45,7 @@ export default function CatalogView({
 	useEffect(() => {
 		async function getSavedItems() {
 			await database
-				.get<ProductModel>("sub_orders")
+				.get<ProductModel>("orders")
 				.query(Q.where("saved", true))
 				.observe()
 				.subscribe((products: ProductModel[]) => {
@@ -93,7 +93,7 @@ export default function CatalogView({
 
 			{type === "sub_service" ||
 				(!type && (
-					<SubSectionWrapper header={{ title: "Serviços" }}>
+					<SubSectionWrapper headerProps={{ title: "Serviços" }}>
 						{products && products.length > 0 ? (
 							products.map((product) =>
 								onEdit ? (
@@ -127,7 +127,7 @@ export default function CatalogView({
 
 			{type === "material" ||
 				(!type && (
-					<SubSectionWrapper header={{ title: "Materiais" }}>
+					<SubSectionWrapper headerProps={{ title: "Materiais" }}>
 						{materials && materials.length > 0 ? (
 							materials.map((material) =>
 								onEdit ? (
@@ -165,7 +165,7 @@ export default function CatalogView({
 				isVisible={itemToDelete !== undefined}
 				toggleVisibility={() => setItemToDelete(undefined)}
 				title={"Você tem certeza?"}
-				message={`O ${
+				description={`O ${
 					itemToDelete?.type === "material" ? "material" : "serviço"
 				} selecionado será apagado permanentemente. Essa ação não pode ser desfeita.`}
 				icon="delete"

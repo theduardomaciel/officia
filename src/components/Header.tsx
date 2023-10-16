@@ -20,6 +20,8 @@ import colors from "global/colors";
 // Types
 import { BusinessData } from "screens/Main/Business/@types";
 import { useEffect, useState } from "react";
+import { userStorage } from "context/AuthContext";
+import { safeJsonParse } from "utils";
 
 interface HeaderProps extends ViewProps {
 	returnButton?: boolean | (() => void);
@@ -29,6 +31,7 @@ interface HeaderProps extends ViewProps {
 	upperChildren?: React.ReactNode;
 	aboveTitle?: React.ReactNode;
 	bellowTitle?: React.ReactNode;
+	navigationHistory?: Array<string>;
 }
 
 export default function Header({
@@ -40,6 +43,7 @@ export default function Header({
 	upperChildren,
 	aboveTitle,
 	bellowTitle,
+	navigationHistory,
 	...props
 }: HeaderProps) {
 	const { colorScheme } = useColorScheme();
@@ -105,6 +109,17 @@ export default function Header({
 			)}
 			{title && (
 				<View className="flex-col w-full gap-y-1">
+					{navigationHistory &&
+						navigationHistory.length > 0 &&
+						navigationHistory.map((item, index) => (
+							<Text
+								key={index}
+								className="text-text_light-neutral dark:text-text-100 text-xl font-medium"
+							>
+								{item}
+								{index <= navigationHistory.length - 1 && " /"}
+							</Text>
+						))}
 					{aboveTitle}
 					<View
 						className="w-full flex-row items-center justify-between"
@@ -130,7 +145,6 @@ export default function Header({
 interface Props {
 	title?: string;
 	children?: HeaderProps["children"];
-	businessData?: BusinessData;
 	navigation: any;
 }
 
@@ -153,16 +167,13 @@ const ANIM_PROPS = {
 	overshootClamping: true,
 };
 
-export function TabBarScreenHeader({
-	title,
-	children,
-	businessData,
-	navigation,
-}: Props) {
+export function TabBarScreenHeader({ title, children, navigation }: Props) {
+	const name = userStorage.getString("name") || "Usuário";
+
 	const isVisible = useSharedValue(1);
 
 	const TEXTS = [
-		`${getGreeting()}, ${businessData?.fantasyName?.split(" ")[0]}!`,
+		`${getGreeting()}, ${name.split(" ")[0]}!`,
 		`Tenha um ótimo dia!`,
 		`Seu período de avaliação acaba em 5 dias.`,
 	];
@@ -174,9 +185,6 @@ export function TabBarScreenHeader({
 	}));
 
 	useEffect(() => {
-		if (!businessData) return;
-
-		console.log("Iniciando ciclo de animações");
 		isVisible.value = withRepeat(
 			withSequence(
 				withDelay(1000, withSpring(1, ANIM_PROPS)),
@@ -186,21 +194,22 @@ export function TabBarScreenHeader({
 						const newIndex = Math.floor(
 							Math.random() * TEXTS.length
 						);
-						console.log(newIndex);
 						runOnJS(setCurrentIndex)(newIndex);
 					})
 				)
 			),
 			-1,
-			false,
-			(finished) => {
+			false
+			/* (finished) => {
 				const resultStr = finished
 					? "All repeats are completed"
 					: "withRepeat cancelled";
 				console.log(resultStr);
-			}
+			} */
 		);
 	}, []);
+
+	const SYNC_STATUS = "error";
 
 	return (
 		<View className="flex flex-row items-center justify-between w-full">
@@ -208,23 +217,38 @@ export function TabBarScreenHeader({
 				className={clsx(
 					"flex flex-row items-center justify-start mr-2",
 					{
-						"flex-1": businessData ? true : false,
+						"flex-1": !!children,
 					}
 				)}
 				style={{ columnGap: 10 }}
 			>
 				<TouchableOpacity
-					className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200"
+					className={clsx(
+						"flex items-center justify-center w-11 h-11 rounded-full bg-gray-200 relative"
+					)}
 					activeOpacity={0.8}
 					onPress={() => navigation.openDrawer()}
 				>
-					<MaterialIcons
-						name="person"
-						size={24}
-						color={colors.text[100]}
-					/>
+					{SYNC_STATUS === "error" && (
+						<>
+							<View className="w-full h-full rounded-full border-[2.5px] border-yellow absolute top-0 left-0 items-center justify-center z-20">
+								<MaterialIcons
+									name="sync-problem"
+									size={24}
+									className="z-30"
+									color={colors.white}
+								/>
+								<View className="w-full h-full rounded-full absolute top-0 left-0 bg-black opacity-50 -z-10" />
+							</View>
+							<MaterialIcons
+								name="person"
+								size={24}
+								color={colors.text[100]}
+							/>
+						</>
+					)}
 				</TouchableOpacity>
-				{businessData && children && (
+				{children && (
 					<Animated.Text
 						style={animatedStyle}
 						className="flex flex-1 text-xs text-text-100 w-full whitespace-pre-line"
@@ -238,7 +262,7 @@ export function TabBarScreenHeader({
 					{title}
 				</Text>
 			)}
-			{children ? children : <View className="w-10 h-full" />}
+			{children ? children : <View className="w-12 h-full" />}
 			{/* <View className="border-b-[1px] border-b-gray-200 w-screen absolute left-1/2 -bottom-2" style={{ transform: [{ translateX: -100 }] }} /> */}
 		</View>
 	);

@@ -1,29 +1,35 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import colors from "global/colors";
+
+import { MaterialIcons } from "@expo/vector-icons";
 
 // Components
 import Container from "components/Container";
 import SectionBottomSheet from "components/Form/SectionBottomSheet";
+import Toast from "components/Toast";
 import { SectionsNavigator } from "components/SectionsNavigator";
 
 import {
 	BasicInfoForm,
 	fetchSegments,
-	useBasicInfoForm,
 } from "screens/Main/Business/screens/BasicInfo";
 import { ActionButton } from "components/Button";
 
-import { BusinessData } from "screens/Main/Business/@types";
+import {
+	BasicInfoSchemeType,
+	BusinessData,
+	FormRef,
+	ServiceSchemeType,
+} from "screens/Main/Business/@types";
 
 // Hooks
 import useBackHandler from "hooks/useBackHandler";
 import useUpdateHandler from "hooks/useUpdateHandler";
-import { useAuth } from "context/AuthContext";
+import { useAuth, userStorage } from "context/AuthContext";
+
 import { api } from "lib/axios";
-import Toast from "components/Toast";
 
 import {
-	Geolocation,
 	ServiceForm,
 	fetchCountries,
 } from "screens/Main/Business/screens/Service";
@@ -35,13 +41,13 @@ const sections = [
 ];
 
 import { globalStorage } from "context/AuthContext";
+import { ProjectModel } from "database/models/project.model";
+import Modal, { Section } from "components/Modal";
+import { Text, View } from "react-native";
+import BottomSheet from "components/BottomSheet";
 
 export default function BusinessRegister({ navigation }: any) {
-	const { updateSelectedProject } = useAuth();
-
-	const [newBusinessData, setNewBusinessData] = React.useState<
-		Partial<BusinessData>
-	>({});
+	const { signOut } = useAuth();
 
 	const HEADERS = [
 		{
@@ -77,35 +83,85 @@ export default function BusinessRegister({ navigation }: any) {
 		},
 	});
 
-	const { submitData: submitSection0Data, ...hookProps } = useBasicInfoForm({
-		onSubmit: (data) => {
-			setNewBusinessData((prevState) => ({ ...prevState, ...data }));
+	const onError = useCallback((error: any) => {
+		Toast.show({
+			preset: "error",
+			title: "Opa! Algo deu errado.",
+			description: error.message,
+		});
+	}, []);
+
+	const newBusinessData = React.useRef<Partial<BusinessData> | undefined>(
+		undefined
+	);
+
+	const [submitModalSection, setSubmitModalSection] = React.useState(0);
+
+	const basicInfoFormRef = React.useRef<FormRef>(null);
+	const serviceFormRef = React.useRef<FormRef>(null);
+
+	const onBasicInfoFormSubmit = async (data: Partial<BusinessData>) => {
+		if (data) {
 			updateHandler(1);
-		},
-	});
+			newBusinessData.current = {
+				...newBusinessData.current,
+				...data,
+			};
+		} else return;
+	};
 
-	const submitSection1Data = useCallback(async () => {
-		try {
-			const response = await api.post(`/projects`, newBusinessData);
+	const onServiceFormSubmit = async (data: Partial<BusinessData>) => {
+		if (!data) return;
 
-			if (response.data) {
-				updateSelectedProject(response.data.id);
-			} else {
-				Toast.show({
-					preset: "error",
-					title: "Erro ao criar projeto",
-					message: "Tente novamente mais tarde",
-				});
-			}
-		} catch (error) {
-			console.log(error);
-			Toast.show({
-				preset: "error",
-				title: "Erro ao criar projeto",
-				message: "Tente novamente mais tarde",
+		if (!newBusinessData.current) {
+			onError({
+				message:
+					"Há dados pendentes na seção anterior a serem preenchidos.",
 			});
+			return;
 		}
-	}, [newBusinessData]);
+
+		const accountId = userStorage.getString("id");
+		if (!accountId) {
+			console.log("Invalid account id stored in device.");
+			signOut();
+			return;
+		}
+
+		const finalData = {
+			...newBusinessData.current,
+			...data,
+			accountId: accountId,
+		};
+
+		console.log(finalData, "Dados enviados para o servidor.");
+
+		try {
+			setSubmitModalSection(1);
+
+			const response = await api.post("/projects", finalData);
+			if (!response.data) {
+				setSubmitModalSection(0);
+				onError({
+					message:
+						"Infelizmente nos deparamos com um erro ao criar seu novo negócio.",
+				});
+				return;
+			}
+
+			newBusinessData.current = response.data;
+			BottomSheet.close(sections[1]);
+			setSubmitModalSection(2);
+		} catch (error) {
+			onError(error);
+			setSubmitModalSection(0);
+		}
+	};
+
+	const modalSections = useCallback(
+		() => getModalSections(newBusinessData),
+		[]
+	);
 
 	const BOTTOM_SHEET_HEIGHT = "65%";
 
@@ -143,13 +199,17 @@ export default function BusinessRegister({ navigation }: any) {
 			}
 		};
 
-		getSegmentsData();
-		getCountriesData();
+		if (!globalStorage.getString("segmentsData")) {
+			getSegmentsData();
+		}
+		if (!globalStorage.getString("countriesData")) {
+			getCountriesData();
+		}
 	}, []);
 
 	return (
 		<Container style={{ rowGap: 0 }}>
-			<BackButton isEnabled={true} />
+			<BackButton />
 			<Header />
 
 			<SectionsNavigator
@@ -178,28 +238,93 @@ export default function BusinessRegister({ navigation }: any) {
 				height={BOTTOM_SHEET_HEIGHT}
 				ignoreBottomRequirementToFixContentHeight
 			>
-				<BasicInfoForm {...hookProps} />
+				<BasicInfoForm
+					ref={basicInfoFormRef}
+					onSubmit={onBasicInfoFormSubmit}
+					palette="dark"
+				/>
 				<ActionButton
-					onPress={submitSection0Data}
+					onPress={() => basicInfoFormRef.current?.submitForm()}
 					preset="next"
 					label="Próximo"
 				/>
 			</SectionBottomSheet>
 
 			<SectionBottomSheet id={sections[1]} height={BOTTOM_SHEET_HEIGHT}>
-				<ServiceForm />
+				<ServiceForm
+					ref={serviceFormRef}
+					onSubmit={onServiceFormSubmit}
+				/>
 				<ActionButton
-					onPress={submitSection1Data}
+					onPress={() => serviceFormRef.current?.submitForm()}
 					preset="next"
 					style={{ backgroundColor: colors.primary }}
 					label="Concluir"
 				/>
 			</SectionBottomSheet>
 
+			<Modal.Multisection
+				currentSection={submitModalSection}
+				sections={modalSections()}
+				setCurrentSection={setSubmitModalSection}
+			/>
+
 			<ConfirmExitModal
 				title="Você tem certeza que deseja voltar?"
-				message="Será necessário inserir os dados do Seu Negócio novamente para concluir o cadastro."
+				description="Será necessário inserir os dados do Seu Negócio novamente para concluir o cadastro."
 			/>
 		</Container>
 	);
+}
+
+function getModalSections(
+	data: React.MutableRefObject<Partial<BusinessData> | undefined>
+) {
+	const { updateSelectedProject } = useAuth();
+	const [isLoading, setIsLoading] = React.useState(false);
+
+	return [
+		{
+			title: "Aguarde...",
+			description:
+				"Estamos terminando os últimos ajustes para que o novo negócio seja adicionado à sua conta.",
+			icon: "pending",
+			isLoading: true,
+		},
+		{
+			children: (
+				<View className="flex-col w-full items-center justify-start">
+					<MaterialIcons
+						name="check-circle-outline"
+						size={36}
+						color={colors.white}
+					/>
+					<Text className="font-titleBold text-2xl text-white text-center mb-4">
+						Seu novo negócio já está pronto.
+					</Text>
+					<Text className="text-left font-regular text-sm text-white whitespace-pre-line">
+						Muitas coisas ainda podem ser configuradas para
+						transmitir ainda mais confiabilidade para seus clientes,
+						no entanto, tudo já está pronto para uso.{`\n`}
+						{`\n`}
+						Acesse já o app e torne mais simples a maneira como sua
+						empresa é gerenciada.
+					</Text>
+				</View>
+			),
+			buttons: [
+				{
+					label: "Acessar",
+					onPress: async () => {
+						setIsLoading(true);
+						await updateSelectedProject(
+							data.current?.id as string,
+							data.current as ProjectModel
+						);
+					},
+				},
+			],
+			isLoading: isLoading,
+		},
+	] as Section[];
 }

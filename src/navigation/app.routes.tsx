@@ -33,13 +33,15 @@ import { createChannelId } from "utils/notificationHandler";
 // Drawer Navigator
 import DrawerNavigator from "./navigators/drawerNavigator";
 
-import ProfileScreen from "screens/Drawer/Profile";
+import ProfileScreen from "screens/Drawer/Profile/index";
 import ClientsScreen from "screens/Drawer/Clients";
 import CatalogScreen from "screens/Drawer/Catalog";
 import SubscriptionScreen from "screens/Drawer/Subscription";
 
 // Drawer Menus Screens
 import ManageData from "screens/Drawer/ManageData";
+import ManageAccount from "screens/Drawer/Profile/ManageAccount";
+import ManageSubscription from "screens/Drawer/Profile/ManageSubscription";
 
 export function AppStack() {
 	const { colorScheme } = useColorScheme();
@@ -206,10 +208,27 @@ export function AppStack() {
 						CardStyleInterpolators.forHorizontalIOS,
 				}}
 			/>
-			{/* DRAWER MENUS SCREENS */}
+			{/* Drawer*/}
 			<Stack.Screen
 				name="manageData"
 				component={ManageData}
+				options={{
+					cardStyleInterpolator:
+						CardStyleInterpolators.forHorizontalIOS,
+				}}
+			/>
+			{/* Drawer -> Profile */}
+			<Stack.Screen
+				name="manageAccount"
+				component={ManageAccount}
+				options={{
+					cardStyleInterpolator:
+						CardStyleInterpolators.forHorizontalIOS,
+				}}
+			/>
+			<Stack.Screen
+				name="manageSubscription"
+				component={ManageSubscription}
 				options={{
 					cardStyleInterpolator:
 						CardStyleInterpolators.forHorizontalIOS,

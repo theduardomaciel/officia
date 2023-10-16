@@ -9,8 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import colors from "global/colors";
 
 // Types
-import type { OrderModel } from "database/models/orderModel";
-import type { ClientModel } from "database/models/clientModel";
+import type { OrderModel } from "database/models/order.model";
+import type { ClientModel } from "database/models/client.model";
 
 // Components
 import BottomSheet from "components/BottomSheet";
@@ -36,7 +36,8 @@ export default function ClientAdd({ order, onSubmitForm }: Props) {
 		Toast.show({
 			preset: "error",
 			title: "Por favor, preencha os campos corretamente.",
-			message: errorMessage || "Não foi possível adicionar o cliente.",
+			description:
+				errorMessage || "Não foi possível adicionar o cliente.",
 		});
 	};
 

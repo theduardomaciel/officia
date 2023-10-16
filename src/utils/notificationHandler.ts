@@ -8,7 +8,7 @@ import notifee, {
 	TimestampTrigger,
 	TriggerType,
 } from "@notifee/react-native";
-import type { OrderModel } from "database/models/orderModel";
+import type { OrderModel } from "database/models/order.model";
 
 export async function createChannelId() {
 	const channelId = await notifee.createChannel({

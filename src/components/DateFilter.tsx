@@ -7,7 +7,7 @@ import colors from "global/colors";
 import { useColorScheme } from "nativewind";
 
 // Components
-import Input from "./Input";
+import Input, { Trigger } from "./Input";
 import Label from "./Label";
 import Modal from "./Modal";
 import { TagObject, TagsSelector } from "./TagsSelector";
@@ -167,7 +167,7 @@ export default function DateFilter({ onSubmit }: Props) {
 					}}
 				>
 					<View className="flex-1 mr-3">
-						<Input
+						<Trigger
 							label="Data Inicial"
 							value={dateFilter?.initialDate
 								?.toISOString()
@@ -177,15 +177,13 @@ export default function DateFilter({ onSubmit }: Props) {
 								.reverse()
 								.join("/")}
 							onPress={() => setDateModalVisible("initial")}
-							editable={false}
 							disabled={dateFilter?.specific}
 							pallette="dark"
 							style={{ height: 40 }}
-							required
 						/>
 					</View>
 					<View className="flex-1">
-						<Input
+						<Trigger
 							label="Data Final"
 							value={dateFilter?.finalDate
 								?.toISOString()
@@ -195,11 +193,9 @@ export default function DateFilter({ onSubmit }: Props) {
 								.reverse()
 								.join("/")}
 							onPress={() => setDateModalVisible("final")}
-							editable={false}
 							disabled={dateFilter?.specific}
 							pallette="dark"
 							style={{ height: 40 }}
-							required
 						/>
 					</View>
 				</View>

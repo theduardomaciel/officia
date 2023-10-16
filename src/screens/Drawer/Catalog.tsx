@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 // Components
-import Container, { BusinessScrollView } from "components/Container";
+import Container, { ContainerScrollView } from "components/Container";
 import Header from "components/Header";
 import CatalogView, {
 	updateMaterial,
@@ -15,8 +15,8 @@ import MaterialForm from "components/ScheduleForm/Forms/MaterialForm";
 import ProductForm from "components/ScheduleForm/Forms/SubserviceForm";
 
 // Types
-import type { ProductModel } from "database/models/productModel";
-import type { MaterialModel } from "database/models/materialModel";
+import type { ProductModel } from "database/models/product.model";
+import type { MaterialModel } from "database/models/material.model";
 
 export default function CatalogScreen() {
 	const [editableData, setEditableData] = useState<
@@ -27,7 +27,7 @@ export default function CatalogScreen() {
 		<>
 			<Container>
 				<Header title="Catálogo" returnButton />
-				<BusinessScrollView>
+				<ContainerScrollView>
 					<CatalogView
 						onEdit={(subOrderToEdit, materialToEdit) => {
 							if (subOrderToEdit) {
@@ -39,7 +39,7 @@ export default function CatalogScreen() {
 							}
 						}}
 					/>
-				</BusinessScrollView>
+				</ContainerScrollView>
 			</Container>
 
 			<BottomSheet height={"78%"} id={"materialBottomSheet"}>

@@ -34,10 +34,10 @@ import ClientView from "components/ClientForms/ClientView";
 import { database } from "database/index.native";
 
 // Types
-import type { ClientModel } from "database/models/clientModel";
-import type { MaterialModel } from "database/models/materialModel";
-import type { OrderModel } from "database/models/orderModel";
-import type { ProductModel } from "database/models/productModel";
+import type { ClientModel } from "database/models/client.model";
+import type { MaterialModel } from "database/models/material.model";
+import type { OrderModel } from "database/models/order.model";
+import type { ProductModel } from "database/models/product.model";
 import {
 	removeNotification,
 	scheduleOrderNotification,
@@ -74,7 +74,7 @@ export default function Order({ route, navigation }: any) {
 			preset: "success",
 			icon: "edit",
 			title: "O serviço foi atualizado com sucesso!",
-			message: "As alterações foram salvas.",
+			description: "As alterações foram salvas.",
 		});
 	}, []);
 
@@ -457,7 +457,7 @@ function ScreenContent({ order, products, materials, client }: Props) {
 				isVisible={isDeleteModalVisible}
 				toggleVisibility={() => setDeleteModalVisible(false)}
 				title={"Você tem certeza?"}
-				message="É possível arquivar este serviço a qualquer momento, ao invés de deletá-lo."
+				description="É possível arquivar este serviço a qualquer momento, ao invés de deletá-lo."
 				icon="delete"
 				buttons={[
 					{

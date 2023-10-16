@@ -147,11 +147,11 @@ const ToastUI = forwardRef(
 		);
 
 		return (
-			<Portal hostName="ToastHost">
+			<Portal hostName="ToastsHost">
 				<PanGestureHandler onGestureEvent={gestureHandler}>
 					<Animated.View
 						style={[animationStyle]}
-						className="w-screen absolute top-0 left-0 px-6 z-50 flex items-center justify-center"
+						className="w-screen absolute top-0 left-0 px-6 flex items-center justify-center z-50"
 					>
 						<View
 							onLayout={(event) =>
@@ -202,7 +202,7 @@ const ToastUI = forwardRef(
 								</Text>
 							</View>
 							<Text className="text-sm text-black dark:text-white">
-								{toastProps?.message}
+								{toastProps?.description}
 							</Text>
 						</View>
 					</Animated.View>

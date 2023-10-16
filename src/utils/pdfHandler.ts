@@ -1,10 +1,10 @@
 import { manipulateAsync } from "expo-image-manipulator";
 
 // Types
-import type { ClientModel } from "database/models/clientModel";
-import type { MaterialModel } from "database/models/materialModel";
-import type { OrderModel } from "database/models/orderModel";
-import type { ProductModel } from "database/models/productModel";
+import type { ClientModel } from "database/models/client.model";
+import type { MaterialModel } from "database/models/material.model";
+import type { OrderModel } from "database/models/order.model";
+import type { ProductModel } from "database/models/product.model";
 
 import type { BusinessData } from "screens/Main/Business/@types";
 

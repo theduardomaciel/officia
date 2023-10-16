@@ -1,7 +1,7 @@
 import React from "react";
 
 // Components
-import { BusinessScrollView } from "components/Container";
+import { ContainerScrollView } from "components/Container";
 import Toast from "components/Toast";
 import Input, { borderErrorStyle } from "components/Input";
 import Dropdown from "components/Dropdown";
@@ -54,7 +54,7 @@ export function useContactForm({ defaultValues, onSubmit }: FormProps) {
 		Toast.show({
 			preset: "error",
 			title: "Algo está errado com os dados inseridos.",
-			message: Object.values(errors)
+			description: Object.values(errors)
 				.map((error) => error.message)
 				.join("\n"),
 		});
@@ -74,7 +74,7 @@ export function useContactForm({ defaultValues, onSubmit }: FormProps) {
 
 	function BasicInfoForm() {
 		return (
-			<BusinessScrollView>
+			<ContainerScrollView>
 				<Controller
 					control={control}
 					render={({ field: { onChange, onBlur, value } }) => (
@@ -186,7 +186,7 @@ export function useContactForm({ defaultValues, onSubmit }: FormProps) {
 						},
 					]}
 				/>
-			</BusinessScrollView>
+			</ContainerScrollView>
 		);
 	}
 

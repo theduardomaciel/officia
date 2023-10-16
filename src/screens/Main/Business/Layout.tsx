@@ -1,23 +1,22 @@
-import React, { useEffect } from "react";
+import React from "react";
 
 // Components
 import Container from "components/Container";
 import Header from "components/Header";
-import SaveButton from "components/Business/SaveButton";
+import { ContainerScrollView } from "components/Container";
 
 // Hooks
 import { useNavigation } from "@react-navigation/native";
 import useBackHandler from "hooks/useBackHandler";
+import useFormChangesObserver from "hooks/useFormChangesObserver";
 
 // Types
-import type { BusinessData } from "./@types";
-import type { SubSectionWrapperProps } from "components/Form/SectionWrapper";
+import type { WrapperProps } from "components/Form/SectionWrapper";
 import type { FormChangesObserver } from "hooks/useFormChangesObserver";
-import useFormChangesObserver from "hooks/useFormChangesObserver";
 
 interface Props {
 	children: React.ReactNode;
-	headerProps: SubSectionWrapperProps["header"];
+	headerProps: WrapperProps["headerProps"];
 	changesObserverProps: FormChangesObserver;
 	submitData: () => void;
 }
@@ -44,6 +43,7 @@ export default function BusinessLayout({
 	return (
 		<Container>
 			<Header
+				navigationHistory={[`Meu Negócio`]}
 				returnButton={() => {
 					if (hasDifferences) {
 						setConfirmExitModalVisible(true);
@@ -53,7 +53,7 @@ export default function BusinessLayout({
 				}}
 				{...headerProps}
 			/>
-			{children}
+			<ContainerScrollView>{children}</ContainerScrollView>
 			<FormSaveButton onPress={submitData} />
 			<ConfirmExitModal />
 		</Container>

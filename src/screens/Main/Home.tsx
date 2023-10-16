@@ -24,8 +24,8 @@ import { Q } from "@nozbe/watermelondb";
 import { database } from "database/index.native";
 
 // Types
-import type { OrderModel } from "database/models/orderModel";
-import type { ProductModel } from "database/models/productModel";
+import type { OrderModel } from "database/models/order.model";
+import type { ProductModel } from "database/models/product.model";
 import type { BusinessData, Category } from "screens/Main/Business/@types";
 
 export const FilterView = ({ colorScheme }: { colorScheme: string }) => (
@@ -101,7 +101,8 @@ export default function Home({ route, navigation }: any) {
 		Toast.show({
 			preset: "success",
 			title: "Serviço criado com sucesso!",
-			message: "Agora você pode acessar o orçamento do serviço agendado.",
+			description:
+				"Agora você pode acessar o orçamento do serviço agendado.",
 		});
 	}, []);
 
@@ -109,7 +110,7 @@ export default function Home({ route, navigation }: any) {
 		Toast.show({
 			preset: "success",
 			title: "Serviço excluído com sucesso!",
-			message: "Agora não será mais possível acessá-lo.",
+			description: "Agora não será mais possível acessá-lo.",
 		});
 	}, []);
 
@@ -261,10 +262,7 @@ export default function Home({ route, navigation }: any) {
 
 	return (
 		<Container>
-			<TabBarScreenHeader
-				navigation={navigation}
-				businessData={businessData}
-			>
+			<TabBarScreenHeader navigation={navigation}>
 				<TouchableOpacity
 					activeOpacity={0.7}
 					className="flex flex-row items-center justify-center px-3 py-1 bg-gray_light-neutral bg-black dark:bg-gray-200 rounded-full"

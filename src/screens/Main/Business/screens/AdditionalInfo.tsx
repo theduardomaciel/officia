@@ -7,7 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from "global/colors";
 
 // Components
-import { BusinessScrollView } from "components/Container";
+import { ContainerScrollView } from "components/Container";
 import Toast from "components/Toast";
 import Input, { borderErrorStyle } from "components/Input";
 import { SubSectionWrapper } from "components/Form/SectionWrapper";
@@ -70,7 +70,7 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
 		Toast.show({
 			preset: "error",
 			title: "Algo está errado com os dados inseridos.",
-			message: Object.values(errors)
+			description: Object.values(errors)
 				.map((error) => error.message)
 				.join("\n"),
 		});
@@ -97,7 +97,7 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
 				currentData={screenData}
 				watch={watch}
 			>
-				<BusinessScrollView>
+				<ContainerScrollView>
 					<SubSectionWrapper
 						header={{
 							title: "Mensagens Padrão",
@@ -232,7 +232,7 @@ export default function AdditionalInfoScreen({ route, navigation }: any) {
 							)}
 						</TouchableOpacity>
 					</SubSectionWrapper>
-				</BusinessScrollView>
+				</ContainerScrollView>
 			</ChangesObserver>
 		</BusinessLayout>
 	);

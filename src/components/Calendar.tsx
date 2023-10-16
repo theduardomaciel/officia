@@ -113,6 +113,8 @@ function DayView({
 				className={clsx("font-semibold text-md text-white", {
 					"text-gray-400 dark:text-text-100": invert,
 				})}
+				adjustsFontSizeToFit
+				numberOfLines={1}
 			>
 				{date.getDate()}
 			</Text>

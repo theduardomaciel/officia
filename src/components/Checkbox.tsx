@@ -140,7 +140,12 @@ export function checkboxesGroupReducer(state: any, action: any) {
 }
 
 interface GroupProps {
-	data: string[];
+	data:
+		| string[]
+		| {
+				label: string;
+				value: string;
+		  }[];
 	checked: string[];
 	dispatch: (action: { type: "add" | "remove"; payload: string }) => void;
 	style?: ViewStyle;
@@ -158,17 +163,37 @@ export const CheckboxesGroup = memo(
 						<Checkbox
 							customKey={`${tag}-${index}`}
 							style={{ marginVertical: 5 }}
-							title={tag}
-							checked={checked.includes(tag)}
+							title={typeof tag === "string" ? tag : tag.label}
+							checked={checked.includes(
+								typeof tag === "string" ? tag : tag.value
+							)}
 							onPress={() => {
-								if (checked.includes(tag)) {
+								if (
+									checked.includes(
+										typeof tag === "string"
+											? tag
+											: tag.value
+									)
+								) {
 									/* setChecked(checked.filter(item => item !== tag)) */
 									/* updateTags(tag, "remove") */
-									dispatch({ type: "remove", payload: tag });
+									dispatch({
+										type: "remove",
+										payload:
+											typeof tag === "string"
+												? tag
+												: tag.value,
+									});
 								} else {
 									/* setChecked([...checked, tag]) */
 									/* updateTags(tag, "add") */
-									dispatch({ type: "add", payload: tag });
+									dispatch({
+										type: "add",
+										payload:
+											typeof tag === "string"
+												? tag
+												: tag.value,
+									});
 								}
 							}}
 						/>

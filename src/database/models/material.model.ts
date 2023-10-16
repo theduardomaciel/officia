@@ -4,9 +4,10 @@ import {
 	readonly,
 	date,
 	relation,
+	text,
 } from "@nozbe/watermelondb/decorators";
 import { Associations } from "@nozbe/watermelondb/Model";
-import { OrderModel } from "./orderModel";
+import { OrderModel } from "./order.model";
 
 export class MaterialModel extends Model {
 	static table = "materials";
@@ -15,14 +16,15 @@ export class MaterialModel extends Model {
 	};
 
 	@readonly @date("created_at") createdAt!: number;
-	@field("name") name!: string;
-	@field("description") description!: string;
-	@field("image_url") image_url!: string | null;
+	@text("name") name!: string;
+	@text("description") description!: string;
+	@text("image_url") image_url!: string | null;
 	@field("price") price!: number;
 	@field("amount") amount!: number;
 	@field("profit_margin") profitMargin!: number | null;
-	@field("availability") availability!: boolean;
-	@field("saved") saved!: boolean;
+
+	@field("is_available") isAvailable!: boolean;
+	@field("is_bookmarked") isBookmarked!: boolean;
 
 	@relation("orders", "order_id") order!: OrderModel;
 }

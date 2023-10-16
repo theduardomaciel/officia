@@ -6,20 +6,20 @@ import Modal from "components/Modal";
 import { useState } from "react";
 
 interface LoadingModalProps {
-	message?: string;
+	description?: string;
 	loadingColor?: string;
 }
 
 export default function useLoadingModal() {
 	const [isVisible, setIsVisible] = useState(false);
 
-	const LoadingModal = ({ message, loadingColor }: LoadingModalProps) => (
+	const LoadingModal = ({ description, loadingColor }: LoadingModalProps) => (
 		<Modal
 			isVisible={isVisible}
 			toggleVisibility={() => setIsVisible(!isVisible)}
 			title={"Aguarde..."}
-			message={message ?? "Estamos processando sua requisição..."}
-			icon="pending"
+			description={description ?? "Estamos processando sua requisição..."}
+			icon="pending-actions"
 		>
 			<View className="w-full py-2.5 bg-gray-100 rounded-md flex-row items-center justify-center">
 				<ActivityIndicator

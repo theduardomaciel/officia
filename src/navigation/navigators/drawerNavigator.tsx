@@ -5,6 +5,8 @@ import {
 	Text,
 	TouchableOpacity,
 	Linking,
+	PixelRatio,
+	ViewStyle,
 } from "react-native";
 import {
 	createDrawerNavigator,
@@ -31,6 +33,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RectButton } from "react-native-gesture-handler";
+import { userStorage } from "context/AuthContext";
+
+import { safeJsonParse } from "utils";
+import { getAccountPlan } from "utils/planHandler";
 
 export default function DrawerNavigator(props: any) {
 	const { width } = useWindowDimensions();
@@ -85,7 +91,7 @@ const STYLE = {
 	width: "100%",
 	marginLeft: 0,
 	paddingLeft: 0,
-};
+} as ViewStyle;
 
 const LABEL_STYLE = {
 	fontSize: 18,
@@ -96,6 +102,11 @@ const PADDING = { paddingLeft: 24, paddingRight: 24 };
 
 function CustomDrawerContent(props: DrawerContentComponentProps) {
 	const insets = useSafeAreaInsets();
+
+	const name = userStorage.getString("name") || "Usuário";
+	const isPremium = getAccountPlan() === "premium";
+
+	const FONT_SCALE = PixelRatio.getFontScale();
 
 	return (
 		<DrawerContentScrollView
@@ -123,11 +134,14 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 							color={colors.text[100]}
 						/>
 					</View>
-					<Text className="font-titleBold text-xl text-white leading-tight">
-						meninocoiso
+					<Text
+						className="font-titleBold text-xl text-white leading-tight"
+						ellipsizeMode="tail"
+					>
+						{name}
 					</Text>
 					<Text className="leading-tight text-sm text-text-100 -mt-2">
-						desde 2021
+						{isPremium ? "Plano Premium" : "Plano Gratuito"}
 					</Text>
 				</View>
 				<MenuIcon width={24} height={24} color={colors.text[100]} />
@@ -145,7 +159,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 					icon={() => (
 						<MaterialIcons
 							name="account-circle"
-							size={24}
+							size={24 * FONT_SCALE}
 							color={colors.white}
 						/>
 					)}
@@ -158,7 +172,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 					icon={() => (
 						<MaterialIcons
 							name="group"
-							size={24}
+							size={24 * FONT_SCALE}
 							color={colors.white}
 						/>
 					)}
@@ -171,7 +185,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 					icon={() => (
 						<MaterialIcons
 							name="bookmarks"
-							size={24}
+							size={24 * FONT_SCALE}
 							color={colors.white}
 						/>
 					)}
@@ -188,7 +202,11 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 						fontFamily: "AbrilFatface_400Regular",
 					}}
 					icon={() => (
-						<Logo width={24} height={24} color={colors.white} />
+						<Logo
+							width={24 * FONT_SCALE}
+							height={24 * FONT_SCALE}
+							color={colors.white}
+						/>
 					)}
 					onPress={() => props.navigation.navigate("subscription")}
 				/>
@@ -275,8 +293,6 @@ interface SubSection {
 	}[];
 }
 
-const SUBSECTION_HEIGHT = 50;
-
 function SubSectionHolder({ title, sections }: SubSection) {
 	const [isExpanded, setIsExpanded] = useState(false);
 	const rotation = useSharedValue(-90);
@@ -287,6 +303,7 @@ function SubSectionHolder({ title, sections }: SubSection) {
 		};
 	});
 
+	const SUBSECTION_HEIGHT = 50 * PixelRatio.getFontScale() + 5;
 	const height = useSharedValue(SUBSECTION_HEIGHT);
 
 	const sizeStyle = useAnimatedStyle(() => {

@@ -22,8 +22,8 @@ import ClientDataForm, {
 } from "./ClientDataForm";
 
 // Types
-import type { ClientModel } from "database/models/clientModel";
-import type { OrderModel } from "database/models/orderModel";
+import type { ClientModel } from "database/models/client.model";
+import type { OrderModel } from "database/models/order.model";
 
 import { scheduleOrderNotification } from "utils/notificationHandler";
 
@@ -40,7 +40,8 @@ export default function ClientEdit({ order, lastBottomSheet, client }: Props) {
 		Toast.show({
 			preset: "error",
 			title: "Por favor, preencha os campos corretamente.",
-			message: errorMessage || "Não foi possível adicionar o cliente.",
+			description:
+				errorMessage || "Não foi possível adicionar o cliente.",
 		});
 	};
 

@@ -14,8 +14,8 @@ import { database } from "database/index.native";
 import { Q } from "@nozbe/watermelondb";
 
 // Types
-import type { ClientModel } from "database/models/clientModel";
-import type { OrderModel } from "database/models/orderModel";
+import type { ClientModel } from "database/models/client.model";
+import type { OrderModel } from "database/models/order.model";
 
 interface Props {
 	lastBottomSheet: string;
@@ -151,7 +151,7 @@ export function ClientDeleteModal({
 			isVisible={isVisible}
 			toggleVisibility={() => setVisible(false)}
 			title={"Você tem certeza?"}
-			message="Os dados do cliente não poderão ser recuperados."
+			description="Os dados do cliente não poderão ser recuperados."
 			icon="delete"
 			buttons={[
 				{
@@ -159,7 +159,7 @@ export function ClientDeleteModal({
 					onPress: () => {
 						deleteClient(client);
 					},
-					color: primary.red,
+					color: colors.red,
 					closeOnPress: true,
 				},
 			]}

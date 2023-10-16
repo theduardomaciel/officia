@@ -23,7 +23,7 @@ import { Loading } from "components/StatusMessage";
 import { database } from "database/index.native";
 
 // Types
-import type { OrderModel } from "database/models/orderModel";
+import type { OrderModel } from "database/models/order.model";
 import BottomSheet from "components/BottomSheet";
 import ConfirmExitModal from "components/Business/ConfirmExitModal";
 import SectionBottomSheet from "components/Form/SectionBottomSheet";

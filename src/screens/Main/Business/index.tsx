@@ -3,9 +3,10 @@ import React from "react";
 import { useColorScheme } from "nativewind";
 
 // Components
-import Container, { BusinessScrollView } from "components/Container";
+import Container, { ContainerScrollView } from "components/Container";
 import NavigationButton from "components/NavigationButton";
 import Toast from "components/Toast";
+import ImagePicker from "components/ImagePicker";
 import { TabBarScreenHeader } from "components/Header";
 
 // Data
@@ -31,7 +32,7 @@ export async function updateData(
 			Toast.show({
 				preset: "success",
 				title: "Tudo certo!",
-				message:
+				description:
 					"Os dados do seu negócio foram atualizados com sucesso.",
 			});
 		}
@@ -43,7 +44,7 @@ export async function updateData(
 		Toast.show({
 			preset: "error",
 			title: "Algo deu errado :(",
-			message: "Não foi possível atualizar os dados do seu negócio.",
+			description: "Não foi possível atualizar os dados do seu negócio.",
 		});
 		return false;
 	}
@@ -53,60 +54,44 @@ export default function Business({ navigation }: { navigation: any }) {
 	return (
 		<Container>
 			<TabBarScreenHeader title="Meu Negócio" navigation={navigation} />
-			<BusinessScrollView
-				style={{ paddingBottom: 25, paddingTop: 4, rowGap: 20 }}
+			<ContainerScrollView
+				style={{ paddingBottom: 25, paddingTop: 4, rowGap: 25 }}
 			>
-				{/* <ImagePicker
-					imageUri={businessData?.logo}
-					onUpdate={async (dataToUpdate) => {
-						if (!businessData) return;
-						const updatedData = await updateData(
-							{ logo: dataToUpdate },
-							businessData
-						);
-						if (updatedData) {
-							setBusinessData(updatedData);
-						}
-					}}
-					label="Adicionar logotipo da empresa"
-					showDeleteButton
-				/> */}
+				<ImagePicker
+					label="Adicionar marca da empresa"
+					onPress={() => navigation.navigate("branding")}
+				/>
 				<NavigationButton
 					title="Informações Básicas"
-					description="Nome, CNPJ e Razão Social"
+					description="Nome da empresa, endereço, CNPJ"
 					onPress={() => navigation.navigate("basicInfo")}
 				/>
 				<NavigationButton
 					title="Dados Complementares"
-					description="Mensagens padrão e assinatura digital"
+					description="Mensagens padrão, assinatura digital"
 					onPress={() => navigation.navigate("additionalInfo")}
 				/>
 				<NavigationButton
-					title="Dados Bancários"
-					description="Conta bancária e chave PIX"
-					onPress={() => navigation.navigate("bankAccount")}
+					title="Atendimento"
+					description="Agenda, zona de atendimento"
+					onPress={() => navigation.navigate("additionalInfo")}
 				/>
 				<NavigationButton
-					title="Contato e Endereço"
-					description="E-mail, telefone e endereço"
+					title="Contato"
+					description="Telefone, e-mail, redes sociais"
 					onPress={() => navigation.navigate("contactAndAddress")}
 				/>
 				<NavigationButton
-					title="Redes Sociais"
-					description="Facebook, Instagram e etc."
-					onPress={() => navigation.navigate("socialMedia")}
+					title="Pagamentos"
+					description="Métodos de pagamento, moeda"
+					onPress={() => navigation.navigate("bankAccount")}
 				/>
 				<NavigationButton
 					title="Categorias"
 					description="Defina em que ramos o seu negócio se encaixa"
 					onPress={() => navigation.navigate("categories")}
 				/>
-				<NavigationButton
-					title="Configurações"
-					description="Gerencie sua conta e personalize suas preferências"
-					onPress={() => navigation.navigate("settings")}
-				/>
-			</BusinessScrollView>
+			</ContainerScrollView>
 		</Container>
 	);
 }

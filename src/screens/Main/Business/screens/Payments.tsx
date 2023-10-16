@@ -6,7 +6,7 @@ import colors from "global/colors";
 import PixIcon from "assets/icons/pix.svg";
 
 // Components
-import { BusinessScrollView } from "components/Container";
+import { ContainerScrollView } from "components/Container";
 import Dropdown from "components/Dropdown";
 import Input, { borderErrorStyle } from "components/Input";
 import Toast from "components/Toast";
@@ -80,7 +80,7 @@ export default function PaymentsScreen({ route, navigation }: any) {
 		Toast.show({
 			preset: "error",
 			title: "Algo está errado com os dados inseridos.",
-			message: Object.values(errors)
+			description: Object.values(errors)
 				.map((error) => error.message)
 				.join("\n"),
 		});
@@ -115,7 +115,7 @@ export default function PaymentsScreen({ route, navigation }: any) {
 				setHasDifferences={setHasDifferences}
 				watch={watch}
 			>
-				<BusinessScrollView>
+				<ContainerScrollView>
 					<Dropdown
 						label="Banco"
 						bottomSheetLabel="Selecione um banco"
@@ -354,7 +354,7 @@ export default function PaymentsScreen({ route, navigation }: any) {
 							/>
 						)}
 					</SubSectionWrapper>
-				</BusinessScrollView>
+				</ContainerScrollView>
 			</ChangesObserver>
 		</BusinessLayout>
 	);

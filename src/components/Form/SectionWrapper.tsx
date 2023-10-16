@@ -4,9 +4,9 @@ import { Text, View, ViewStyle } from "react-native";
 import Label from "components/Label";
 
 // Types
-import type { MaterialModel } from "database/models/materialModel";
-import type { OrderModel } from "database/models/orderModel";
-import type { ProductModel } from "database/models/productModel";
+import type { MaterialModel } from "database/models/material.model";
+import type { OrderModel } from "database/models/order.model";
+import type { ProductModel } from "database/models/product.model";
 
 export interface Section {
 	initialValue?: {

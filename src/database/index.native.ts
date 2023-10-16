@@ -1,16 +1,23 @@
 import { Database } from "@nozbe/watermelondb";
 import SQLiteAdapter from "@nozbe/watermelondb/adapters/sqlite";
 
-import { schemas } from "./schemas";
+import appSchema from "./schemas";
 
-import { OrderModel } from "./models/orderModel";
-import { ProductModel } from "./models/productModel";
-import { MaterialModel } from "./models/materialModel";
-import { ClientModel } from "./models/clientModel";
-import { ProjectModel } from "./models/projectModel";
+import { OrderModel } from "./models/order.model";
+import { ProductModel } from "./models/product.model";
+import { MaterialModel } from "./models/material.model";
+import { ClientModel } from "./models/client.model";
+import { ProjectModel } from "./models/project.model";
+
+import migrations from "./migrations";
 
 const adapter = new SQLiteAdapter({
-	schema: schemas,
+	schema: appSchema,
+	//migrations,
+	jsi: true,
+	onSetUpError: (error) => {
+		console.log(error);
+	},
 });
 
 export const database = new Database({

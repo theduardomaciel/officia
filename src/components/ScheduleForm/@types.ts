@@ -1,7 +1,7 @@
 // Types
 import type { CalendarDate } from "components/Calendar";
-import type { MaterialModel } from "database/models/materialModel";
-import type { ProductModel } from "database/models/productModel";
+import type { MaterialModel } from "database/models/material.model";
+import type { ProductModel } from "database/models/product.model";
 
 export interface Section0Props {
 	name: string;
