@@ -4,7 +4,7 @@ import { tableSchema } from "@nozbe/watermelondb";
 // schema = column
 // both = database schema
 
-export const clientSchema = tableSchema({
+export const costumerSchema = tableSchema({
 	name: "clients",
 	columns: [
 		{ name: "name", type: "string" },

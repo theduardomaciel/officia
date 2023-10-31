@@ -1,8 +1,8 @@
 import { Model } from "@nozbe/watermelondb";
 import { Associations } from "@nozbe/watermelondb/Model";
-import { field, readonly, date, text } from "@nozbe/watermelondb/decorators";
+import { readonly, date, text } from "@nozbe/watermelondb/decorators";
 
-export class ClientModel extends Model {
+export class CostumerModel extends Model {
 	static table = "clients";
 	static associations: Associations = {
 		projects: { type: "belongs_to", key: "project_id" },

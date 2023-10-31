@@ -1,7 +1,7 @@
 import { manipulateAsync } from "expo-image-manipulator";
 
 // Types
-import type { ClientModel } from "database/models/client.model";
+import type { CostumerModel } from "database/models/costumer.model";
 import type { MaterialModel } from "database/models/material.model";
 import type { OrderModel } from "database/models/order.model";
 import type { ProductModel } from "database/models/product.model";
@@ -13,7 +13,7 @@ interface Props {
 	order: OrderModel;
 	products?: ProductModel[];
 	materials?: MaterialModel[];
-	client?: ClientModel;
+	client?: CostumerModel;
 }
 
 export interface Config {
@@ -56,7 +56,7 @@ export async function getPDFString(
 	order: OrderModel,
 	products: ProductModel[],
 	materials: MaterialModel[],
-	client: ClientModel,
+	client: CostumerModel,
 	validity: string,
 	config: Config
 ) {

@@ -10,7 +10,7 @@ import {
 	text,
 } from "@nozbe/watermelondb/decorators";
 import { Associations } from "@nozbe/watermelondb/Model";
-import { ClientModel } from "./client.model";
+import { CostumerModel } from "./costumer.model";
 import { MaterialModel } from "./material.model";
 import { ProductModel } from "./product.model";
 
@@ -49,7 +49,7 @@ export class OrderModel extends Model {
 
 	@children("products") products!: ProductModel[];
 	@children("materials") materials!: MaterialModel[];
-	@relation("clients", "client_id") client!: ClientModel;
+	@relation("clients", "client_id") client!: CostumerModel;
 
 	@readonly @date("created_at") createdAt!: number;
 }

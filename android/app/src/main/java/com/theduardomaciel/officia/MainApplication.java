@@ -12,6 +12,13 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactNativeHost;
 import com.facebook.soloader.SoLoader;
 
+import java.util.Arrays; // ⬅️ This!
+import com.facebook.react.bridge.JSIModuleSpec; // ⬅️ This!
+import com.facebook.react.bridge.JSIModulePackage; // ⬅️ This!
+import com.facebook.react.bridge.ReactApplicationContext; // ⬅️ This!
+import com.facebook.react.bridge.JavaScriptContextHolder; // ⬅️ This!
+import com.nozbe.watermelondb.jsi.WatermelonDBJSIPackage; // ⬅️ This!
+
 import expo.modules.ApplicationLifecycleDispatcher;
 import expo.modules.ReactNativeHostWrapper;
 
@@ -48,6 +55,25 @@ public class MainApplication extends Application implements ReactApplication {
       @Override
       protected Boolean isHermesEnabled() {
         return BuildConfig.IS_HERMES_ENABLED;
+      }
+
+      @Override
+      protected JSIModulePackage getJSIModulePackage() {
+        return new JSIModulePackage() {
+          @Override
+          public List<JSIModuleSpec> getJSIModules(
+            final ReactApplicationContext reactApplicationContext,
+            final JavaScriptContextHolder jsContext
+          ) {
+            List<JSIModuleSpec> modules = Arrays.asList();
+
+            modules.addAll(new WatermelonDBJSIPackage().getJSIModules(reactApplicationContext, jsContext)); // ⬅️ This!
+            // ⬅️ add more JSI packages here by conventions above, for example:
+            // modules.addAll(new ReanimatedJSIModulePackage().getJSIModules(reactApplicationContext, jsContext));
+
+            return modules;
+          }
+        };
       }
   });
 

@@ -6,7 +6,7 @@ import appSchema from "./schemas";
 import { OrderModel } from "./models/order.model";
 import { ProductModel } from "./models/product.model";
 import { MaterialModel } from "./models/material.model";
-import { ClientModel } from "./models/client.model";
+import {  CostumerModel } from "./models/costumer.model";
 import { ProjectModel } from "./models/project.model";
 
 import migrations from "./migrations";
@@ -26,7 +26,7 @@ export const database = new Database({
 		OrderModel,
 		ProductModel,
 		MaterialModel,
-		ClientModel,
+		CostumerModel,
 		ProjectModel,
 	],
 });

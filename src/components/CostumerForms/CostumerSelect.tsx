@@ -23,7 +23,7 @@ interface Props {
     onSelectClient?: (data: CostumerModel) => void;
 }
 
-export default function ProjectsBottomSheet({ lastBottomSheet, order }: Props) {
+export default function ClientSelect({ lastBottomSheet, order }: Props) {
     const [clients, setClients] = useState<CostumerModel[]>([]);
 
     const lastBottomSheetRefOpenHandler = useCallback(() => {
