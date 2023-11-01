@@ -1,30 +1,36 @@
 import { Model } from "@nozbe/watermelondb";
 import {
-	field,
-	readonly,
-	date,
-	relation,
-	text,
+    field,
+    readonly,
+    date,
+    relation,
+    text,
 } from "@nozbe/watermelondb/decorators";
-import { Associations } from "@nozbe/watermelondb/Model";
-import { OrderModel } from "./order.model";
+
+// Types
+import type { OrderModel } from "./order.model";
+import type { ProjectModel } from "./project.model";
+import type { UNIT } from "./product.model";
 
 export class MaterialModel extends Model {
-	static table = "materials";
-	static associations: Associations = {
-		orders: { type: "belongs_to", key: "order_id" },
-	};
+    static table = "materials";
 
-	@readonly @date("created_at") createdAt!: number;
-	@text("name") name!: string;
-	@text("description") description!: string;
-	@text("image_url") image_url!: string | null;
-	@field("price") price!: number;
-	@field("amount") amount!: number;
-	@field("profit_margin") profitMargin!: number | null;
+    @text("name") name!: string;
+    @text("description") description!: string | null;
+    @text("image_url") image_url!: string | null;
 
-	@field("is_available") isAvailable!: boolean;
-	@field("is_bookmarked") isBookmarked!: boolean;
+    @field("price") price!: number | null;
+    @field("cost") cost!: number | null;
+    @field("profit_margin") profitMargin!: number | null;
+    @field("amount") amount!: number;
+    @field("unit") unit!: UNIT;
+    @field("responsibility") responsibility!: Responsibility;
 
-	@relation("orders", "order_id") order!: OrderModel;
+    @relation("orders", "order_id") order!: OrderModel;
+    @relation("projects", "project_id") project!: ProjectModel;
+
+    @readonly @date("created_at") createdAt!: number;
+    @readonly @date("updated_at") updatedAt!: number;
 }
+
+export type Responsibility = "COSTUMER" | "PROJECT" | "OTHER";

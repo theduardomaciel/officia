@@ -18,7 +18,7 @@ const Stack = createStackNavigator();
 
 export function AuthStack() {
     const { colorScheme } = useColorScheme();
-    const authData = useAuth();
+    const { id } = useAuth();
 
     return (
         <Stack.Navigator
@@ -33,23 +33,17 @@ export function AuthStack() {
                 }, */
             }}
         >
-            {
-                // If the user has a id but not a selectedProjectId, it means that the user needs to create one
-                !authData?.id && (
-                    <Stack.Screen
-                        name="login"
-                        component={Login}
-                        options={{
-                            headerShown: false,
-                            cardStyleInterpolator:
-                                CardStyleInterpolators.forFadeFromBottomAndroid,
-                        }}
-                    />
-                )
-            }
+            <Stack.Screen
+                name="login"
+                component={Login}
+                options={{
+                    headerShown: false,
+                    cardStyleInterpolator:
+                        CardStyleInterpolators.forFadeFromBottomAndroid,
+                }}
+            />
             <Stack.Screen
                 name="register"
-                initialParams={{}}
                 component={Register}
                 options={{
                     headerShown: false,

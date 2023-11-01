@@ -97,7 +97,7 @@ export default function Login({ navigation }: any) {
     const inserts = useSafeAreaInsets();
     const { height } = useWindowDimensions();
 
-    const { signIn } = useAuth();
+    const { id, signIn } = useAuth();
 
     const RANDOM_QUOTE_INDEX = Math.floor(Math.random() * QUOTES.length);
 
@@ -230,7 +230,9 @@ export default function Login({ navigation }: any) {
                                 ) : (
                                     <TouchableOpacity
                                         className="absolute -bottom-14 left-0 w-full"
-                                        onPress={() => signIn()}
+                                        onPress={() =>
+                                            id ? navigation.goBack() : signIn()
+                                        }
                                     >
                                         <Text className="w-full text-center text-text-200 opacity-80">
                                             Continuar como convidado

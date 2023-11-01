@@ -1,39 +1,55 @@
 import { Model } from "@nozbe/watermelondb";
 import {
-	field,
-	readonly,
-	date,
-	relation,
-	json,
-	text,
+    field,
+    readonly,
+    date,
+    relation,
+    text,
+    children,
 } from "@nozbe/watermelondb/decorators";
 import { Associations } from "@nozbe/watermelondb/Model";
 
 // Types
 import type { OrderModel } from "./order.model";
 import type { ProjectModel } from "./project.model";
-
-// Category
-import { Category } from "screens/Main/Business/@types";
-
-const sanitizeTypes = (json: Category) => json;
+import type { CategoryModel } from "./category.model";
 
 export class ProductModel extends Model {
-	static table = "products";
-	static associations: Associations = {
-		orders: { type: "belongs_to", key: "order_id" },
-		projects: { type: "belongs_to", key: "project_id" },
-	};
+    static table = "products";
+    static associations: Associations = {
+        categories: { type: "belongs_to", key: "project_id" },
+    };
 
-	@text("description") description!: string;
-	@text("details") details!: string | null;
-	@json("types", sanitizeTypes) types!: Category[];
-	@field("price") price!: number;
-	@field("amount") amount!: number;
-	@field("is_bookmarked") isBookmarked!: boolean;
+    @text("name") description!: string;
+    @text("description") details!: string | null;
+    @field("price") price!: number | null;
+    @field("unit") unit!: UNIT;
+    @field("amount") amount!: number;
 
-	@relation("orders", "order_id") order!: OrderModel;
-	@relation("projects", "project_id") project!: ProjectModel;
+    @children("categories") categories!: CategoryModel[];
 
-	@readonly @date("created_at") createdAt!: number;
+    @relation("orders", "order_id") order!: OrderModel;
+    @relation("projects", "project_id") project!: ProjectModel;
+
+    @readonly @date("created_at") createdAt!: number;
 }
+
+export type UNIT =
+    | "UNIT"
+    | "M2"
+    | "KM2"
+    | "HA"
+    | "MM"
+    | "CM"
+    | "M"
+    | "KM"
+    | "ML"
+    | "L"
+    | "M3"
+    | "MIN"
+    | "H"
+    | "DAYS"
+    | "WEEKS"
+    | "MONTHS"
+    | "G"
+    | "KG";
