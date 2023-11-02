@@ -1,66 +1,48 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-    BackHandler,
-    Keyboard,
-    TouchableWithoutFeedback,
-    View,
-} from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { BackHandler, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 
 import Header from "components/Header";
 import { SectionsNavigator } from "components/SectionsNavigator";
 
-import Section0 from "components/ScheduleForm/Sections/Section0";
-import Section1 from "components/ScheduleForm/Sections/Section1";
-import Section2 from "components/ScheduleForm/Sections/Section2";
+import Section0Form from "screens/ScheduleForm/Sections/Section0";
 
 // Components
-import Container from "components/Container";
 import { Loading } from "components/StatusMessage";
+import Container from "components/Container";
+import BottomSheet from "components/BottomSheet";
+import ConfirmExitModal from "components/Business/ConfirmExitModal";
 
 // Database
 import { database } from "database/index.native";
 
 // Types
 import type { OrderModel } from "database/models/order.model";
-import BottomSheet from "components/BottomSheet";
-import ConfirmExitModal from "components/Business/ConfirmExitModal";
-import SectionBottomSheet from "components/Form/SectionBottomSheet";
+import { SECTION_PREFIX } from "./ScheduleForm/@types";
+import Section1Form from "./ScheduleForm/Sections/Section1";
 
 export default function ScheduleForm({ route, navigation }: any) {
+    const orderId = route.params?.orderId;
     const selectedSectionId = useSharedValue(0);
 
-    const section0BottomSheet = "scheduleFormSection0BottomSheet";
-    const section1BottomSheet = "scheduleFormSection1BottomSheet";
-    const section2BottomSheet = "scheduleFormSection2BottomSheet";
-
-    const sections = [
-        section0BottomSheet,
-        section1BottomSheet,
-        section2BottomSheet,
-    ];
-
     const updateHandler = useCallback((id: number) => {
-        if (sections[selectedSectionId.value] && sections[id]) {
-            BottomSheet.close(sections[selectedSectionId.value]);
+        if (id >= 0 && id <= 2) {
+            BottomSheet.close(SECTION_PREFIX + selectedSectionId.value);
             selectedSectionId.value = withSpring(id, {
                 damping: 100,
                 stiffness: 400,
             });
-            BottomSheet.expand(sections[id]);
+            BottomSheet.expand(SECTION_PREFIX + id);
         } else {
             navigation.goBack();
         }
     }, []);
 
-    const section0Ref = useRef<any>(null);
-    const section1Ref = useRef<any>(null);
-
     const [initialValue, setInitialValue] = useState<any | undefined>(
         undefined
     );
 
-    async function setInitialState(id: string) {
+    async function fetchInitialData(id: string) {
         try {
             const order = (await database
                 .get<OrderModel>("orders")
@@ -76,7 +58,7 @@ export default function ScheduleForm({ route, navigation }: any) {
                         products,
                         materials,
                     });
-                    BottomSheet.expand(section0BottomSheet);
+                    BottomSheet.expand(SECTION_PREFIX + "0");
                 }
             }
         } catch (error) {
@@ -87,20 +69,20 @@ export default function ScheduleForm({ route, navigation }: any) {
     const [isConfirmExitModalVisible, setConfirmExitModalVisible] =
         React.useState(false);
 
-    useEffect(() => {
-        if (route.params?.orderId) {
-            setInitialState(route.params?.orderId);
+    const backAction = useCallback(() => {
+        if (selectedSectionId.value === 0) {
+            setConfirmExitModalVisible(true);
+            return true;
+        } else {
+            updateHandler(selectedSectionId.value - 1);
+            return true;
         }
+    }, []);
 
-        const backAction = () => {
-            if (selectedSectionId.value !== 0) {
-                updateHandler(selectedSectionId.value - 1);
-                return true;
-            } else {
-                setConfirmExitModalVisible(true);
-                return true;
-            }
-        };
+    useEffect(() => {
+        if (orderId) {
+            fetchInitialData(orderId);
+        }
 
         const backHandler = BackHandler.addEventListener(
             "hardwareBackPress",
@@ -114,82 +96,44 @@ export default function ScheduleForm({ route, navigation }: any) {
         <>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <Container>
-                    <View>
-                        <Header
-                            title={
-                                route.params?.orderId
-                                    ? "Editar serviço"
-                                    : "Agendamento"
+                    <Header
+                        title={orderId ? "Editar serviço" : "Agendamento"}
+                        returnButton={() => {
+                            if (selectedSectionId.value !== 0) {
+                                updateHandler(selectedSectionId.value - 1);
+                            } else {
+                                setConfirmExitModalVisible(true);
                             }
-                            returnButton={() => {
-                                if (selectedSectionId.value !== 0) {
-                                    updateHandler(selectedSectionId.value - 1);
-                                } else {
-                                    setConfirmExitModalVisible(true);
-                                }
-                            }}
-                        />
-                    </View>
+                        }}
+                    />
                     <SectionsNavigator
                         selectedId={selectedSectionId}
                         sections={[
                             {
                                 id: 0,
                                 title: "Básico",
-                                onPress: () =>
-                                    selectedSectionId.value !== 0 &&
-                                    updateHandler(0),
                             },
                             {
                                 id: 1,
                                 title: "Detalhes",
-                                onPress: () =>
-                                    selectedSectionId.value !== 1 &&
-                                    updateHandler(1),
                             },
                             {
                                 id: 2,
                                 title: "Revisão",
-                                onPress: () =>
-                                    selectedSectionId.value !== 2 &&
-                                    updateHandler(2),
                             },
                         ]}
                     />
 
-                    {!route.params?.orderId ||
-                    (route.params?.orderId && initialValue) ? (
+                    {!orderId || (orderId && initialValue) ? (
                         <>
-                            <SectionBottomSheet
-                                id={section0BottomSheet}
-                                height="76%"
-                                defaultValues={{
-                                    expanded: !initialValue,
-                                }}
-                            >
-                                <Section0
-                                    initialValue={initialValue}
-                                    ref={section0Ref}
-                                    updateHandler={updateHandler}
-                                />
-                            </SectionBottomSheet>
-
-                            <SectionBottomSheet
-                                id={section1BottomSheet}
-                                height="76%"
-                            >
-                                <Section1
-                                    initialValue={initialValue}
-                                    ref={section1Ref}
-                                    updateHandler={updateHandler}
-                                />
-                            </SectionBottomSheet>
-
+                            <Section0Form updateHandler={updateHandler} />
+                            <Section1Form updateHandler={updateHandler} />
+                            {/* 
                             <Section2
                                 bottomSheet={section2BottomSheet}
                                 initialValue={initialValue}
                                 formRefs={{ section0Ref, section1Ref }}
-                            />
+                            /> */}
                         </>
                     ) : (
                         <Loading />
@@ -200,7 +144,7 @@ export default function ScheduleForm({ route, navigation }: any) {
                 isVisible={isConfirmExitModalVisible}
                 toggleVisibility={() => setConfirmExitModalVisible(false)}
                 onExitConfirmation={() => {
-                    //setConfirmExitModalVisible(false);
+                    setConfirmExitModalVisible(false);
                     navigation.goBack();
                 }}
             />

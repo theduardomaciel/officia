@@ -47,7 +47,7 @@ interface FormValues {
 }
 
 interface Props {
-    onSubmitForm?: (data: Partial<MaterialModel>) => void;
+    onSubmitForm?: (data: MaterialModel) => void;
     initialData?: Partial<MaterialModel>;
     toCatalog?: boolean;
 }
@@ -132,7 +132,7 @@ export default function MaterialForm({
         BottomSheet.close("materialBottomSheet");
 
         setMaterialImage(undefined);
-        onSubmitForm && onSubmitForm(newMaterial);
+        onSubmitForm && onSubmitForm(newMaterial as MaterialModel);
         reset();
     };
 

@@ -25,7 +25,7 @@ const sections = ["projectSelection"];
 
 // The logic used behind the (!email) conditional is that if the user already created an account and reopened the app but didn't created a business yet, the app will redirect him to the register screen, but in the last section, so he can create a business.
 
-export default function ProjectSelection({ navigation }: any) {
+export default function AccountSelection({ navigation }: any) {
     const { signOut } = useAuth();
 
     const { BackButton } = useUpdateHandler({

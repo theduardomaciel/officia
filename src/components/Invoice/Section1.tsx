@@ -8,7 +8,7 @@ import {
     PaymentMethodsReview,
     ReviewSection,
     WarrantyReview,
-} from "components/ScheduleForm/Sections/Section2";
+} from "screens/ScheduleForm/Sections/Section2";
 import { SubSectionWrapper } from "components/Form/SectionWrapper";
 import { ActionButton } from "components/Button";
 

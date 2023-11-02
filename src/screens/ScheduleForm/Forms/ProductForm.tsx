@@ -34,24 +34,24 @@ import type { ProductModel } from "database/models/product.model";
 import type { CategoryModel } from "database/models/category.model";
 
 interface FormValues {
+    name: string;
     description: string;
-    details: string;
     price: string;
     amount: string;
 }
 
 const schema = z.object({
-    description: z.string({
+    name: z.string({
         required_error:
-            "É necessário inserir uma descrição para o subserviço ser adicionado.",
+            "É necessário inserir uma descrição para o produto ser adicionado.",
     }),
-    details: z.string(),
+    description: z.string(),
     price: z.string().default("0"),
     amount: z.string(),
 });
 
 interface Props {
-    onSubmitForm?: (data: Partial<ProductModel>) => void;
+    onSubmitForm?: (data: ProductModel) => void;
     initialData?: Partial<ProductModel>;
     toCatalog?: boolean;
 }
@@ -77,8 +77,8 @@ export default function ProductForm({
         formState: { errors },
     } = useForm({
         defaultValues: {
+            name: "",
             description: "",
-            details: "",
             price: "0",
             amount: "1",
         },
@@ -93,12 +93,12 @@ export default function ProductForm({
     const onSubmit: SubmitHandler<FormValues> = (data) => {
         const newProduct = {
             id: initialData ? initialData.id : uuidv4(),
+            name: data.name,
             description: data.description,
-            details: data.details,
-            price: (data.price ? parseFloat(data.price) : 0) ?? 0,
+            price: data.price ? parseFloat(data.price) : undefined,
             amount: parseInt(data.amount),
-            types: selectedTags.current,
-        };
+            categories: selectedTags.current,
+        } as Partial<ProductModel>;
         //console.log(newProduct)
 
         if (toCatalog) {
@@ -124,7 +124,7 @@ export default function ProductForm({
 
         BottomSheet.close("subOrderBottomSheet");
 
-        onSubmitForm && onSubmitForm(newProduct as unknown as ProductModel);
+        onSubmitForm && onSubmitForm(newProduct as ProductModel);
         reset();
     };
 
@@ -146,15 +146,15 @@ export default function ProductForm({
             tagsPickerRef.current?.setTags(initialData.categories ?? []);
 
             reset({
-                description: initialData.description,
-                details: initialData.details ?? "",
+                name: initialData.name,
+                description: initialData.description ?? "",
                 price: initialData.price?.toString(),
                 amount: initialData.amount?.toString(),
             });
         } else {
             reset({
+                name: "",
                 description: "",
-                details: "",
                 price: "",
                 amount: "1",
             });
@@ -232,7 +232,8 @@ export default function ProductForm({
                                     label="Detalhes do Serviço"
                                     style={[
                                         { minHeight: 100, paddingTop: 15 },
-                                        !!errors.details && borderErrorStyle,
+                                        !!errors.description &&
+                                            borderErrorStyle,
                                     ]}
                                     multiline
                                     onBlur={onBlur}
@@ -243,7 +244,7 @@ export default function ProductForm({
                                     placeholder="Ex: O box precisa estar totalmente seco e limpo para a execução do serviço"
                                 />
                             )}
-                            name="details"
+                            name="description"
                             rules={{ required: false }}
                         />
                         <View className="flex-row w-full items-center justify-between">

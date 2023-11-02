@@ -11,8 +11,8 @@ import CatalogView, {
 // Bottom Sheet
 import BottomSheet from "components/BottomSheet";
 
-import MaterialForm from "components/ScheduleForm/Forms/MaterialForm";
-import ProductForm from "components/ScheduleForm/Forms/ProductForm";
+import MaterialForm from "screens/ScheduleForm/Forms/MaterialForm";
+import ProductForm from "screens/ScheduleForm/Forms/ProductForm";
 
 // Types
 import type { ProductModel } from "database/models/product.model";

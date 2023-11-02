@@ -56,7 +56,7 @@ interface ObservableOrderModel extends OrderModel {
 }
 
 export default function Order({ route, navigation }: any) {
-    const { orderId, updated } = route.params;
+    const { id, hasUpdated } = route.params;
 
     const [order, setOrder] = React.useState<OrderModel | undefined>(undefined);
     const [products, setProducts] = React.useState<ProductModel[] | undefined>(
@@ -81,7 +81,7 @@ export default function Order({ route, navigation }: any) {
     async function fetchOrder() {
         const newOrder = (await database
             .get<OrderModel>("orders")
-            .find(orderId)) as ObservableOrderModel;
+            .find(id)) as ObservableOrderModel;
 
         if (newOrder.date < new Date() && newOrder.status === "scheduled") {
             await database.write(async () => {
@@ -102,16 +102,16 @@ export default function Order({ route, navigation }: any) {
 
     useFocusEffect(
         React.useCallback(() => {
-            if (updated) {
+            if (hasUpdated) {
                 navigation.setParams({
-                    updated: undefined,
-                    orderId: orderId,
+                    hasUpdated: undefined,
+                    id: id,
                 });
                 showUpdatedOrderToast();
             }
 
             fetchOrder();
-        }, [orderId, updated])
+        }, [id, hasUpdated])
     );
 
     return (
@@ -211,7 +211,7 @@ function ScreenContent({ order, products, materials, client }: Props) {
         await removeNotification(order.id);
 
         setDeleteModalVisible(false);
-        navigate("home", { order: "deleted" });
+        navigate("Home", { order: "deleted" });
     }
 
     return (
@@ -408,7 +408,7 @@ function ScreenContent({ order, products, materials, client }: Props) {
                             icon="edit"
                             style={{ paddingTop: 12, paddingBottom: 12 }}
                             onPress={() =>
-                                navigate("schedule", { orderId: order.id })
+                                navigate("Schedule", { id: order.id })
                             }
                         />
                         <View>
@@ -437,7 +437,7 @@ function ScreenContent({ order, products, materials, client }: Props) {
                     icon={"attach-money"}
                     label={"Gerar orçamento"}
                     disabled={products && products?.length === 0}
-                    onPress={() => navigate("invoice", { orderId: order.id })}
+                    onPress={() => navigate("invoice", { id: order.id })}
                 />
             </View>
             {client && <CostumerView client={client} order={order} />}

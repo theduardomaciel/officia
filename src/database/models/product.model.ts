@@ -20,8 +20,8 @@ export class ProductModel extends Model {
         categories: { type: "belongs_to", key: "project_id" },
     };
 
-    @text("name") description!: string;
-    @text("description") details!: string | null;
+    @text("name") name!: string;
+    @text("description") description!: string | null;
     @field("price") price!: number | null;
     @field("unit") unit!: UNIT;
     @field("amount") amount!: number;

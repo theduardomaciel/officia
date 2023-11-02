@@ -8,21 +8,21 @@ import { useNavigation } from "@react-navigation/native";
 import { useColorScheme } from "nativewind";
 import colors from "global/colors";
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
 
 import Login from "screens/Auth/Login";
 
 import Invoice from "screens/Invoice";
 import ScheduleForm from "screens/ScheduleForm";
 import Order from "screens/Order";
-import DayAgenda from "screens/DayAgenda";
+import DateAgenda from "screens/DateAgenda";
 
 // Business
 import BasicInfo from "screens/Main/Business/screens/BasicInfo";
 import AdditionalInfo from "screens/Main/Business/screens/AdditionalInfo";
+import Marketplace from "screens/Main/Business/screens/Marketplace";
 import BankAccount from "screens/Main/Business/screens/Payments";
 import PhoneAndAddress from "screens/Main/Business/screens/ContactAndAddress";
-import SocialMedia from "screens/Main/Business/screens/SocialMedia";
 import CategoriesScreen from "screens/Main/Business/screens/Categories";
 
 import Settings from "screens/Drawer/Settings";
@@ -44,6 +44,14 @@ import SubscriptionScreen from "screens/Drawer/Subscription";
 import ManageData from "screens/Drawer/ManageData";
 import ManageAccount from "screens/Drawer/Profile/ManageAccount";
 import ManageSubscription from "screens/Drawer/Profile/ManageSubscription";
+
+// Types
+import type { RootStackParamList } from "./@types";
+import AccountSelection from "screens/Auth/Selection";
+
+const DEFAULT_OPTIONS = {
+    cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
+} as const;
 
 export function AppStack() {
     const { colorScheme } = useColorScheme();
@@ -77,167 +85,152 @@ export function AppStack() {
             }}
         >
             <Stack.Screen
-                name="homeDrawer"
+                name="HomeDrawer"
                 component={DrawerNavigator}
                 options={{ headerShown: false }}
             />
+            {/* GENERAL */}
             <Stack.Screen
-                name="dayAgenda"
-                component={DayAgenda}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
+                name="DateAgenda"
+                component={DateAgenda}
+                options={DEFAULT_OPTIONS}
             />
             <Stack.Screen
-                name="bankAccount"
-                component={BankAccount}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
-            />
-            <Stack.Screen
-                name="socialMedia"
-                component={SocialMedia}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
-            />
-            <Stack.Screen
-                name="basicInfo"
-                component={BasicInfo}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
-            />
-            <Stack.Screen
-                name="additionalInfo"
-                component={AdditionalInfo}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
-            />
-            <Stack.Screen
-                name="contactAndAddress"
-                component={PhoneAndAddress}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
-            />
-            <Stack.Screen
-                name="schedule"
-                component={ScheduleForm}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forVerticalIOS,
-                }}
-            />
-            <Stack.Screen
-                name="order"
+                name="Order"
                 component={Order}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
+                options={DEFAULT_OPTIONS}
             />
             <Stack.Screen
-                name="categories"
-                component={CategoriesScreen}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
-            />
-            <Stack.Screen
-                name="digitalSignature"
-                component={DigitalSignature}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
-            />
-            <Stack.Screen
-                name="settings"
-                component={Settings}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
-            />
-            <Stack.Screen
-                name="invoice"
+                name="Invoice"
                 component={Invoice}
                 options={{
                     cardStyleInterpolator:
                         CardStyleInterpolators.forVerticalIOS,
                 }}
             />
+            {/* SCHEDULE */}
+            <Stack.Screen
+                name="Schedule"
+                component={ScheduleForm}
+                options={{
+                    cardStyleInterpolator:
+                        CardStyleInterpolators.forVerticalIOS,
+                }}
+            />
+            {/* BUSINESS SCREENS */}
+            <Stack.Group>
+                <Stack.Screen
+                    name="BasicInfo"
+                    component={BasicInfo}
+                    options={{
+                        cardStyleInterpolator:
+                            CardStyleInterpolators.forHorizontalIOS,
+                    }}
+                />
+                <Stack.Screen
+                    name="AdditionalInfo"
+                    component={AdditionalInfo}
+                    options={{
+                        cardStyleInterpolator:
+                            CardStyleInterpolators.forHorizontalIOS,
+                    }}
+                />
+                <Stack.Screen
+                    name="Marketplace"
+                    component={Marketplace}
+                    options={{
+                        cardStyleInterpolator:
+                            CardStyleInterpolators.forHorizontalIOS,
+                    }}
+                />
+                <Stack.Screen
+                    name="Contact"
+                    component={PhoneAndAddress}
+                    options={{
+                        cardStyleInterpolator:
+                            CardStyleInterpolators.forHorizontalIOS,
+                    }}
+                />
+                <Stack.Screen
+                    name="Payments"
+                    component={BankAccount}
+                    options={{
+                        cardStyleInterpolator:
+                            CardStyleInterpolators.forHorizontalIOS,
+                    }}
+                />
+                <Stack.Screen
+                    name="Categories"
+                    component={CategoriesScreen}
+                    options={{
+                        cardStyleInterpolator:
+                            CardStyleInterpolators.forHorizontalIOS,
+                    }}
+                />
+                <Stack.Screen
+                    name="DigitalSignature"
+                    component={DigitalSignature}
+                    options={{
+                        cardStyleInterpolator:
+                            CardStyleInterpolators.forHorizontalIOS,
+                    }}
+                />
+            </Stack.Group>
             {/* DRAWER SCREENS */}
             <Stack.Screen
-                name="profile"
+                name="Profile"
                 component={ProfileScreen}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
+                options={DEFAULT_OPTIONS}
             />
             <Stack.Screen
-                name="clients"
+                name="Costumers"
                 component={CostumersScreen}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
+                options={DEFAULT_OPTIONS}
             />
             <Stack.Screen
-                name="catalog"
+                name="Catalog"
                 component={CatalogScreen}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
+                options={DEFAULT_OPTIONS}
             />
             <Stack.Screen
-                name="subscription"
+                name="Subscription"
                 component={SubscriptionScreen}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
-            />
-            {/* Drawer*/}
-            <Stack.Screen
-                name="manageData"
-                component={ManageData}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
+                options={DEFAULT_OPTIONS}
             />
             {/* Drawer -> Profile */}
             <Stack.Screen
-                name="manageAccount"
+                name="ManageAccount"
                 component={ManageAccount}
-                options={{
-                    cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
-                }}
+                options={DEFAULT_OPTIONS}
             />
             <Stack.Screen
-                name="manageSubscription"
+                name="ManageSubscription"
                 component={ManageSubscription}
+                options={DEFAULT_OPTIONS}
+            />
+            {/* DRAWER OPTIONS */}
+            <Stack.Screen
+                name="Settings"
+                component={Settings}
+                options={DEFAULT_OPTIONS}
+            />
+            <Stack.Screen
+                name="ManageData"
+                component={ManageData}
+                options={DEFAULT_OPTIONS}
+            />
+            {/* AUTHENTICATION */}
+            <Stack.Screen
+                name="AccountSelection"
+                component={AccountSelection}
                 options={{
+                    headerShown: false,
                     cardStyleInterpolator:
-                        CardStyleInterpolators.forHorizontalIOS,
+                        CardStyleInterpolators.forFadeFromBottomAndroid,
                 }}
             />
             <Stack.Screen
-                name="login"
+                name="Login"
                 component={Login}
                 options={{
                     headerShown: false,

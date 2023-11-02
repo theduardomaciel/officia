@@ -55,7 +55,7 @@ export default function DrawerNavigator(props: any) {
 
     return (
         <Drawer.Navigator
-            initialRouteName="homeTab"
+            initialRouteName="HomeTab"
             screenOptions={{
                 swipeEdgeWidth: (width / 3) * 2,
                 swipeEnabled: true,
@@ -75,7 +75,7 @@ export default function DrawerNavigator(props: any) {
             drawerContent={(props) => <CustomDrawerContent {...props} />}
         >
             <Drawer.Screen
-                name="homeTab"
+                name="HomeTab"
                 component={HomeNavigator}
                 options={{
                     headerShown: false,
@@ -166,7 +166,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                     style={STYLE}
                     labelStyle={LABEL_STYLE}
                     onPress={() =>
-                        loggedNavigation(props.navigation, "profile")
+                        loggedNavigation(props.navigation, "Profile")
                     }
                 />
                 <DrawerItem
@@ -181,7 +181,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                     style={STYLE}
                     labelStyle={LABEL_STYLE}
                     onPress={() =>
-                        loggedNavigation(props.navigation, "costumers")
+                        loggedNavigation(props.navigation, "Costumers")
                     }
                 />
                 <DrawerItem
@@ -196,7 +196,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                     style={STYLE}
                     labelStyle={LABEL_STYLE}
                     onPress={() =>
-                        loggedNavigation(props.navigation, "catalog")
+                        loggedNavigation(props.navigation, "Catalog")
                     }
                 />
                 <DrawerItem
@@ -215,7 +215,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                         />
                     )}
                     onPress={() =>
-                        loggedNavigation(props.navigation, "subscription")
+                        loggedNavigation(props.navigation, "Subscription")
                     }
                 />
             </View>
@@ -235,7 +235,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                             label: "Configurações do aplicativo",
                             icon: "settings",
                             onPress: () =>
-                                loggedNavigation(props.navigation, "settings"),
+                                props.navigation.navigate("Settings"),
                         },
                         {
                             label: "Central de Ajuda",
@@ -277,7 +277,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
                             onPress: () =>
                                 loggedNavigation(
                                     props.navigation,
-                                    "manageData"
+                                    "ManageData"
                                 ),
                         },
                         {

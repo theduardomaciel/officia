@@ -6,49 +6,49 @@ import colors from "global/colors";
 import { FC, SVGProps } from "react";
 
 interface Props extends TextProps {
-	icon?: {
-		name: string;
-		size?: number;
-		color?: string;
-	};
-	customIcon?: FC<SVGProps<SVGSVGElement>>;
+    icon?: {
+        name: string;
+        size?: number;
+        color?: string;
+    };
+    customIcon?: FC<SVGProps<SVGSVGElement>>;
 }
 
 export default function Label({
-	children,
-	icon,
-	customIcon: CustomIcon,
-	...rest
+    children,
+    icon,
+    customIcon: CustomIcon,
+    ...rest
 }: Props) {
-	const { colorScheme } = useColorScheme();
+    const { colorScheme } = useColorScheme();
 
-	return (
-		<View
-			className="flex flex-row items-center justify-start"
-			style={{ columnGap: 10 }}
-		>
-			{CustomIcon && (
-				<CustomIcon fontSize={18} color={colors.text[100]} />
-			)}
-			{icon && (
-				<MaterialIcons
-					name={icon.name as unknown as any}
-					size={icon.size || 18}
-					color={
-						icon.color
-							? icon.color
-							: colorScheme === "dark"
-							? colors.text[100]
-							: colors.black
-					}
-				/>
-			)}
-			<Text
-				className="flex font-semibold text-[15px] text-black dark:text-text-100"
-				{...rest}
-			>
-				{children}
-			</Text>
-		</View>
-	);
+    return (
+        <View
+            className="flex flex-row items-center justify-start bg-red"
+            style={{ columnGap: 10 }}
+        >
+            {CustomIcon && (
+                <CustomIcon fontSize={18} color={colors.text[100]} />
+            )}
+            {icon && (
+                <MaterialIcons
+                    name={icon.name as unknown as any}
+                    size={icon.size || 18}
+                    color={
+                        icon.color
+                            ? icon.color
+                            : colorScheme === "dark"
+                            ? colors.text[100]
+                            : colors.black
+                    }
+                />
+            )}
+            <Text
+                className="flex font-semibold text-[15px] text-black dark:text-text-100"
+                {...rest}
+            >
+                {children}
+            </Text>
+        </View>
+    );
 }

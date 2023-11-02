@@ -62,4 +62,4 @@ export class OrderModel extends Model {
     @readonly @date("updated_at") updatedAt!: Date;
 }
 
-type PAYMENT_CONDITION = "FULL" | "CARD" | "AGREEMENT";
+export type PAYMENT_CONDITION = "FULL" | "INSTALLMENTS" | "AGREEMENT";
