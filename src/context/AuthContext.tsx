@@ -78,13 +78,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 );
 
             const access_token = userStorage.getString("access_token");
-
             if (access_token) {
                 api.defaults.headers.Authorization = `Bearer ${access_token}`;
-                setId(id);
-            } else {
-                setId(undefined);
             }
+
+            setId(id);
         } catch (error) {
             console.log(error);
         } finally {

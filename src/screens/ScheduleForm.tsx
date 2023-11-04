@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import { BackHandler, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 
@@ -125,7 +125,7 @@ export default function ScheduleForm({ route, navigation }: any) {
                     />
 
                     {!orderId || (orderId && initialValue) ? (
-                        <>
+                        <Fragment>
                             <Section0Form updateHandler={updateHandler} />
                             <Section1Form updateHandler={updateHandler} />
                             {/* 
@@ -134,7 +134,7 @@ export default function ScheduleForm({ route, navigation }: any) {
                                 initialValue={initialValue}
                                 formRefs={{ section0Ref, section1Ref }}
                             /> */}
-                        </>
+                        </Fragment>
                     ) : (
                         <Loading />
                     )}

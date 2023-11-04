@@ -73,10 +73,10 @@ export const SubSectionWrapper = React.memo(
                 style={[style, { rowGap: 10 }]}
             >
                 <View
-                    className="w-full flex-row items-center justify-between bg-green-400"
+                    className="w-full flex-row items-center justify-between"
                     style={headerProps.style}
                 >
-                    <View className="flex flex-col items-start justify-start">
+                    <View className="flex flex-col items-start justify-start w-full">
                         <Label
                             icon={
                                 headerProps.icon &&

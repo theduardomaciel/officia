@@ -1,13 +1,4 @@
-import React, {
-    forwardRef,
-    memo,
-    useCallback,
-    useImperativeHandle,
-    useMemo,
-    useReducer,
-    useRef,
-    useState,
-} from "react";
+import React, { memo, useCallback, useReducer, useRef, useState } from "react";
 import { View, Text } from "react-native";
 import { z } from "zod";
 
@@ -67,47 +58,6 @@ const paymentMethods = [
 function Section1({ initialValue, updateHandler }: SectionProps) {
     const navigation = useNavigation();
 
-    // Payment Condition - full, card or AGREEMENT
-    const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>(
-        (initialValue?.paymentCondition as PaymentCondition) ?? "FULL"
-    );
-
-    const [checkedPaymentMethods, dispatch] = useReducer(
-        checkboxesGroupReducer,
-        initialValue?.paymentMethods ?? []
-    );
-
-    // Split Method (for AGREEMENT)
-    // pode ser:
-    // 1. parcelas: do cartão quando NÃO há valor restante do acordo (splitRemaining)
-    // 2. valor inicial do acordo em dinheiro: quando NÃO HÁ símbolos no valor (ex: número inteiro ['462'], '1/3' ou '1/2')
-    // 3. valor inicial do acordo em porcentagem: quando há o símbolo de (%) no valor
-
-    const [splitMethod, setSplitMethod] = useState<SplitMethod | null>(
-        initialValue?.splitValue?.includes("%") ? "PERCENTAGE" : "MONEY"
-    );
-
-    // Agreement Initial Value - MONEY (ex: número inteiro ['462'], '1/3' ou '1/2')
-    const splitInitialPercentageRef =
-        useRef<ToggleGroupWithManualValueRef | null>(null);
-
-    // Agreement Initial Value - percentage (ex: 25%, 65%)
-    const splitInitialValueRef = useRef<ToggleGroupWithManualValueRef | null>(
-        null
-    );
-
-    // Remaining Value - pode ser 'parcelas' (ex: 2x, 3x) ou 'valor restante do acordo' ('REMAINING')
-    const [remainingValue, setRemainingValue] = useState<RemainingValue>(
-        (initialValue?.splitRemaining === "REMAINING"
-            ? "afterCompletion"
-            : "WITH_INSTALLMENTS") as RemainingValue
-    );
-
-    // Installments
-    const installmentsAmountRef = useRef<ToggleGroupWithManualValueRef | null>(
-        null
-    );
-
     // Warranty
     const [warrantyPeriodType, setWarrantyPeriodType] =
         useState<WarrantyPeriod>("DAYS");
@@ -135,8 +85,6 @@ function Section1({ initialValue, updateHandler }: SectionProps) {
         },
         resolver: zodResolver(schema),
     });
-
-    console.log(paymentCondition);
 
     const hasInstallments =
         paymentCondition === "INSTALLMENTS" ||
@@ -389,35 +337,96 @@ function Section1({ initialValue, updateHandler }: SectionProps) {
 const Section1Form = memo(Section1, () => true);
 export default Section1Form;
 
-interface PaymentConditionsProps {
-    paymentCondition: PaymentCondition;
-    setPaymentCondition: (value: PaymentCondition) => void;
-    splitMethod: SplitMethod | null;
-    setSplitMethod: (value: SplitMethod | null) => void;
-    remainingValue: RemainingValue;
-    setRemainingValue: (value: RemainingValue) => void;
-    hasInstallments: boolean;
-    splitInitialPercentageRef: React.MutableRefObject<ToggleGroupWithManualValueRef | null>;
-    splitInitialValueRef: React.MutableRefObject<ToggleGroupWithManualValueRef | null>;
-    installmentsAmountRef: React.MutableRefObject<ToggleGroupWithManualValueRef | null>;
-    initialValue: any;
+/* 
+// Payment Condition - FULL, CARD or AGREEMENT
+    const [paymentCondition, setPaymentCondition] = useState<PaymentCondition>(
+        (initialValue?.paymentCondition as PaymentCondition) ?? "FULL"
+    );
+
+    const [checkedPaymentMethods, dispatch] = useReducer(
+        checkboxesGroupReducer,
+        initialValue?.paymentMethods ?? []
+    );
+
+    // Split Method (for AGREEMENT)
+    // pode ser:
+    // 1. parcelas: do cartão quando NÃO há valor restante do acordo (splitRemaining)
+    // 2. valor inicial do acordo em dinheiro: quando NÃO HÁ símbolos no valor (ex: número inteiro ['462'], '1/3' ou '1/2')
+    // 3. valor inicial do acordo em porcentagem: quando há o símbolo de (%) no valor
+
+    const [splitMethod, setSplitMethod] = useState<SplitMethod | null>(
+        initialValue?.splitValue?.includes("%") ? "PERCENTAGE" : "MONEY"
+    );
+
+    // Agreement Initial Value - MONEY (ex: número inteiro ['462'], '1/3' ou '1/2')
+    const splitInitialPercentageRef =
+        useRef<ToggleGroupWithManualValueRef | null>(null);
+
+    // Agreement Initial Value - percentage (ex: 25%, 65%)
+    const splitInitialValueRef = useRef<ToggleGroupWithManualValueRef | null>(
+        null
+    );
+
+    // Remaining Value - pode ser 'parcelas' (ex: 2x, 3x) ou 'valor restante do acordo' ('REMAINING')
+    const [remainingValue, setRemainingValue] = useState<RemainingValue>(
+        (initialValue?.splitRemaining === "REMAINING"
+            ? "afterCompletion"
+            : "WITH_INSTALLMENTS") as RemainingValue
+    );
+
+    // Installments
+    const installmentsAmountRef = useRef<ToggleGroupWithManualValueRef | null>(
+        null
+    );
+*/
+
+interface DefaultProps {
     control: any;
 }
 
+interface PaymentConditionsState {
+    paymentCondition: PaymentCondition;
+    splitMethod?: SplitMethod;
+    splitValue?: SplitMethod;
+    remainingValue: RemainingValue;
+}
+
+interface PaymentConditionsAction {
+    type: string;
+    payload: any;
+}
+
+function paymentConditionsReducer(
+    state: PaymentConditionsState,
+    action: PaymentConditionsAction
+): PaymentConditionsState {
+    switch (action.type) {
+        case "SET_PAYMENT_CONDITION":
+            return {
+                ...state,
+                paymentCondition: action.payload,
+            };
+        case "SET_SPLIT_METHOD":
+            return {
+                ...state,
+                splitMethod: action.payload,
+            };
+        case "SET_REMAINING_VALUE":
+            return {
+                ...state,
+                remainingValue: action.payload,
+            };
+        default:
+            return state;
+    }
+}
+
 function PaymentConditions({
-    paymentCondition,
-    setPaymentCondition,
-    splitMethod,
-    setSplitMethod,
-    remainingValue,
-    setRemainingValue,
-    hasInstallments,
-    splitInitialPercentageRef,
-    splitInitialValueRef,
-    installmentsAmountRef,
     initialValue,
     control,
-}: PaymentConditionsProps) {
+}: DefaultProps & { initialValue?: PaymentConditionsState }) {
+    const [data, dispatch] = useReducer(paymentConditionsReducer, initialValue);
+
     return (
         <SubSectionWrapper
             headerProps={{
@@ -442,10 +451,15 @@ function PaymentConditions({
                                 value: "AGREEMENT",
                             },
                         ]}
-                        selected={paymentCondition}
-                        updateState={setPaymentCondition}
+                        selected={data.paymentCondition}
+                        setSelected={(value) =>
+                            dispatch({
+                                type: "SET_PAYMENT_CONDITION",
+                                payload: value,
+                            })
+                        }
                     />
-                    {paymentCondition === "AGREEMENT" && (
+                    {data.paymentCondition === "AGREEMENT" && (
                         <ToggleGroup
                             data={[
                                 {
@@ -457,13 +471,18 @@ function PaymentConditions({
                                     value: "MONEY",
                                 },
                             ]}
-                            selected={splitMethod}
-                            updateState={setSplitMethod}
+                            selected={data.splitMethod as string}
+                            setSelected={(value) =>
+                                dispatch({
+                                    type: "SET_SPLIT_METHOD",
+                                    payload: value,
+                                })
+                            }
                         />
                     )}
                 </View>
-                {paymentCondition === "AGREEMENT" &&
-                    (splitMethod === "PERCENTAGE" ? (
+                {data.paymentCondition === "AGREEMENT" &&
+                    (data.splitMethod === "PERCENTAGE" ? (
                         <SubSectionWrapper
                             headerProps={{
                                 title: `Qual o percentual do acordo?`,
@@ -481,12 +500,7 @@ function PaymentConditions({
                                         value: "50%",
                                     },
                                 ]}
-                                ref={splitInitialPercentageRef}
-                                defaultValue={
-                                    initialValue?.discount
-                                        ? `${initialValue?.discount}%`
-                                        : "50%"
-                                }
+                                defaultValue={initialValue?.remainingValue}
                                 manualValue={{
                                     inputProps: {
                                         placeholder: "Outro (%)",
@@ -520,7 +534,6 @@ function PaymentConditions({
                                         value: "1/2",
                                     },
                                 ]}
-                                ref={splitInitialValueRef}
                                 defaultValue={
                                     (initialValue?.splitValue as SplitMethod) ??
                                     "1/2"
@@ -540,7 +553,7 @@ function PaymentConditions({
                             />
                         </SubSectionWrapper>
                     ))}
-                {paymentCondition === "AGREEMENT" && (
+                {data.paymentCondition === "AGREEMENT" && (
                     <SubSectionWrapper
                         headerProps={{
                             title: "Como o valor restante será pago?",
@@ -557,8 +570,13 @@ function PaymentConditions({
                                     value: "WITH_INSTALLMENTS",
                                 },
                             ]}
-                            selected={remainingValue}
-                            updateState={setRemainingValue}
+                            selected={data.remainingValue}
+                            setSelected={(value) =>
+                                dispatch({
+                                    type: "SET_REMAINING_VALUE",
+                                    payload: value,
+                                })
+                            }
                         />
                     </SubSectionWrapper>
                 )}
@@ -580,13 +598,13 @@ function PaymentConditions({
                                     value: "3x",
                                 },
                             ]}
-                            ref={installmentsAmountRef}
                             defaultValue={
                                 initialValue?.splitValue
                                     ? `${initialValue?.splitValue}x`
                                     : "2x"
                             }
                             manualValue={{
+                                name: "installmentsAmount",
                                 inputProps: {
                                     placeholder: "Outro (parcelas)",
                                     keyboardType: "number-pad",
@@ -597,7 +615,6 @@ function PaymentConditions({
                                 },
                             }}
                             control={control}
-                            name="installmentsAmount"
                         />
                     </SubSectionWrapper>
                 )}

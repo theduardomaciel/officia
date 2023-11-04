@@ -32,6 +32,8 @@ import Toast from "components/Toast";
 // Types
 import type { ProductModel } from "database/models/product.model";
 import type { CategoryModel } from "database/models/category.model";
+import { database } from "database/index.native";
+import { Q } from "@nozbe/watermelondb";
 
 interface FormValues {
     name: string;
@@ -102,20 +104,19 @@ export default function ProductForm({
         //console.log(newProduct)
 
         if (toCatalog) {
-            // If the order is being added to the saved items, we mark it as such.
+            // If the order is being added to the catalog, we mark it as such.
             Toast.show({
                 preset: "success",
-                title: "Serviço adicionado aos Itens Salvos.",
+                title: "Serviço adicionado ao Catálogo.",
                 description:
-                    "Você poderá acessá-lo a qualquer momento nos Itens Salvos após o agendamento.",
+                    "Você poderá acessá-lo a qualquer momento no Catálogo após o agendamento.",
             });
         } else if (initialData?.project?.id!!) {
-            // If the order is being removed from the saved items, we mark it as such.
+            // If the order is being removed from the catalog, we mark it as such.
             Toast.show({
                 preset: "success",
-                title: "Serviço removido dos Itens Salvos.",
-                description:
-                    "Você pode adicioná-lo novamente a qualquer momento.",
+                title: "Serviço removido do Catálogo.",
+                description: "Não é mais possível acessá-lo no Catálogo.",
             });
         } else {
             // In the case of some previous input error, we hide the modal.
@@ -169,19 +170,24 @@ export default function ProductForm({
     >(undefined);
 
     useEffect(() => {
-        const getBusinessData = async () => {
-            /* const data = (await database.localStorage.get(
-                "businessData"
-            )) as BusinessData;
-            if (data) {
-                //console.log("Dados obtidos com sucesso.", data)
-                setBusinessData(data);
-            } else {
-                setBusinessData(undefined);
-            } */
+        const fetchCategories = async () => {
+            try {
+                const categories = await database
+                    .get<CategoryModel>("categories")
+                    .query(Q.where("id", "teste")) // GAMBIARRA
+                    .fetch();
+                setCategories(categories);
+            } catch (error) {
+                console.log(error);
+                Toast.show({
+                    preset: "error",
+                    title: "Não foi possível carregar as categorias.",
+                    description: "Por favor, tente novamente mais tarde.",
+                });
+            }
         };
 
-        getBusinessData();
+        fetchCategories();
     }, []);
 
     return (

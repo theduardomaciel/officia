@@ -3,6 +3,7 @@ import React, {
     SetStateAction,
     forwardRef,
     useCallback,
+    useEffect,
     useImperativeHandle,
     useRef,
     useState,
@@ -61,12 +62,12 @@ interface DataProps {
 interface ToggleGroupProps {
     data: DataProps[];
     selected: string | string[] | null;
-    updateState: Dispatch<SetStateAction<any>>;
+    setSelected: (value: string | string[] | null) => void;
     children?: React.ReactNode;
 }
 
 const ToggleGroup = React.memo(
-    ({ data, selected, updateState, children }: ToggleGroupProps) => {
+    ({ data, selected, setSelected, children }: ToggleGroupProps) => {
         return (
             <View className="flex-row w-full items-center justify-between">
                 <View className="flex-row items-center justify-between flex-1">
@@ -75,7 +76,7 @@ const ToggleGroup = React.memo(
                             <Toggle
                                 key={index.toString()}
                                 item={item}
-                                onPress={() => updateState(item.value)}
+                                onPress={() => setSelected(item.value)}
                                 isSelected={
                                     typeof selected === "string"
                                         ? selected === item.value
@@ -98,8 +99,8 @@ export default ToggleGroup;
 
 interface ToggleGroupWithManualValueProps {
     data: DataProps[];
-    control: any;
-    manualValue?: {
+    manualValue: {
+        name: string;
         inputProps: TextInputProps;
         maxValue?: number;
         unit?: {
@@ -107,168 +108,129 @@ interface ToggleGroupWithManualValueProps {
             position: "start" | "end";
         };
     };
-    defaultValue?: string;
-    name: string;
-    error?: boolean;
+    control: any;
+    hasError?: boolean;
+    value?: string;
+    setValue: Dispatch<SetStateAction<any>>;
 }
 
-export interface ToggleGroupWithManualValueRef {
-    reset: () => void;
-    getSelected: () => string | null;
-}
+export function ToggleGroupWithManualValue({
+    data,
+    manualValue,
+    control,
+    hasError,
+    value,
+    setValue,
+}: ToggleGroupWithManualValueProps) {
+    const inputRef = useRef<TextInput>(null); // usamos o useRef para acessar o input manualmente, removendo o foco ao apertar em outro botão
 
-export const ToggleGroupWithManualValue = forwardRef(
-    (
-        {
-            defaultValue,
-            data,
-            control,
-            manualValue,
-            name,
-            error,
-        }: ToggleGroupWithManualValueProps,
-        ref
-    ) => {
-        const inputRef = useRef<TextInput>(null); // usamos o useRef para acessar o input manualmente, removendo o foco ao apertar em outro botão
-        const [selected, setSelected] = useState<string | null>(
-            defaultValue ?? data[0].value
-        );
-        //console.log(selected, defaultValue, data.flatMap(item => item.value));
-
-        useImperativeHandle(
-            ref,
-            () => ({
-                reset: () => {
-                    setSelected(null);
-                    inputRef.current?.blur();
-                },
-                getSelected: () => selected,
-            }),
-            [selected]
-        );
-
-        /* No caso de troca de tipo no parente, atualizamos o estado para o primeiro valor ou o valor padrão, caso exista */
-        /* useEffect(() => {
-        console.log("useEffect");
-        setSelected(defaultValue ?? data[0].value);
-    }, [data]); */
-
-        return (
+    return (
+        <View
+            className="flex-row w-full items-center justify-between"
+            key={`${manualValue.name}_container`}
+        >
             <View
-                className="flex-row w-full items-center justify-between"
-                key={`${name}_container`}
+                className="flex-row items-center justify-between flex-1"
+                key={`${manualValue.name}_toggleContainer`}
             >
-                <View
-                    className="flex-row items-center justify-between flex-1"
-                    key={`${name}_toggleContainer`}
-                >
-                    {data.map((item, index) => (
-                        <Toggle
-                            key={index.toString()}
-                            item={item}
-                            onPress={() => {
-                                setSelected(item.value);
-                                inputRef.current?.blur();
-                            }}
-                            isSelected={selected === item.value}
-                            applyMarginRight={
-                                (data && index !== data.length - 1) ||
-                                (manualValue ? true : false)
-                            }
-                        />
-                    ))}
-                </View>
-                {manualValue && (
-                    <View key={`${name}_container`} className="flex flex-1">
-                        <Controller
-                            key={`${name}_controller`}
-                            control={control}
-                            name={name}
-                            render={({
-                                field: { onChange, onBlur, value },
-                            }) => (
-                                <Input
-                                    key={`${name}_input`}
-                                    value={value}
-                                    onChangeText={onChange}
-                                    onFocus={() => {
-                                        setSelected(null);
-                                        if (manualValue.unit && value) {
-                                            const replacedValue = value
-                                                .replaceAll(
-                                                    manualValue.unit.label,
-                                                    ""
-                                                )
-                                                .replaceAll(" ", "");
-                                            onChange(replacedValue);
-                                        }
-                                    }}
-                                    onBlur={() => {
-                                        onBlur();
-                                        const reducedValue =
-                                            manualValue.maxValue &&
-                                            parseInt(value) >
-                                                manualValue.maxValue
-                                                ? manualValue.maxValue.toString()
-                                                : value;
-                                        if (
-                                            manualValue.unit &&
-                                            value &&
-                                            value.length > 0
-                                        ) {
-                                            onChange(
-                                                `${
-                                                    manualValue.unit &&
-                                                    manualValue.unit
-                                                        .position === "start"
-                                                        ? `${manualValue.unit.label} `
-                                                        : ""
-                                                }${reducedValue}${
-                                                    manualValue.unit &&
-                                                    manualValue.unit
-                                                        .position === "end"
-                                                        ? ` ${manualValue.unit.label}`
-                                                        : ""
-                                                }`
-                                            );
-                                        }
-                                    }}
-                                    ref={inputRef}
-                                    pallette="dark"
-                                    style={{
-                                        paddingHorizontal: 0,
-                                        flex: 1,
-                                        textAlign: "center",
-                                        borderWidth:
-                                            selected === null || error ? 1 : 0,
-                                        borderTopColor:
-                                            selected === null
-                                                ? colors.primary
-                                                : error
-                                                ? colors.red
-                                                : colors.gray[200],
-                                        borderBottomColor:
-                                            selected === null
-                                                ? colors.primary
-                                                : error
-                                                ? colors.red
-                                                : colors.gray[200],
-                                        borderColor:
-                                            selected === null
-                                                ? colors.primary
-                                                : error
-                                                ? colors.red
-                                                : colors.gray[200],
-                                    }}
-                                    {...manualValue.inputProps}
-                                    required
-                                />
-                            )}
-                            rules={{ required: true }}
-                        />
-                    </View>
-                )}
+                {data.map((item, index) => (
+                    <Toggle
+                        key={index.toString()}
+                        item={item}
+                        onPress={() => {
+                            setValue(item.value);
+                            inputRef.current?.blur();
+                        }}
+                        isSelected={value === item.value}
+                        applyMarginRight={
+                            (data && index !== data.length - 1) ||
+                            (manualValue ? true : false)
+                        }
+                    />
+                ))}
             </View>
-        );
-    }
-);
+            <View key={`${manualValue.name}_container`} className="flex flex-1">
+                <Controller
+                    key={`${manualValue.name}_controller`}
+                    control={control}
+                    name={manualValue.name}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <Input
+                            key={`${name}_input`}
+                            value={value}
+                            onChangeText={(text) => {
+                                onChange(text);
+                                setValue(text);
+                            }}
+                            onFocus={() => {
+                                if (manualValue.unit && value) {
+                                    const replacedValue = value
+                                        .replaceAll(manualValue.unit.label, "")
+                                        .replaceAll(" ", "");
+                                    onChange(replacedValue);
+                                }
+                            }}
+                            onBlur={() => {
+                                onBlur();
+                                const reducedValue =
+                                    manualValue.maxValue &&
+                                    parseInt(value) > manualValue.maxValue
+                                        ? manualValue.maxValue.toString()
+                                        : value;
+                                if (
+                                    manualValue.unit &&
+                                    value &&
+                                    value.length > 0
+                                ) {
+                                    onChange(
+                                        `${
+                                            manualValue.unit &&
+                                            manualValue.unit.position ===
+                                                "start"
+                                                ? `${manualValue.unit.label} `
+                                                : ""
+                                        }${reducedValue}${
+                                            manualValue.unit &&
+                                            manualValue.unit.position === "end"
+                                                ? ` ${manualValue.unit.label}`
+                                                : ""
+                                        }`
+                                    );
+                                }
+                            }}
+                            ref={inputRef}
+                            pallette="dark"
+                            style={{
+                                paddingHorizontal: 0,
+                                flex: 1,
+                                textAlign: "center",
+                                borderWidth: value === null || hasError ? 1 : 0,
+                                borderTopColor:
+                                    value === null
+                                        ? colors.primary
+                                        : hasError
+                                        ? colors.red
+                                        : colors.gray[200],
+                                borderBottomColor:
+                                    value === null
+                                        ? colors.primary
+                                        : hasError
+                                        ? colors.red
+                                        : colors.gray[200],
+                                borderColor:
+                                    value === null
+                                        ? colors.primary
+                                        : hasError
+                                        ? colors.red
+                                        : colors.gray[200],
+                            }}
+                            {...manualValue.inputProps}
+                            required
+                        />
+                    )}
+                    rules={{ required: true }}
+                />
+            </View>
+        </View>
+    );
+}

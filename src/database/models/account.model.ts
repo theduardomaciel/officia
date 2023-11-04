@@ -8,9 +8,8 @@ import {
     immutableRelation,
 } from "@nozbe/watermelondb/decorators";
 
-import { ProjectModel } from "./project.model";
-
-type GENDER = "MALE" | "FEMALE" | "OTHER";
+// Types
+import type { ProjectModel } from "./project.model";
 
 export class AccountModel extends Model {
     static table = "accounts";
@@ -42,3 +41,5 @@ export class AccountModel extends Model {
     @readonly @date("created_at") createdAt!: Date;
     @readonly @date("updated_at") updatedAt!: Date;
 }
+
+type GENDER = "MALE" | "FEMALE" | "OTHER";

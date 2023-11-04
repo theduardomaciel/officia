@@ -1,4 +1,5 @@
 import { Model } from "@nozbe/watermelondb";
+import { Associations } from "@nozbe/watermelondb/Model";
 
 import {
     readonly,
@@ -8,8 +9,8 @@ import {
     immutableRelation,
 } from "@nozbe/watermelondb/decorators";
 
-import { ProjectModel } from "./project.model";
-import { Associations } from "@nozbe/watermelondb/Model";
+// Types
+import type { ProjectModel } from "./project.model";
 
 export class CategoryModel extends Model {
     static table = "categories";

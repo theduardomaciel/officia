@@ -24,7 +24,7 @@ export default function Label({
 
     return (
         <View
-            className="flex flex-row items-center justify-start bg-red"
+            className="flex flex-row items-center justify-start"
             style={{ columnGap: 10 }}
         >
             {CustomIcon && (

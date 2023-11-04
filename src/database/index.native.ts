@@ -15,6 +15,9 @@ import { BankAccountModel } from "./models/bankAccount.model";
 import { CategoryModel } from "./models/category.model";
 import { MarketplaceModel } from "./models/marketplace.model";
 import { PixModel } from "./models/pix.model";
+import { PaymentConditionsModel } from "./models/paymentConditions.model";
+import { FeeModel } from "./models/fee.model";
+import { DiscountModel } from "./models/discount.model";
 
 // import migrations from "./migrations";
 
@@ -42,5 +45,8 @@ export const database = new Database({
         BankAccountModel,
         CategoryModel,
         PixModel,
+        PaymentConditionsModel,
+        FeeModel,
+        DiscountModel,
     ],
 });

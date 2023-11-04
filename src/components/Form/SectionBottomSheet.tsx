@@ -24,7 +24,7 @@ function unmemorized_SectionBottomSheet({
 }: Props) {
     const insets = useSafeAreaInsets();
 
-    console.log("RERENDER DO BOTTOM SHEET DA SEÇÃO");
+    console.log("ScheduleForm section bottom sheet rendered");
 
     return (
         <BottomSheet
@@ -57,6 +57,6 @@ function unmemorized_SectionBottomSheet({
     );
 }
 
-const SectionBottomSheet = memo(unmemorized_SectionBottomSheet, () => true);
+const SectionBottomSheet = memo(unmemorized_SectionBottomSheet);
 
 export default SectionBottomSheet;

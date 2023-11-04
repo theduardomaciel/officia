@@ -1,12 +1,6 @@
-import React, {
-    useRef,
-    useState,
-    useCallback,
-    memo,
-    Fragment,
-    SetStateAction,
-} from "react";
+import React, { useRef, useState, useCallback, Fragment } from "react";
 import { View, Text } from "react-native";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import DatePicker from "react-native-date-picker";
 
 import { useColorScheme } from "nativewind";
@@ -26,6 +20,7 @@ import { Preview } from "components/Preview";
 // Types
 import type { ProductModel } from "database/models/product.model";
 import type { MaterialModel } from "database/models/material.model";
+import type { OrderModel } from "database/models/order.model";
 
 import type { SectionProps } from "../@types";
 
@@ -40,8 +35,7 @@ import MaterialForm from "../Forms/MaterialForm";
 // Utils
 import { loggedNavigation } from "utils/planHandler";
 import { SECTION_PREFIX } from "../@types";
-import { useNavigation } from "@react-navigation/native";
-import { OrderModel } from "database/models/order.model";
+import { database } from "database/index.native";
 
 const schema = z.object({
     name: z.string().max(30),
@@ -51,17 +45,74 @@ const schema = z.object({
 
 type SchemaType = z.infer<typeof schema>;
 
+interface State {
+    products: ProductModel[];
+    materials: MaterialModel[];
+    date: Date | undefined;
+}
+
+interface Action {
+    type: "SET_PRODUCTS" | "SET_MATERIALS" | "SET_DATE";
+    payload: any;
+}
+
+function reducer(state: State, action: Action): State {
+    switch (action.type) {
+        case "SET_PRODUCTS":
+            return {
+                ...state,
+                products: action.payload,
+            };
+        case "SET_MATERIALS":
+            return {
+                ...state,
+                materials: action.payload,
+            };
+        case "SET_DATE":
+            return {
+                ...state,
+                date: updateDate(state.date, action.payload),
+            };
+        default:
+            return state;
+    }
+}
+
+function updateDate(currentDate: Date | undefined, payload: any) {
+    const { date, month, time } = payload;
+
+    let newDate =
+        currentDate && !isNaN(currentDate.valueOf())
+            ? new Date(currentDate)
+            : new Date();
+
+    if (date !== undefined && month !== undefined) {
+        newDate.setDate(date);
+        newDate.setMonth(month);
+    }
+
+    if (time) {
+        newDate.setHours(time.hours);
+        newDate.setMinutes(time.minutes);
+    }
+
+    return newDate;
+}
+
 function Section0({ initialValue, updateHandler }: SectionProps) {
     const navigation = useNavigation();
-    const [data, setData] = useState<Partial<OrderModel> | undefined>(
-        undefined
-    );
+    const data = useRef<State | undefined>(undefined);
+
+    const dispatch = useCallback((action: Action) => {
+        data.current = reducer(data.current ?? ({} as State), action);
+    }, []);
 
     const {
         reset,
         control,
         getValues,
         formState: { errors },
+        //handleSubmit,
     } = useForm<SchemaType>({
         defaultValues: {
             name: initialValue?.name ?? "",
@@ -73,22 +124,31 @@ function Section0({ initialValue, updateHandler }: SectionProps) {
         resolver: zodResolver(schema),
     });
 
-    const handleSubmit = useCallback(() => {
+    const handleSubmit = async () => {
         const name = getValues("name");
         const additionalInfo = getValues("additionalInfo");
         const discount = parseInt(getValues("discount").replace("%", ""));
 
-        setData((prev) => ({
-            ...prev,
+        console.log("Dados: ", {
             name,
             additionalInfo,
             discount,
-        }));
+            products: data.current?.products,
+            materials: data.current?.materials,
+            date: data.current?.date,
+        });
 
-        console.log("DATA - 0: ", data);
+        database.localStorage.set("order_cache", {
+            name,
+            additionalInfo,
+            discount,
+            products: data.current?.products,
+            materials: data.current?.materials,
+            date: data.current?.date,
+        });
 
         updateHandler(1);
-    }, [data]);
+    };
 
     return (
         <SectionBottomSheet
@@ -113,19 +173,23 @@ function Section0({ initialValue, updateHandler }: SectionProps) {
             />
 
             <ProductsHub
-                setData={setData}
+                dispatch={dispatch}
                 navigation={navigation}
                 initialValue={initialValue?.products}
             />
 
             <MaterialsHub
-                setData={setData}
+                dispatch={dispatch}
                 navigation={navigation}
                 initialValue={initialValue?.materials}
             />
 
-            <CalendarHub setData={setData} initialValue={initialValue?.date} />
-            <TimeHub setData={setData} initialValue={initialValue?.date} />
+            <CalendarHub
+                dispatch={dispatch}
+                initialValue={initialValue?.date}
+            />
+
+            <TimeHub dispatch={dispatch} initialValue={initialValue?.date} />
 
             <Controller
                 control={control}
@@ -174,26 +238,26 @@ function Section0({ initialValue, updateHandler }: SectionProps) {
 
             <ActionButton
                 label="Próximo"
-                onPress={handleSubmit}
+                onPress={handleSubmit /* handleSubmit(onSubmit) */}
                 preset="next"
             />
         </SectionBottomSheet>
     );
 }
 
-const Section0Form = memo(Section0);
-
+const Section0Form = Section0; //memo(Section0);
 export default Section0Form;
 
-interface ProductsHubProps {
-    navigation: any;
-    initialValue?: ProductModel[];
-    setData: React.Dispatch<
-        React.SetStateAction<Partial<OrderModel> | undefined>
-    >;
+interface DefaultProps {
+    navigation: NavigationProp<ReactNavigation.RootParamList>;
+    dispatch: React.Dispatch<Action>;
 }
 
-function ProductsHub({ navigation, initialValue, setData }: ProductsHubProps) {
+function ProductsHub({
+    navigation,
+    initialValue,
+    dispatch,
+}: DefaultProps & { initialValue?: ProductModel[] }) {
     const [products, setProducts] = useState<ProductModel[]>(
         initialValue ?? []
     );
@@ -225,9 +289,16 @@ function ProductsHub({ navigation, initialValue, setData }: ProductsHubProps) {
                             <Preview
                                 product={product}
                                 onDelete={() => {
-                                    setProducts((prev) =>
-                                        prev.filter((s) => s.id !== product.id)
+                                    const newProducts = products.filter(
+                                        (p) => p.id !== product.id
                                     );
+
+                                    dispatch({
+                                        type: "SET_PRODUCTS",
+                                        payload: newProducts,
+                                    });
+
+                                    setProducts(newProducts);
                                 }}
                                 onEdit={() => {
                                     setProductData(product);
@@ -264,31 +335,22 @@ function ProductsHub({ navigation, initialValue, setData }: ProductsHubProps) {
                 <ProductForm
                     initialData={productData}
                     onSubmitForm={(data) => {
-                        if (productData) {
-                            setData((prev) => ({
-                                ...prev,
-                                products: products.map((oldProduct) =>
-                                    oldProduct.id === data.id
-                                        ? data
-                                        : oldProduct
-                                ),
-                            }));
+                        let PRODUCTS = [];
 
-                            setProducts((prev) =>
-                                prev.map((oldProduct) =>
-                                    oldProduct.id === data.id
-                                        ? data
-                                        : oldProduct
-                                )
+                        if (productData) {
+                            PRODUCTS = products.map((oldProduct) =>
+                                oldProduct.id === data.id ? data : oldProduct
                             );
                         } else {
-                            setData((prev) => ({
-                                ...prev,
-                                products: [...products, data],
-                            }));
-
-                            setProducts((prev) => [...prev, data]);
+                            PRODUCTS = [...products, data];
                         }
+
+                        dispatch({
+                            type: "SET_PRODUCTS",
+                            payload: PRODUCTS,
+                        });
+
+                        setProducts(PRODUCTS);
                     }}
                 />
             </BottomSheet>
@@ -296,19 +358,11 @@ function ProductsHub({ navigation, initialValue, setData }: ProductsHubProps) {
     );
 }
 
-interface MaterialsHubProps {
-    navigation: any;
-    setData: React.Dispatch<
-        React.SetStateAction<Partial<OrderModel> | undefined>
-    >;
-    initialValue?: MaterialModel[];
-}
-
 function MaterialsHub({
     navigation,
     initialValue,
-    setData,
-}: MaterialsHubProps) {
+    dispatch,
+}: DefaultProps & { initialValue?: MaterialModel[] }) {
     const [materials, setMaterials] = useState<MaterialModel[]>(
         initialValue ?? []
     );
@@ -335,9 +389,16 @@ function MaterialsHub({
                             <Preview
                                 material={material}
                                 onDelete={() => {
-                                    setMaterials((prev) =>
-                                        prev.filter((m) => m.id !== material.id)
+                                    const newMaterials = materials.filter(
+                                        (m) => m.id !== material.id
                                     );
+
+                                    dispatch({
+                                        type: "SET_MATERIALS",
+                                        payload: newMaterials,
+                                    });
+
+                                    setMaterials(newMaterials);
                                 }}
                                 onEdit={() => {
                                     setMaterialData(material);
@@ -373,31 +434,24 @@ function MaterialsHub({
                 <MaterialForm
                     initialData={materialData}
                     onSubmitForm={(data) => {
-                        if (materialData) {
-                            setData((prev) => ({
-                                ...prev,
-                                materials: materials.map((oldMaterial) =>
-                                    oldMaterial.id === data.id
-                                        ? data
-                                        : oldMaterial
-                                ),
-                            }));
+                        let MATERIALS = [];
 
-                            setMaterials((prev) =>
-                                prev.map((oldMaterial) =>
-                                    oldMaterial.id === data.id
-                                        ? data
-                                        : oldMaterial
-                                )
+                        // Se houver um materialData, significa que o usuário está editando um material
+                        if (materialData) {
+                            MATERIALS = materials.map((oldMaterial) =>
+                                oldMaterial.id === data.id ? data : oldMaterial
                             );
                         } else {
-                            setData((prev) => ({
-                                ...prev,
-                                materials: [...materials, data],
-                            }));
-
-                            setMaterials((prev) => [...prev, data]);
+                            // Caso contrário, o usuário está adicionando um novo material
+                            MATERIALS = [...materials, data];
                         }
+
+                        dispatch({
+                            type: "SET_MATERIALS",
+                            payload: MATERIALS,
+                        });
+
+                        setMaterials(MATERIALS);
                     }}
                 />
             </BottomSheet>
@@ -405,14 +459,10 @@ function MaterialsHub({
     );
 }
 
-interface CalendarHubProps {
-    setData: React.Dispatch<
-        React.SetStateAction<Partial<OrderModel> | undefined>
-    >;
-    initialValue?: Date;
-}
-
-function CalendarHub({ setData, initialValue }: CalendarHubProps) {
+function CalendarHub({
+    dispatch,
+    initialValue,
+}: Omit<DefaultProps, "navigation"> & { initialValue?: Date }) {
     const currentDate = new Date();
     const [date, setDate] = useState<CalendarDate | undefined>(
         initialValue
@@ -430,14 +480,13 @@ function CalendarHub({ setData, initialValue }: CalendarHubProps) {
                 selectedDate={date}
                 setSelectedDate={(calendarDate) => {
                     setDate(calendarDate);
-                    setData((prev) => ({
-                        ...prev,
-                        date: new Date(
-                            currentDate.getFullYear(),
-                            calendarDate.month,
-                            calendarDate.date
-                        ),
-                    }));
+                    dispatch({
+                        type: "SET_DATE",
+                        payload: {
+                            month: calendarDate.month,
+                            date: calendarDate.date,
+                        },
+                    });
                 }}
                 style={{ padding: 16, backgroundColor: colors.gray[600] }}
             />
@@ -445,14 +494,10 @@ function CalendarHub({ setData, initialValue }: CalendarHubProps) {
     );
 }
 
-interface TimeHubProps {
-    setData: React.Dispatch<
-        React.SetStateAction<Partial<OrderModel> | undefined>
-    >;
-    initialValue?: Date;
-}
-
-function TimeHub({ setData, initialValue }: TimeHubProps) {
+function TimeHub({
+    dispatch,
+    initialValue,
+}: Omit<DefaultProps, "navigation"> & { initialValue?: Date }) {
     const { colorScheme } = useColorScheme();
     const newDate = useRef(new Date());
 
@@ -466,21 +511,27 @@ function TimeHub({ setData, initialValue }: TimeHubProps) {
     const onConfirm = () => {
         setTimeModalVisible(false);
 
-        console.log("Data: ", newDate.current);
-        setData((prev) => ({
-            ...prev,
-            date: newDate.current,
-        }));
+        dispatch({
+            type: "SET_DATE",
+            payload: {
+                time: {
+                    hours: newDate.current.getHours(),
+                    minutes: newDate.current.getMinutes(),
+                },
+            },
+        });
+
         setTime(newDate.current);
     };
 
     const onClean = () => {
         setTimeModalVisible(false);
 
-        setData((prev) => ({
-            ...prev,
-            date: undefined,
-        }));
+        dispatch({
+            type: "SET_DATE",
+            payload: { time: undefined },
+        });
+
         setTime(undefined);
     };
 
@@ -529,7 +580,7 @@ function TimeHub({ setData, initialValue }: TimeHubProps) {
                         androidVariant="nativeAndroid"
                         minuteInterval={15}
                         mode="time"
-                        /* is24hourSource='locale' */
+                        is24hourSource="locale"
                     />
                 </View>
             </Modal>

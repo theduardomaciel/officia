@@ -120,7 +120,7 @@ export default function MaterialForm({
             // If the order is being removed from the catalog, we mark it as such.
             Toast.show({
                 preset: "success",
-                title: "Material removido dos Itens Salvos.",
+                title: "Material removido dos Catálogo.",
                 description:
                     "Você pode adicioná-lo novamente a qualquer momento.",
             });
